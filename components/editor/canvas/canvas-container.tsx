@@ -1,10 +1,12 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useCanvasStore, useEditorStore } from '@/lib/store'
 import { componentRegistry } from '@/lib/components-registry'
+import { generateSingleComponentHtml } from '@/components/editor/preview/preview-generator'
 import { DEVICE_WIDTHS } from '@/types'
 import type { ComponentInstance } from '@/types'
 import { Plus, GripVertical, Lock, Eye, EyeOff, Trash2, Copy } from 'lucide-react'
@@ -19,6 +21,15 @@ function SortableComponent({ instance }: SortableComponentProps) {
   const { selectedComponentId, setSelectedComponentId, setHoveredComponentId } = useEditorStore()
   const { updateComponent, removeComponent, duplicateComponent } = useCanvasStore()
   const registryItem = componentRegistry.getById(instance.componentRegistryId)
+
+  // Generate inline HTML preview for this component
+  const previewHtml = useMemo(() => {
+    try {
+      return generateSingleComponentHtml(instance)
+    } catch {
+      return ''
+    }
+  }, [instance])
 
   const {
     attributes,
@@ -144,20 +155,29 @@ function SortableComponent({ instance }: SortableComponentProps) {
       {/* Component Content */}
       <div
         className={cn(
-          'p-4 border rounded-lg cursor-pointer transition-all',
+          'border rounded-lg cursor-pointer transition-all overflow-hidden',
           isSelected ? 'ring-2 ring-primary' : 'hover:border-primary/50',
           instance.isHidden && 'pointer-events-none'
         )}
       >
-        <div className="h-24 bg-muted/50 rounded flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-sm font-medium">{registryItem?.displayName || 'Unknown'}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {registryItem?.description?.slice(0, 50) || 'Component preview'}
-              {registryItem?.description && registryItem.description.length > 50 ? '...' : ''}
-            </p>
-          </div>
+        {/* Name overlay */}
+        <div className="relative z-10 flex items-center gap-1.5 px-2 py-1 bg-background/80 backdrop-blur-sm border-b text-xs">
+          <Badge variant={instance.source as any} className="text-[10px] px-1 py-0">
+            {instance.source}
+          </Badge>
+          <span className="font-medium truncate">{registryItem?.displayName || 'Unknown'}</span>
         </div>
+        {/* Inline HTML preview */}
+        {previewHtml ? (
+          <div
+            className="pointer-events-none overflow-hidden max-h-[300px]"
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
+        ) : (
+          <div className="h-24 bg-muted/50 rounded flex items-center justify-center">
+            <p className="text-xs text-muted-foreground">No preview available</p>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -214,7 +234,7 @@ export function Canvas() {
             </div>
           ) : (
             <div className="space-y-6 pt-8">
-              {components
+              {[...components]
                 .sort((a, b) => a.order - b.order)
                 .map((instance) => (
                   <SortableComponent key={instance.id} instance={instance} />

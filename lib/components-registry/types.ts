@@ -2,7 +2,7 @@ import type { ComponentSource, ComponentCategory } from '@/types/component'
 
 export interface ComponentProp {
   name: string
-  type: 'string' | 'number' | 'boolean' | 'select' | 'color' | 'image' | 'richtext' | 'children' | 'array'
+  type: 'string' | 'number' | 'boolean' | 'select' | 'color' | 'image' | 'richtext' | 'children' | 'array' | 'object'
   default?: unknown
   required: boolean
   options?: string[]

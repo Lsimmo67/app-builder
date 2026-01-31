@@ -27,7 +27,7 @@ export function generatePageCode(
     const registry = componentRegistry.getById(comp.componentRegistryId)
     if (!registry) continue
     
-    const importPath = `@/components/ui/${kebabCase(registry.name)}`
+    const importPath = `@/components/${registry.source}/${kebabCase(registry.name)}`
     if (!imports.has(importPath)) {
       imports.set(importPath, new Set())
     }
@@ -198,4 +198,6 @@ function escapeString(str: string): string {
     .replace(/\\/g, '\\\\')
     .replace(/"/g, '\\"')
     .replace(/\n/g, '\\n')
+    .replace(/`/g, '\\`')
+    .replace(/\$\{/g, '\\${')
 }

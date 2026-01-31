@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import {
@@ -30,8 +30,7 @@ import { useProjectStore, useCanvasStore, useDesignSystemStore, useEditorStore }
 import { componentRegistry } from '@/lib/components-registry'
 import { Badge } from '@/components/ui/badge'
 import { Loader2 } from 'lucide-react'
-import { useState, useCallback } from 'react'
-import type { ComponentInstance } from '@/types'
+import type { ComponentInstance, ViewMode } from '@/types'
 
 // Dynamic imports for heavy components
 const CodePanel = dynamic(
@@ -91,6 +90,62 @@ export default function EditorPage() {
       loadComponents(currentPage.id)
     }
   }, [currentPage, loadComponents])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore when typing in inputs or textareas
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+
+      const editorState = useEditorStore.getState()
+      const canvasState = useCanvasStore.getState()
+
+      // Undo: Ctrl+Z (not Shift)
+      if (e.key === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        e.preventDefault()
+        editorState.undo()
+        return
+      }
+
+      // Redo: Ctrl+Y or Ctrl+Shift+Z
+      if (
+        (e.key === 'y' && (e.ctrlKey || e.metaKey)) ||
+        (e.key === 'z' && (e.ctrlKey || e.metaKey) && e.shiftKey)
+      ) {
+        e.preventDefault()
+        editorState.redo()
+        return
+      }
+
+      // Delete selected component: Delete or Backspace
+      if ((e.key === 'Delete' || e.key === 'Backspace') && editorState.selectedComponentId) {
+        e.preventDefault()
+        const comp = canvasState.components.find((c) => c.id === editorState.selectedComponentId)
+        if (comp && !comp.isLocked) {
+          canvasState.removeComponent(editorState.selectedComponentId)
+          editorState.setSelectedComponentId(null)
+        }
+        return
+      }
+
+      // Duplicate: Ctrl+D
+      if (e.key === 'd' && (e.ctrlKey || e.metaKey) && editorState.selectedComponentId) {
+        e.preventDefault()
+        canvasState.duplicateComponent(editorState.selectedComponentId)
+        return
+      }
+
+      // Escape: deselect
+      if (e.key === 'Escape') {
+        editorState.setSelectedComponentId(null)
+        return
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event
