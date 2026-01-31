@@ -1,0 +1,136 @@
+{
+  "source": "osmo",
+  "components": [
+    {
+      "id": "osmo-hero-section",
+      "name": "HeroSection",
+      "displayName": "Hero Section",
+      "categories": ["hero", "section"],
+      "tags": ["landing", "hero", "headline", "cta"],
+      "description": "A complete hero section with headline, description, and CTA buttons",
+      "previewImage": "/components/osmo/hero-section.png",
+      "props": [
+        { "name": "headline", "type": "string", "default": "Build something amazing", "required": true, "description": "Main headline" },
+        { "name": "subheadline", "type": "string", "default": "Create stunning websites with our premium components", "required": false, "description": "Supporting text" },
+        { "name": "primaryCta", "type": "string", "default": "Get Started", "required": false, "description": "Primary button text" },
+        { "name": "secondaryCta", "type": "string", "default": "Learn More", "required": false, "description": "Secondary button text" },
+        { "name": "image", "type": "image", "default": "/placeholder.jpg", "required": false, "description": "Hero image" }
+      ],
+      "dependencies": [],
+      "code": "export function HeroSection() {\n  return (\n    <section className=\"py-24 px-6\">\n      <div className=\"max-w-6xl mx-auto text-center\">\n        <h1 className=\"text-5xl font-bold mb-6\">{{headline}}</h1>\n        <p className=\"text-xl text-muted-foreground mb-8 max-w-2xl mx-auto\">{{subheadline}}</p>\n        <div className=\"flex gap-4 justify-center\">\n          <button className=\"px-6 py-3 bg-primary text-primary-foreground rounded-lg\">{{primaryCta}}</button>\n          <button className=\"px-6 py-3 border rounded-lg\">{{secondaryCta}}</button>\n        </div>\n      </div>\n    </section>\n  );\n}",
+      "suggestedWith": ["osmo-features-grid", "osmo-testimonials"],
+      "docsUrl": "https://osmo.supply",
+      "version": "1.0.0"
+    },
+    {
+      "id": "osmo-features-grid",
+      "name": "FeaturesGrid",
+      "displayName": "Features Grid",
+      "categories": ["feature", "section", "grid"],
+      "tags": ["features", "grid", "icons", "benefits"],
+      "description": "A grid of feature cards with icons and descriptions",
+      "previewImage": "/components/osmo/features-grid.png",
+      "props": [
+        { "name": "title", "type": "string", "default": "Features", "required": false, "description": "Section title" },
+        { "name": "description", "type": "string", "default": "Everything you need to build amazing products", "required": false, "description": "Section description" },
+        { "name": "features", "type": "array", "default": [], "required": true, "description": "Array of features with icon, title, description" }
+      ],
+      "dependencies": ["lucide-react"],
+      "code": "import { Zap, Shield, Rocket } from \"lucide-react\";\n\nexport function FeaturesGrid() {\n  const features = [\n    { icon: Zap, title: \"Lightning Fast\", description: \"Optimized for speed\" },\n    { icon: Shield, title: \"Secure\", description: \"Enterprise-grade security\" },\n    { icon: Rocket, title: \"Scalable\", description: \"Grows with your business\" }\n  ];\n  \n  return (\n    <section className=\"py-24 px-6\">\n      <div className=\"max-w-6xl mx-auto\">\n        <h2 className=\"text-3xl font-bold text-center mb-4\">{{title}}</h2>\n        <p className=\"text-center text-muted-foreground mb-12\">{{description}}</p>\n        <div className=\"grid md:grid-cols-3 gap-8\">\n          {features.map((f, i) => (\n            <div key={i} className=\"p-6 border rounded-xl\">\n              <f.icon className=\"w-10 h-10 mb-4\" />\n              <h3 className=\"font-semibold mb-2\">{f.title}</h3>\n              <p className=\"text-muted-foreground\">{f.description}</p>\n            </div>\n          ))}\n        </div>\n      </div>\n    </section>\n  );\n}",
+      "suggestedWith": ["osmo-hero-section", "osmo-cta-section"],
+      "docsUrl": "https://osmo.supply",
+      "version": "1.0.0"
+    },
+    {
+      "id": "osmo-testimonials",
+      "name": "Testimonials",
+      "displayName": "Testimonials Section",
+      "categories": ["testimonial", "section"],
+      "tags": ["testimonials", "reviews", "social-proof", "quotes"],
+      "description": "A testimonials section with customer quotes and avatars",
+      "previewImage": "/components/osmo/testimonials.png",
+      "props": [
+        { "name": "title", "type": "string", "default": "What our customers say", "required": false, "description": "Section title" },
+        { "name": "testimonials", "type": "array", "default": [], "required": true, "description": "Array of testimonials" }
+      ],
+      "dependencies": [],
+      "code": "export function Testimonials() {\n  const testimonials = [\n    { quote: \"Amazing product!\", author: \"John Doe\", role: \"CEO\", avatar: \"/avatar1.jpg\" },\n    { quote: \"Changed our workflow\", author: \"Jane Smith\", role: \"CTO\", avatar: \"/avatar2.jpg\" }\n  ];\n  \n  return (\n    <section className=\"py-24 px-6 bg-muted/50\">\n      <div className=\"max-w-6xl mx-auto\">\n        <h2 className=\"text-3xl font-bold text-center mb-12\">{{title}}</h2>\n        <div className=\"grid md:grid-cols-2 gap-8\">\n          {testimonials.map((t, i) => (\n            <div key={i} className=\"p-8 bg-background rounded-xl border\">\n              <p className=\"text-lg mb-6\">\"{t.quote}\"</p>\n              <div className=\"flex items-center gap-4\">\n                <img src={t.avatar} className=\"w-12 h-12 rounded-full\" />\n                <div>\n                  <p className=\"font-semibold\">{t.author}</p>\n                  <p className=\"text-sm text-muted-foreground\">{t.role}</p>\n                </div>\n              </div>\n            </div>\n          ))}\n        </div>\n      </div>\n    </section>\n  );\n}",
+      "suggestedWith": ["osmo-features-grid", "osmo-cta-section"],
+      "docsUrl": "https://osmo.supply",
+      "version": "1.0.0"
+    },
+    {
+      "id": "osmo-pricing-section",
+      "name": "PricingSection",
+      "displayName": "Pricing Section",
+      "categories": ["pricing", "section"],
+      "tags": ["pricing", "plans", "subscription", "tiers"],
+      "description": "A pricing section with multiple plan tiers",
+      "previewImage": "/components/osmo/pricing.png",
+      "props": [
+        { "name": "title", "type": "string", "default": "Simple, transparent pricing", "required": false, "description": "Section title" },
+        { "name": "plans", "type": "array", "default": [], "required": true, "description": "Array of pricing plans" }
+      ],
+      "dependencies": [],
+      "code": "export function PricingSection() {\n  const plans = [\n    { name: \"Starter\", price: \"$9\", features: [\"Feature 1\", \"Feature 2\"] },\n    { name: \"Pro\", price: \"$29\", features: [\"All Starter\", \"Feature 3\", \"Feature 4\"], popular: true },\n    { name: \"Enterprise\", price: \"Custom\", features: [\"All Pro\", \"Feature 5\", \"Priority support\"] }\n  ];\n  \n  return (\n    <section className=\"py-24 px-6\">\n      <h2 className=\"text-3xl font-bold text-center mb-12\">{{title}}</h2>\n      <div className=\"max-w-5xl mx-auto grid md:grid-cols-3 gap-8\">\n        {plans.map((plan, i) => (\n          <div key={i} className={`p-8 rounded-xl border ${plan.popular ? 'border-primary ring-2 ring-primary' : ''}`}>\n            <h3 className=\"text-xl font-semibold\">{plan.name}</h3>\n            <p className=\"text-4xl font-bold my-4\">{plan.price}<span className=\"text-lg\">/mo</span></p>\n            <ul className=\"space-y-2 mb-8\">\n              {plan.features.map((f, j) => <li key={j}>✓ {f}</li>)}\n            </ul>\n            <button className=\"w-full py-3 bg-primary text-primary-foreground rounded-lg\">Get Started</button>\n          </div>\n        ))}\n      </div>\n    </section>\n  );\n}",
+      "suggestedWith": ["osmo-faq-section", "osmo-cta-section"],
+      "docsUrl": "https://osmo.supply",
+      "version": "1.0.0"
+    },
+    {
+      "id": "osmo-cta-section",
+      "name": "CtaSection",
+      "displayName": "CTA Section",
+      "categories": ["cta", "section"],
+      "tags": ["cta", "call-to-action", "conversion", "signup"],
+      "description": "A call-to-action section to drive conversions",
+      "previewImage": "/components/osmo/cta.png",
+      "props": [
+        { "name": "title", "type": "string", "default": "Ready to get started?", "required": true, "description": "CTA title" },
+        { "name": "description", "type": "string", "default": "Join thousands of satisfied customers today.", "required": false, "description": "CTA description" },
+        { "name": "buttonText", "type": "string", "default": "Start Free Trial", "required": false, "description": "Button text" }
+      ],
+      "dependencies": [],
+      "code": "export function CtaSection() {\n  return (\n    <section className=\"py-24 px-6 bg-primary text-primary-foreground\">\n      <div className=\"max-w-4xl mx-auto text-center\">\n        <h2 className=\"text-4xl font-bold mb-4\">{{title}}</h2>\n        <p className=\"text-xl opacity-90 mb-8\">{{description}}</p>\n        <button className=\"px-8 py-4 bg-background text-foreground rounded-lg font-semibold\">{{buttonText}}</button>\n      </div>\n    </section>\n  );\n}",
+      "suggestedWith": ["osmo-footer"],
+      "docsUrl": "https://osmo.supply",
+      "version": "1.0.0"
+    },
+    {
+      "id": "osmo-footer",
+      "name": "Footer",
+      "displayName": "Footer",
+      "categories": ["footer", "section"],
+      "tags": ["footer", "links", "copyright", "navigation"],
+      "description": "A complete footer with links and copyright",
+      "previewImage": "/components/osmo/footer.png",
+      "props": [
+        { "name": "companyName", "type": "string", "default": "Company", "required": true, "description": "Company name" },
+        { "name": "links", "type": "array", "default": [], "required": false, "description": "Footer link groups" }
+      ],
+      "dependencies": [],
+      "code": "export function Footer() {\n  const links = [\n    { title: \"Product\", items: [\"Features\", \"Pricing\", \"Changelog\"] },\n    { title: \"Company\", items: [\"About\", \"Blog\", \"Careers\"] },\n    { title: \"Legal\", items: [\"Privacy\", \"Terms\"] }\n  ];\n  \n  return (\n    <footer className=\"py-12 px-6 border-t\">\n      <div className=\"max-w-6xl mx-auto\">\n        <div className=\"grid md:grid-cols-4 gap-8 mb-8\">\n          <div>\n            <h3 className=\"font-bold text-xl mb-4\">{{companyName}}</h3>\n            <p className=\"text-muted-foreground\">Building the future.</p>\n          </div>\n          {links.map((group, i) => (\n            <div key={i}>\n              <h4 className=\"font-semibold mb-4\">{group.title}</h4>\n              <ul className=\"space-y-2\">\n                {group.items.map((item, j) => (\n                  <li key={j}><a href=\"#\" className=\"text-muted-foreground hover:text-foreground\">{item}</a></li>\n                ))}\n              </ul>\n            </div>\n          ))}\n        </div>\n        <div className=\"pt-8 border-t text-center text-muted-foreground\">\n          © 2024 {{companyName}}. All rights reserved.\n        </div>\n      </div>\n    </footer>\n  );\n}",
+      "suggestedWith": ["osmo-cta-section"],
+      "docsUrl": "https://osmo.supply",
+      "version": "1.0.0"
+    },
+    {
+      "id": "osmo-faq-section",
+      "name": "FaqSection",
+      "displayName": "FAQ Section",
+      "categories": ["faq", "section"],
+      "tags": ["faq", "questions", "answers", "accordion"],
+      "description": "A frequently asked questions section with accordion",
+      "previewImage": "/components/osmo/faq.png",
+      "props": [
+        { "name": "title", "type": "string", "default": "Frequently Asked Questions", "required": false, "description": "Section title" },
+        { "name": "faqs", "type": "array", "default": [], "required": true, "description": "Array of FAQ items" }
+      ],
+      "dependencies": ["@radix-ui/react-accordion"],
+      "code": "export function FaqSection() {\n  const faqs = [\n    { q: \"How does it work?\", a: \"Simply sign up and start building.\" },\n    { q: \"Is there a free trial?\", a: \"Yes, 14 days free trial.\" },\n    { q: \"Can I cancel anytime?\", a: \"Yes, no questions asked.\" }\n  ];\n  \n  return (\n    <section className=\"py-24 px-6\">\n      <div className=\"max-w-3xl mx-auto\">\n        <h2 className=\"text-3xl font-bold text-center mb-12\">{{title}}</h2>\n        <div className=\"space-y-4\">\n          {faqs.map((faq, i) => (\n            <details key={i} className=\"p-4 border rounded-lg\">\n              <summary className=\"font-semibold cursor-pointer\">{faq.q}</summary>\n              <p className=\"mt-4 text-muted-foreground\">{faq.a}</p>\n            </details>\n          ))}\n        </div>\n      </div>\n    </section>\n  );\n}",
+      "suggestedWith": ["osmo-cta-section", "osmo-pricing-section"],
+      "docsUrl": "https://osmo.supply",
+      "version": "1.0.0"
+    }
+  ]
+}

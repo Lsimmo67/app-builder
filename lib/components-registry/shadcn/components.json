@@ -1,0 +1,98 @@
+{
+  "source": "shadcn",
+  "components": [
+    {
+      "id": "shadcn-button",
+      "name": "Button",
+      "displayName": "Button",
+      "categories": ["button", "cta"],
+      "tags": ["action", "click", "submit", "primary", "secondary"],
+      "description": "A versatile button component with multiple variants and sizes",
+      "previewImage": "/components/shadcn/button.png",
+      "props": [
+        { "name": "variant", "type": "select", "options": ["default", "destructive", "outline", "secondary", "ghost", "link"], "default": "default", "required": false, "description": "Button style variant" },
+        { "name": "size", "type": "select", "options": ["default", "sm", "lg", "icon"], "default": "default", "required": false, "description": "Button size" },
+        { "name": "children", "type": "string", "default": "Button", "required": true, "description": "Button text content" },
+        { "name": "disabled", "type": "boolean", "default": false, "required": false, "description": "Disable the button" }
+      ],
+      "dependencies": ["@radix-ui/react-slot", "class-variance-authority"],
+      "code": "import { Button } from \"@/components/ui/button\"\n\nexport function ButtonDemo() {\n  return <Button variant=\"{{variant}}\" size=\"{{size}}\">{{children}}</Button>\n}",
+      "suggestedWith": ["shadcn-input", "shadcn-card"],
+      "docsUrl": "https://ui.shadcn.com/docs/components/button",
+      "version": "1.0.0"
+    },
+    {
+      "id": "shadcn-card",
+      "name": "Card",
+      "displayName": "Card",
+      "categories": ["card", "layout"],
+      "tags": ["container", "content", "box", "panel"],
+      "description": "A card component for displaying content in a contained format",
+      "previewImage": "/components/shadcn/card.png",
+      "props": [
+        { "name": "title", "type": "string", "default": "Card Title", "required": false, "description": "Card header title" },
+        { "name": "description", "type": "string", "default": "Card description goes here", "required": false, "description": "Card header description" },
+        { "name": "content", "type": "richtext", "default": "Card content", "required": false, "description": "Main card content" }
+      ],
+      "dependencies": [],
+      "code": "import { Card, CardContent, CardDescription, CardHeader, CardTitle } from \"@/components/ui/card\"\n\nexport function CardDemo() {\n  return (\n    <Card>\n      <CardHeader>\n        <CardTitle>{{title}}</CardTitle>\n        <CardDescription>{{description}}</CardDescription>\n      </CardHeader>\n      <CardContent>{{content}}</CardContent>\n    </Card>\n  )\n}",
+      "suggestedWith": ["shadcn-button", "shadcn-input"],
+      "docsUrl": "https://ui.shadcn.com/docs/components/card",
+      "version": "1.0.0"
+    },
+    {
+      "id": "shadcn-input",
+      "name": "Input",
+      "displayName": "Input",
+      "categories": ["input", "form"],
+      "tags": ["text", "field", "form", "input"],
+      "description": "A text input component for forms",
+      "previewImage": "/components/shadcn/input.png",
+      "props": [
+        { "name": "placeholder", "type": "string", "default": "Enter text...", "required": false, "description": "Placeholder text" },
+        { "name": "type", "type": "select", "options": ["text", "email", "password", "number", "tel", "url"], "default": "text", "required": false, "description": "Input type" },
+        { "name": "disabled", "type": "boolean", "default": false, "required": false, "description": "Disable the input" }
+      ],
+      "dependencies": [],
+      "code": "import { Input } from \"@/components/ui/input\"\n\nexport function InputDemo() {\n  return <Input type=\"{{type}}\" placeholder=\"{{placeholder}}\" />\n}",
+      "suggestedWith": ["shadcn-button", "shadcn-label"],
+      "docsUrl": "https://ui.shadcn.com/docs/components/input",
+      "version": "1.0.0"
+    },
+    {
+      "id": "shadcn-badge",
+      "name": "Badge",
+      "displayName": "Badge",
+      "categories": ["text", "other"],
+      "tags": ["label", "tag", "status", "indicator"],
+      "description": "A small badge for displaying status or labels",
+      "previewImage": "/components/shadcn/badge.png",
+      "props": [
+        { "name": "variant", "type": "select", "options": ["default", "secondary", "destructive", "outline"], "default": "default", "required": false, "description": "Badge style variant" },
+        { "name": "children", "type": "string", "default": "Badge", "required": true, "description": "Badge text" }
+      ],
+      "dependencies": ["class-variance-authority"],
+      "code": "import { Badge } from \"@/components/ui/badge\"\n\nexport function BadgeDemo() {\n  return <Badge variant=\"{{variant}}\">{{children}}</Badge>\n}",
+      "suggestedWith": ["shadcn-card"],
+      "docsUrl": "https://ui.shadcn.com/docs/components/badge",
+      "version": "1.0.0"
+    },
+    {
+      "id": "shadcn-navigation-menu",
+      "name": "NavigationMenu",
+      "displayName": "Navigation Menu",
+      "categories": ["navigation", "header"],
+      "tags": ["nav", "menu", "links", "header"],
+      "description": "A responsive navigation menu with dropdown support",
+      "previewImage": "/components/shadcn/navigation-menu.png",
+      "props": [
+        { "name": "items", "type": "array", "default": [], "required": true, "description": "Navigation items" }
+      ],
+      "dependencies": ["@radix-ui/react-navigation-menu"],
+      "code": "import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from \"@/components/ui/navigation-menu\"\n\nexport function NavigationMenuDemo() {\n  return (\n    <NavigationMenu>\n      <NavigationMenuList>\n        <NavigationMenuItem>\n          <NavigationMenuLink href=\"/\">Home</NavigationMenuLink>\n        </NavigationMenuItem>\n      </NavigationMenuList>\n    </NavigationMenu>\n  )\n}",
+      "suggestedWith": ["shadcn-button"],
+      "docsUrl": "https://ui.shadcn.com/docs/components/navigation-menu",
+      "version": "1.0.0"
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+{
+  "source": "gsap",
+  "components": [
+    {
+      "id": "gsap-scroll-reveal",
+      "name": "ScrollReveal",
+      "displayName": "Scroll Reveal",
+      "categories": ["animation", "effect"],
+      "tags": ["scroll", "reveal", "fade", "animation", "intersection"],
+      "description": "Reveal elements with smooth animations as they scroll into view",
+      "previewImage": "/components/gsap/scroll-reveal.png",
+      "props": [
+        { "name": "children", "type": "children", "default": "", "required": true, "description": "Content to reveal" },
+        { "name": "direction", "type": "select", "options": ["up", "down", "left", "right", "none"], "default": "up", "required": false, "description": "Direction of animation" },
+        { "name": "delay", "type": "number", "default": 0, "required": false, "description": "Delay in seconds" },
+        { "name": "duration", "type": "number", "default": 0.8, "required": false, "description": "Duration in seconds" },
+        { "name": "distance", "type": "number", "default": 50, "required": false, "description": "Distance to travel in pixels" }
+      ],
+      "dependencies": ["gsap", "@gsap/react"],
+      "code": "\"use client\";\nimport { useRef, useEffect } from \"react\";\nimport gsap from \"gsap\";\nimport { ScrollTrigger } from \"gsap/ScrollTrigger\";\n\ngsap.registerPlugin(ScrollTrigger);\n\nexport function ScrollReveal({ children, direction = \"up\", delay = 0, duration = 0.8, distance = 50 }) {\n  const ref = useRef(null);\n  \n  useEffect(() => {\n    const dirs = {\n      up: { y: distance },\n      down: { y: -distance },\n      left: { x: distance },\n      right: { x: -distance },\n      none: {}\n    };\n    \n    gsap.fromTo(ref.current,\n      { opacity: 0, ...dirs[direction] },\n      {\n        opacity: 1, x: 0, y: 0,\n        duration,\n        delay,\n        scrollTrigger: {\n          trigger: ref.current,\n          start: \"top 85%\",\n          toggleActions: \"play none none reverse\"\n        }\n      }\n    );\n  }, [direction, delay, duration, distance]);\n  \n  return <div ref={ref}>{children}</div>;\n}",
+      "suggestedWith": ["gsap-stagger-list", "gsap-parallax-section"],
+      "docsUrl": "https://gsap.com/docs/v3/Plugins/ScrollTrigger",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gsap-stagger-list",
+      "name": "StaggerList",
+      "displayName": "Stagger List",
+      "categories": ["animation", "layout"],
+      "tags": ["stagger", "list", "sequential", "animation", "children"],
+      "description": "Animate list items with staggered timing",
+      "previewImage": "/components/gsap/stagger-list.png",
+      "props": [
+        { "name": "children", "type": "children", "default": "", "required": true, "description": "List items" },
+        { "name": "stagger", "type": "number", "default": 0.1, "required": false, "description": "Delay between items" },
+        { "name": "direction", "type": "select", "options": ["up", "down", "left", "right"], "default": "up", "required": false, "description": "Animation direction" }
+      ],
+      "dependencies": ["gsap", "@gsap/react"],
+      "code": "\"use client\";\nimport { useRef, useEffect } from \"react\";\nimport gsap from \"gsap\";\nimport { ScrollTrigger } from \"gsap/ScrollTrigger\";\n\ngsap.registerPlugin(ScrollTrigger);\n\nexport function StaggerList({ children, stagger = 0.1, direction = \"up\" }) {\n  const ref = useRef(null);\n  \n  useEffect(() => {\n    const items = ref.current.children;\n    const dirs = {\n      up: { y: 30 }, down: { y: -30 },\n      left: { x: 30 }, right: { x: -30 }\n    };\n    \n    gsap.fromTo(items,\n      { opacity: 0, ...dirs[direction] },\n      {\n        opacity: 1, x: 0, y: 0,\n        duration: 0.6,\n        stagger,\n        scrollTrigger: {\n          trigger: ref.current,\n          start: \"top 80%\"\n        }\n      }\n    );\n  }, [stagger, direction]);\n  \n  return <div ref={ref}>{children}</div>;\n}",
+      "suggestedWith": ["gsap-scroll-reveal", "osmo-features-grid"],
+      "docsUrl": "https://gsap.com/docs/v3/GSAP/gsap.to()",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gsap-parallax-section",
+      "name": "ParallaxSection",
+      "displayName": "Parallax Section",
+      "categories": ["animation", "section", "effect"],
+      "tags": ["parallax", "scroll", "depth", "background", "layered"],
+      "description": "Create depth with parallax scrolling effects",
+      "previewImage": "/components/gsap/parallax-section.png",
+      "props": [
+        { "name": "backgroundImage", "type": "image", "default": "/placeholder.jpg", "required": false, "description": "Background image URL" },
+        { "name": "speed", "type": "number", "default": 0.5, "required": false, "description": "Parallax speed (0-1)" },
+        { "name": "children", "type": "children", "default": "", "required": true, "description": "Section content" },
+        { "name": "height", "type": "string", "default": "100vh", "required": false, "description": "Section height" }
+      ],
+      "dependencies": ["gsap", "@gsap/react"],
+      "code": "\"use client\";\nimport { useRef, useEffect } from \"react\";\nimport gsap from \"gsap\";\nimport { ScrollTrigger } from \"gsap/ScrollTrigger\";\n\ngsap.registerPlugin(ScrollTrigger);\n\nexport function ParallaxSection({ backgroundImage, speed = 0.5, children, height = \"100vh\" }) {\n  const bgRef = useRef(null);\n  const containerRef = useRef(null);\n  \n  useEffect(() => {\n    gsap.to(bgRef.current, {\n      yPercent: -50 * speed,\n      ease: \"none\",\n      scrollTrigger: {\n        trigger: containerRef.current,\n        start: \"top bottom\",\n        end: \"bottom top\",\n        scrub: true\n      }\n    });\n  }, [speed]);\n  \n  return (\n    <div ref={containerRef} className=\"relative overflow-hidden\" style={{ height }}>\n      <div\n        ref={bgRef}\n        className=\"absolute inset-0 -top-[20%] h-[140%] bg-cover bg-center\"\n        style={{ backgroundImage: `url(${backgroundImage})` }}\n      />\n      <div className=\"relative z-10 h-full\">{children}</div>\n    </div>\n  );\n}",
+      "suggestedWith": ["gsap-scroll-reveal", "osmo-hero-section"],
+      "docsUrl": "https://gsap.com/docs/v3/Plugins/ScrollTrigger",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gsap-text-split",
+      "name": "TextSplit",
+      "displayName": "Text Split Animation",
+      "categories": ["animation", "text"],
+      "tags": ["text", "split", "characters", "words", "typewriter"],
+      "description": "Animate text by splitting into characters or words",
+      "previewImage": "/components/gsap/text-split.png",
+      "props": [
+        { "name": "text", "type": "string", "default": "Animated Text", "required": true, "description": "Text to animate" },
+        { "name": "type", "type": "select", "options": ["chars", "words", "lines"], "default": "chars", "required": false, "description": "Split type" },
+        { "name": "stagger", "type": "number", "default": 0.03, "required": false, "description": "Stagger timing" },
+        { "name": "animation", "type": "select", "options": ["fade", "slide", "scale", "rotate"], "default": "fade", "required": false, "description": "Animation type" }
+      ],
+      "dependencies": ["gsap", "@gsap/react", "split-type"],
+      "code": "\"use client\";\nimport { useRef, useEffect } from \"react\";\nimport gsap from \"gsap\";\n\nexport function TextSplit({ text, type = \"chars\", stagger = 0.03, animation = \"fade\" }) {\n  const ref = useRef(null);\n  \n  useEffect(() => {\n    const el = ref.current;\n    const items = type === \"chars\" ? text.split(\"\") : text.split(\" \");\n    el.innerHTML = items.map(item => \n      `<span class=\"inline-block\">${item}${type === \"words\" ? \"&nbsp;\" : \"\"}</span>`\n    ).join(\"\");\n    \n    const animations = {\n      fade: { opacity: 0 },\n      slide: { opacity: 0, y: 20 },\n      scale: { opacity: 0, scale: 0 },\n      rotate: { opacity: 0, rotateX: 90 }\n    };\n    \n    gsap.fromTo(el.children, animations[animation], {\n      opacity: 1, y: 0, scale: 1, rotateX: 0,\n      duration: 0.5,\n      stagger,\n      ease: \"power2.out\"\n    });\n  }, [text, type, stagger, animation]);\n  \n  return <span ref={ref} />;\n}",
+      "suggestedWith": ["gsap-scroll-reveal", "aceternity-text-generate"],
+      "docsUrl": "https://gsap.com/docs/v3/GSAP/gsap.fromTo()",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gsap-magnetic-button",
+      "name": "MagneticButton",
+      "displayName": "Magnetic Button",
+      "categories": ["button", "animation", "effect"],
+      "tags": ["magnetic", "hover", "cursor", "interactive", "follow"],
+      "description": "A button that magnetically follows the cursor",
+      "previewImage": "/components/gsap/magnetic-button.png",
+      "props": [
+        { "name": "children", "type": "string", "default": "Hover me", "required": true, "description": "Button content" },
+        { "name": "strength", "type": "number", "default": 0.3, "required": false, "description": "Magnetic strength" }
+      ],
+      "dependencies": ["gsap"],
+      "code": "\"use client\";\nimport { useRef } from \"react\";\nimport gsap from \"gsap\";\n\nexport function MagneticButton({ children, strength = 0.3 }) {\n  const ref = useRef(null);\n  \n  const handleMouseMove = (e) => {\n    const { left, top, width, height } = ref.current.getBoundingClientRect();\n    const x = (e.clientX - left - width / 2) * strength;\n    const y = (e.clientY - top - height / 2) * strength;\n    gsap.to(ref.current, { x, y, duration: 0.3, ease: \"power2.out\" });\n  };\n  \n  const handleMouseLeave = () => {\n    gsap.to(ref.current, { x: 0, y: 0, duration: 0.5, ease: \"elastic.out(1, 0.3)\" });\n  };\n  \n  return (\n    <button\n      ref={ref}\n      onMouseMove={handleMouseMove}\n      onMouseLeave={handleMouseLeave}\n      className=\"px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold\"\n    >\n      {children}\n    </button>\n  );\n}",
+      "suggestedWith": ["skiper-gradient-button", "gsap-scroll-reveal"],
+      "docsUrl": "https://gsap.com/docs/v3/GSAP/gsap.to()",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gsap-counter",
+      "name": "AnimatedCounter",
+      "displayName": "Animated Counter",
+      "categories": ["animation", "text"],
+      "tags": ["counter", "number", "stats", "increment", "animate"],
+      "description": "Animate numbers counting up with scroll trigger",
+      "previewImage": "/components/gsap/counter.png",
+      "props": [
+        { "name": "end", "type": "number", "default": 100, "required": true, "description": "End number" },
+        { "name": "start", "type": "number", "default": 0, "required": false, "description": "Start number" },
+        { "name": "duration", "type": "number", "default": 2, "required": false, "description": "Duration in seconds" },
+        { "name": "suffix", "type": "string", "default": "", "required": false, "description": "Suffix text (e.g., '+', '%')" },
+        { "name": "prefix", "type": "string", "default": "", "required": false, "description": "Prefix text (e.g., '$')" }
+      ],
+      "dependencies": ["gsap", "@gsap/react"],
+      "code": "\"use client\";\nimport { useRef, useEffect, useState } from \"react\";\nimport gsap from \"gsap\";\nimport { ScrollTrigger } from \"gsap/ScrollTrigger\";\n\ngsap.registerPlugin(ScrollTrigger);\n\nexport function AnimatedCounter({ end, start = 0, duration = 2, suffix = \"\", prefix = \"\" }) {\n  const ref = useRef(null);\n  const [value, setValue] = useState(start);\n  \n  useEffect(() => {\n    const obj = { value: start };\n    \n    gsap.to(obj, {\n      value: end,\n      duration,\n      ease: \"power2.out\",\n      scrollTrigger: {\n        trigger: ref.current,\n        start: \"top 80%\",\n        toggleActions: \"play none none reverse\"\n      },\n      onUpdate: () => setValue(Math.round(obj.value))\n    });\n  }, [end, start, duration]);\n  \n  return <span ref={ref}>{prefix}{value.toLocaleString()}{suffix}</span>;\n}",
+      "suggestedWith": ["osmo-features-grid", "gsap-scroll-reveal"],
+      "docsUrl": "https://gsap.com/docs/v3/GSAP/gsap.to()",
+      "version": "1.0.0"
+    },
+    {
+      "id": "gsap-smooth-scroll",
+      "name": "SmoothScroll",
+      "displayName": "Smooth Scroll Container",
+      "categories": ["layout", "animation"],
+      "tags": ["smooth", "scroll", "lerp", "inertia", "container"],
+      "description": "Add smooth scrolling to your page or container",
+      "previewImage": "/components/gsap/smooth-scroll.png",
+      "props": [
+        { "name": "children", "type": "children", "default": "", "required": true, "description": "Page content" },
+        { "name": "smoothness", "type": "number", "default": 1, "required": false, "description": "Smoothness factor (1-2)" }
+      ],
+      "dependencies": ["gsap", "@gsap/react"],
+      "code": "\"use client\";\nimport { useEffect, useRef } from \"react\";\nimport gsap from \"gsap\";\nimport { ScrollSmoother } from \"gsap/ScrollSmoother\";\nimport { ScrollTrigger } from \"gsap/ScrollTrigger\";\n\ngsap.registerPlugin(ScrollTrigger, ScrollSmoother);\n\nexport function SmoothScroll({ children, smoothness = 1 }) {\n  const wrapperRef = useRef(null);\n  const contentRef = useRef(null);\n  \n  useEffect(() => {\n    const smoother = ScrollSmoother.create({\n      wrapper: wrapperRef.current,\n      content: contentRef.current,\n      smooth: smoothness,\n      effects: true\n    });\n    \n    return () => smoother.kill();\n  }, [smoothness]);\n  \n  return (\n    <div ref={wrapperRef} id=\"smooth-wrapper\">\n      <div ref={contentRef} id=\"smooth-content\">\n        {children}\n      </div>\n    </div>\n  );\n}",
+      "suggestedWith": ["gsap-parallax-section", "gsap-scroll-reveal"],
+      "docsUrl": "https://gsap.com/docs/v3/Plugins/ScrollSmoother",
+      "version": "1.0.0"
+    }
+  ]
+}
