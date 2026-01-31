@@ -3,6 +3,7 @@ import { saveAs } from 'file-saver'
 import type { Project, Page, DesignSystem, ComponentInstance } from '@/types'
 import { componentRegistry } from '@/lib/components-registry'
 import { db } from '@/lib/db'
+import { getVersionForDep } from './dependency-versions'
 
 export interface ExportOptions {
   includeReadme: boolean
@@ -367,26 +368,22 @@ export default function ${this.toPascalCase(page.name)}Page() {
 
   private async generateComponents(zip: JSZip): Promise<void> {
     const componentsFolder = zip.folder('components')!
-    const uiFolder = componentsFolder.folder('ui')!
 
     // Get all unique components used
     const usedComponents = this.getAllUsedComponents()
     const uniqueRegistryIds = new Set(usedComponents.map((c) => c.componentRegistryId))
 
-    // Generate each component file
+    // Generate each component file in source-based subfolders
     for (const registryId of uniqueRegistryIds) {
       const registryItem = componentRegistry.getById(registryId)
       if (!registryItem) continue
 
       const componentCode = this.generateComponentCode(registryItem)
       const filename = `${registryItem.name.toLowerCase().replace(/\s+/g, '-')}.tsx`
-      
-      uiFolder.file(filename, componentCode)
-    }
 
-    // Generate index file
-    const indexContent = this.generateComponentsIndex(uniqueRegistryIds)
-    uiFolder.file('index.ts', indexContent)
+      const sourceFolder = componentsFolder.folder(registryItem.source)!
+      sourceFolder.file(filename, componentCode)
+    }
   }
 
   private generateComponentCode(registryItem: ReturnType<typeof componentRegistry.getById>): string {
@@ -403,20 +400,6 @@ export default function ${this.toPascalCase(page.name)}Page() {
     }
 
     return code
-  }
-
-  private generateComponentsIndex(registryIds: Set<string>): string {
-    const exports: string[] = []
-
-    for (const id of registryIds) {
-      const registryItem = componentRegistry.getById(id)
-      if (!registryItem) continue
-
-      const filename = registryItem.name.toLowerCase().replace(/\s+/g, '-')
-      exports.push(`export * from './${filename}'`)
-    }
-
-    return exports.join('\n')
   }
 
   private async generateLibFiles(zip: JSZip): Promise<void> {
@@ -464,7 +447,11 @@ ${this.getDevCommand()}
 \`\`\`
 ├── app/              # Next.js App Router pages
 ├── components/       # React components
-│   └── ui/          # UI components
+│   ├── shadcn/      # ShadCN UI components
+│   ├── aceternity/  # Aceternity UI components
+│   ├── osmo/        # Osmo Supply components
+│   ├── skiper/      # Skiper UI components
+│   └── gsap/        # GSAP effect components
 ├── lib/             # Utility functions
 └── public/          # Static assets
 \`\`\`
@@ -576,7 +563,7 @@ MIT
       if (!registryItem) continue
 
       const componentName = this.toPascalCase(registryItem.name)
-      imports.push(`import { ${componentName} } from '@/components/ui/${registryItem.name.toLowerCase().replace(/\s+/g, '-')}'`)
+      imports.push(`import { ${componentName} } from '@/components/${registryItem.source}/${registryItem.name.toLowerCase().replace(/\s+/g, '-')}'`)
     }
 
     return imports.join('\n')

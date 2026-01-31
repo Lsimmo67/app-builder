@@ -1,10 +1,12 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useCanvasStore, useEditorStore } from '@/lib/store'
 import { componentRegistry } from '@/lib/components-registry'
+import { generateSingleComponentHtml } from '@/components/editor/preview/preview-generator'
 import { DEVICE_WIDTHS } from '@/types'
 import type { ComponentInstance } from '@/types'
 import { Plus, GripVertical, Lock, Eye, EyeOff, Trash2, Copy } from 'lucide-react'
@@ -21,6 +23,15 @@ function SortableComponent({ instance }: SortableComponentProps) {
   const { selectedComponentId, setSelectedComponentId, setHoveredComponentId } = useEditorStore()
   const { updateComponent, removeComponent, duplicateComponent } = useCanvasStore()
   const registryItem = componentRegistry.getById(instance.componentRegistryId)
+
+  // Generate inline HTML preview for this component
+  const previewHtml = useMemo(() => {
+    try {
+      return generateSingleComponentHtml(instance)
+    } catch {
+      return ''
+    }
+  }, [instance])
 
   const {
     attributes,
@@ -230,7 +241,7 @@ export function Canvas() {
             </div>
           ) : (
             <div className="space-y-6 pt-8">
-              {components
+              {[...components]
                 .sort((a, b) => a.order - b.order)
                 .map((instance) => (
                   <SortableComponent key={instance.id} instance={instance} />

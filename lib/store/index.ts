@@ -14,8 +14,10 @@ import { nanoid } from 'nanoid'
 import { getDefaultPreset } from '@/lib/design-tokens/presets'
 
 // ============================================
-// EDITOR STATE
+// EDITOR STATE (with undo/redo)
 // ============================================
+
+const MAX_HISTORY = 50
 
 interface EditorState {
   // View settings
@@ -24,15 +26,15 @@ interface EditorState {
   sidebarOpen: boolean
   propertiesOpen: boolean
   layerTreeOpen: boolean
-  
+
   // Selection
   selectedComponentId: string | null
   hoveredComponentId: string | null
-  
+
   // History
   historyIndex: number
   historyStack: string[]
-  
+
   // Actions
   setViewMode: (mode: ViewMode) => void
   setPreviewDevice: (device: PreviewDevice) => void
@@ -46,11 +48,18 @@ interface EditorState {
   setSelectedComponentId: (id: string | null) => void
   hoverComponent: (id: string | null) => void
   setHoveredComponentId: (id: string | null) => void
+
+  // Undo/Redo
+  pushHistory: (snapshot: string) => void
+  undo: () => void
+  redo: () => void
+  canUndo: () => boolean
+  canRedo: () => boolean
 }
 
 export const useEditorStore = create<EditorState>()(
   persist(
-    immer((set) => ({
+    immer((set, get) => ({
       // Initial state
       viewMode: 'visual',
       previewDevice: 'desktop',
@@ -122,6 +131,72 @@ export const useEditorStore = create<EditorState>()(
         set((state) => {
           state.hoveredComponentId = id
         }),
+
+      // Undo/Redo
+      pushHistory: (snapshot) =>
+        set((state) => {
+          // Truncate any redo history beyond current index
+          const newStack = state.historyStack.slice(0, state.historyIndex + 1)
+          newStack.push(snapshot)
+          // Keep max history size
+          if (newStack.length > MAX_HISTORY) {
+            newStack.shift()
+          }
+          state.historyStack = newStack
+          state.historyIndex = newStack.length - 1
+        }),
+
+      undo: () => {
+        const { historyIndex, historyStack } = get()
+        if (historyIndex <= 0) return
+
+        const newIndex = historyIndex - 1
+        const snapshot = historyStack[newIndex]
+        if (!snapshot) return
+
+        set((state) => {
+          state.historyIndex = newIndex
+        })
+
+        // Restore canvas state
+        try {
+          const components = JSON.parse(snapshot) as ComponentInstance[]
+          useCanvasStore.setState({ components })
+        } catch {
+          // Ignore invalid snapshots
+        }
+      },
+
+      redo: () => {
+        const { historyIndex, historyStack } = get()
+        if (historyIndex >= historyStack.length - 1) return
+
+        const newIndex = historyIndex + 1
+        const snapshot = historyStack[newIndex]
+        if (!snapshot) return
+
+        set((state) => {
+          state.historyIndex = newIndex
+        })
+
+        // Restore canvas state
+        try {
+          const components = JSON.parse(snapshot) as ComponentInstance[]
+          useCanvasStore.setState({ components })
+        } catch {
+          // Ignore invalid snapshots
+        }
+      },
+
+      canUndo: () => {
+        const { historyIndex } = get()
+        return historyIndex > 0
+      },
+
+      canRedo: () => {
+        const { historyIndex, historyStack } = get()
+        return historyIndex < historyStack.length - 1
+      },
     })),
     {
       name: 'app-builder-editor',
@@ -135,8 +210,18 @@ export const useEditorStore = create<EditorState>()(
   )
 )
 
+/**
+ * Push current canvas state to history.
+ * Call this after every canvas mutation.
+ */
+function pushToHistory() {
+  const components = useCanvasStore.getState().components
+  const snapshot = JSON.stringify(components)
+  useEditorStore.getState().pushHistory(snapshot)
+}
+
 // ============================================
-// PROJECT STATE
+// PROJECT STATE (with page CRUD)
 // ============================================
 
 interface ProjectState {
@@ -155,6 +240,11 @@ interface ProjectState {
   deleteProject: (id: string) => Promise<void>
   duplicateProject: (id: string) => Promise<Project>
   setCurrentPage: (page: Page | null) => void
+
+  // Page CRUD
+  addPage: (name: string, slug: string) => Promise<Page>
+  renamePage: (pageId: string, name: string, slug: string) => Promise<void>
+  deletePage: (pageId: string) => Promise<void>
 }
 
 export const useProjectStore = create<ProjectState>()(
@@ -321,13 +411,11 @@ export const useProjectStore = create<ProjectState>()(
       const newDesignSystemId = nanoid()
       const now = new Date()
 
-      // Get original design system
       const originalDS = await db.designSystems
         .where('projectId')
         .equals(id)
         .first()
 
-      // Get original pages and components
       const originalPages = await db.pages
         .where('projectId')
         .equals(id)
@@ -348,10 +436,8 @@ export const useProjectStore = create<ProjectState>()(
         db.pages,
         db.componentInstances,
       ], async () => {
-        // Create new project
         await db.projects.add(newProject)
 
-        // Duplicate design system
         if (originalDS) {
           await db.designSystems.add({
             ...originalDS,
@@ -360,7 +446,6 @@ export const useProjectStore = create<ProjectState>()(
           })
         }
 
-        // Duplicate pages and components
         for (const page of originalPages) {
           const newPageId = nanoid()
 
@@ -372,7 +457,6 @@ export const useProjectStore = create<ProjectState>()(
             updatedAt: now,
           })
 
-          // Duplicate components
           const components = await db.componentInstances
             .where('pageId')
             .equals(page.id)
@@ -399,23 +483,71 @@ export const useProjectStore = create<ProjectState>()(
       set((state) => {
         state.currentPage = page
       }),
+
+    // Page CRUD
+    addPage: async (name, slug) => {
+      const { currentProject } = get()
+      if (!currentProject) throw new Error('No project loaded')
+
+      const existingPages = await db.pages
+        .where('projectId')
+        .equals(currentProject.id)
+        .toArray()
+
+      const pageId = nanoid()
+      const now = new Date()
+      const page: Page = {
+        id: pageId,
+        projectId: currentProject.id,
+        name,
+        slug,
+        order: existingPages.length,
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      await db.pages.add(page)
+      set((state) => {
+        state.currentPage = page
+      })
+      return page
+    },
+
+    renamePage: async (pageId, name, slug) => {
+      await db.pages.update(pageId, { name, slug, updatedAt: new Date() })
+      set((state) => {
+        if (state.currentPage?.id === pageId) {
+          state.currentPage = { ...state.currentPage, name, slug }
+        }
+      })
+    },
+
+    deletePage: async (pageId) => {
+      await db.transaction('rw', [db.pages, db.componentInstances, db.history], async () => {
+        await db.componentInstances.where('pageId').equals(pageId).delete()
+        await db.history.where('pageId').equals(pageId).delete()
+        await db.pages.delete(pageId)
+      })
+      set((state) => {
+        if (state.currentPage?.id === pageId) {
+          state.currentPage = null
+        }
+      })
+    },
   }))
 )
 
 // ============================================
-// CANVAS STATE
+// CANVAS STATE (with error handling + history)
 // ============================================
 
 interface CanvasState {
-  // Components on canvas
   components: ComponentInstance[]
-  
-  // Drag state
   isDragging: boolean
   dragSource: 'library' | 'canvas' | null
   dragComponentId: string | null
+  error: string | null
 
-  // Actions
   loadComponents: (pageId: string) => Promise<void>
   addComponent: (component: ComponentInstance | Omit<ComponentInstance, 'id' | 'order'>) => Promise<void>
   updateComponent: (id: string, updates: Partial<ComponentInstance>) => Promise<void>
@@ -433,120 +565,159 @@ export const useCanvasStore = create<CanvasState>()(
     isDragging: false,
     dragSource: null,
     dragComponentId: null,
+    error: null,
 
     loadComponents: async (pageId) => {
-      const components = await db.componentInstances
-        .where('pageId')
-        .equals(pageId)
-        .sortBy('order')
+      try {
+        set((state) => { state.error = null })
+        const components = await db.componentInstances
+          .where('pageId')
+          .equals(pageId)
+          .sortBy('order')
 
-      set((state) => {
-        state.components = components
-      })
+        set((state) => {
+          state.components = components
+        })
+        pushToHistory()
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
 
     addComponent: async (componentData) => {
-      const { components } = get()
-      const maxOrder = Math.max(...components.map((c) => c.order), -1)
+      try {
+        set((state) => { state.error = null })
+        const { components } = get()
+        const maxOrder = Math.max(...components.map((c) => c.order), -1)
 
-      // Check if it's already a full ComponentInstance (with id)
-      const component: ComponentInstance = 'id' in componentData && componentData.id
-        ? { ...componentData, order: componentData.order ?? maxOrder + 1 } as ComponentInstance
-        : {
-            ...componentData,
-            id: nanoid(),
-            order: maxOrder + 1,
-          } as ComponentInstance
+        const component: ComponentInstance = 'id' in componentData && componentData.id
+          ? { ...componentData, order: componentData.order ?? maxOrder + 1 } as ComponentInstance
+          : {
+              ...componentData,
+              id: nanoid(),
+              order: maxOrder + 1,
+            } as ComponentInstance
 
-      await db.componentInstances.add(component)
+        await db.componentInstances.add(component)
 
-      set((state) => {
-        state.components.push(component)
-      })
+        set((state) => {
+          state.components.push(component)
+        })
+        pushToHistory()
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
 
     updateComponent: async (id, updates) => {
-      await db.componentInstances.update(id, updates)
+      try {
+        set((state) => { state.error = null })
+        await db.componentInstances.update(id, updates)
 
-      set((state) => {
-        const index = state.components.findIndex((c) => c.id === id)
-        if (index !== -1) {
-          state.components[index] = { ...state.components[index], ...updates }
-        }
-      })
+        set((state) => {
+          const index = state.components.findIndex((c) => c.id === id)
+          if (index !== -1) {
+            state.components[index] = { ...state.components[index], ...updates }
+          }
+        })
+        pushToHistory()
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
 
     removeComponent: async (id) => {
-      await db.componentInstances.delete(id)
+      try {
+        set((state) => { state.error = null })
+        await db.componentInstances.delete(id)
 
-      set((state) => {
-        state.components = state.components.filter((c) => c.id !== id)
-      })
+        set((state) => {
+          state.components = state.components.filter((c) => c.id !== id)
+        })
+        pushToHistory()
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
 
     moveComponent: async (id, newOrder, newParentId) => {
-      await db.componentInstances.update(id, {
-        order: newOrder,
-        parentId: newParentId,
-      })
+      try {
+        set((state) => { state.error = null })
+        await db.componentInstances.update(id, {
+          order: newOrder,
+          parentId: newParentId,
+        })
 
-      set((state) => {
-        const component = state.components.find((c) => c.id === id)
-        if (component) {
-          component.order = newOrder
-          component.parentId = newParentId
-        }
-        // Re-sort components
-        state.components.sort((a, b) => a.order - b.order)
-      })
+        set((state) => {
+          const component = state.components.find((c) => c.id === id)
+          if (component) {
+            component.order = newOrder
+            component.parentId = newParentId
+          }
+          state.components.sort((a, b) => a.order - b.order)
+        })
+        pushToHistory()
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
 
     duplicateComponent: async (id) => {
-      const original = get().components.find((c) => c.id === id)
-      if (!original) return
+      try {
+        set((state) => { state.error = null })
+        const original = get().components.find((c) => c.id === id)
+        if (!original) return
 
-      const maxOrder = Math.max(...get().components.map((c) => c.order), -1)
+        const maxOrder = Math.max(...get().components.map((c) => c.order), -1)
 
-      const duplicate: ComponentInstance = {
-        ...original,
-        id: nanoid(),
-        order: maxOrder + 1,
+        const duplicate: ComponentInstance = {
+          ...original,
+          id: nanoid(),
+          order: maxOrder + 1,
+        }
+
+        await db.componentInstances.add(duplicate)
+
+        set((state) => {
+          state.components.push(duplicate)
+        })
+        pushToHistory()
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
       }
-
-      await db.componentInstances.add(duplicate)
-
-      set((state) => {
-        state.components.push(duplicate)
-      })
     },
 
     reorderComponents: async (oldIndex, newIndex) => {
-      const { components } = get()
-      if (oldIndex === newIndex) return
-      if (oldIndex < 0 || oldIndex >= components.length) return
-      if (newIndex < 0 || newIndex >= components.length) return
+      try {
+        set((state) => { state.error = null })
+        const { components } = get()
+        if (oldIndex === newIndex) return
+        if (oldIndex < 0 || oldIndex >= components.length) return
+        if (newIndex < 0 || newIndex >= components.length) return
 
-      // Create new array with reordered items
-      const newComponents = [...components]
-      const [movedItem] = newComponents.splice(oldIndex, 1)
-      newComponents.splice(newIndex, 0, movedItem)
+        const newComponents = [...components]
+        const [movedItem] = newComponents.splice(oldIndex, 1)
+        newComponents.splice(newIndex, 0, movedItem)
 
-      // Update order values
-      const updates: Promise<void>[] = newComponents.map((comp, index) => {
-        if (comp.order !== index) {
-          return db.componentInstances.update(comp.id, { order: index }).then(() => {})
-        }
-        return Promise.resolve()
-      })
+        const updates: Promise<void>[] = newComponents.map((comp, index) => {
+          if (comp.order !== index) {
+            return db.componentInstances.update(comp.id, { order: index }).then(() => {})
+          }
+          return Promise.resolve()
+        })
 
-      await Promise.all(updates)
+        await Promise.all(updates)
 
-      set((state) => {
-        state.components = newComponents.map((comp, index) => ({
-          ...comp,
-          order: index,
-        }))
-      })
+        set((state) => {
+          state.components = newComponents.map((comp, index) => ({
+            ...comp,
+            order: index,
+          }))
+        })
+        pushToHistory()
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
 
     setDragState: (isDragging, source, componentId) =>
@@ -564,14 +735,14 @@ export const useCanvasStore = create<CanvasState>()(
 )
 
 // ============================================
-// DESIGN SYSTEM STATE
+// DESIGN SYSTEM STATE (with error handling)
 // ============================================
 
 interface DesignSystemState {
   designSystem: DesignSystem | null
   isLoading: boolean
+  error: string | null
 
-  // Actions
   loadDesignSystem: (projectId: string) => Promise<void>
   updateDesignSystem: (updates: Partial<DesignSystem>) => Promise<void>
   applyPreset: (presetId: string) => Promise<void>
@@ -581,56 +752,75 @@ export const useDesignSystemStore = create<DesignSystemState>()(
   immer((set, get) => ({
     designSystem: null,
     isLoading: false,
+    error: null,
 
     loadDesignSystem: async (projectId) => {
-      set((state) => {
-        state.isLoading = true
-      })
+      try {
+        set((state) => {
+          state.isLoading = true
+          state.error = null
+        })
 
-      const designSystem = await db.designSystems
-        .where('projectId')
-        .equals(projectId)
-        .first()
+        const designSystem = await db.designSystems
+          .where('projectId')
+          .equals(projectId)
+          .first()
 
-      set((state) => {
-        state.designSystem = designSystem || null
-        state.isLoading = false
-      })
+        set((state) => {
+          state.designSystem = designSystem || null
+          state.isLoading = false
+        })
+      } catch (error) {
+        set((state) => {
+          state.error = (error as Error).message
+          state.isLoading = false
+        })
+      }
     },
 
     updateDesignSystem: async (updates) => {
-      const { designSystem } = get()
-      if (!designSystem) return
+      try {
+        set((state) => { state.error = null })
+        const { designSystem } = get()
+        if (!designSystem) return
 
-      await db.designSystems.update(designSystem.id, updates)
+        await db.designSystems.update(designSystem.id, updates)
 
-      set((state) => {
-        if (state.designSystem) {
-          state.designSystem = { ...state.designSystem, ...updates }
-        }
-      })
+        set((state) => {
+          if (state.designSystem) {
+            state.designSystem = { ...state.designSystem, ...updates }
+          }
+        })
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
 
     applyPreset: async (presetId) => {
-      const { designSystem } = get()
-      if (!designSystem) return
+      try {
+        set((state) => { state.error = null })
+        const { designSystem } = get()
+        if (!designSystem) return
 
-      const { presets } = await import('@/lib/design-tokens/presets')
-      const preset = presets.find((p) => p.id === presetId)
-      if (!preset) return
+        const { presets } = await import('@/lib/design-tokens/presets')
+        const preset = presets.find((p) => p.id === presetId)
+        if (!preset) return
 
-      const updates = {
-        presetId,
-        ...preset.tokens,
-      }
-
-      await db.designSystems.update(designSystem.id, updates)
-
-      set((state) => {
-        if (state.designSystem) {
-          state.designSystem = { ...state.designSystem, ...updates }
+        const updates = {
+          presetId,
+          ...preset.tokens,
         }
-      })
+
+        await db.designSystems.update(designSystem.id, updates)
+
+        set((state) => {
+          if (state.designSystem) {
+            state.designSystem = { ...state.designSystem, ...updates }
+          }
+        })
+      } catch (error) {
+        set((state) => { state.error = (error as Error).message })
+      }
     },
   }))
 )

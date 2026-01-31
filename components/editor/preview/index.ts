@@ -1,2 +1,2 @@
 export { PreviewFrame } from './preview-frame'
-export { generatePreviewHtml } from './preview-generator'
+export { generatePreviewHtml, generateSingleComponentHtml } from './preview-generator'
