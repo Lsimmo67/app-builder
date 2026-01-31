@@ -1,17 +1,12 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useCanvasStore, useDesignSystemStore } from '@/lib/store'
+import { useCanvasStore, useDesignSystemStore, useEditorStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { generatePreviewHtml } from './preview-generator'
+import { usePreviewBridge } from '@/hooks/use-preview-bridge'
 import {
   Monitor,
   Tablet,
@@ -26,7 +21,6 @@ import {
   Minimize2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useDebouncedCallback } from '@/hooks/use-debounce'
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile'
 
@@ -41,80 +35,104 @@ interface PreviewFrameProps {
 }
 
 export function PreviewFrame({ className }: PreviewFrameProps) {
-  const iframeRef = useRef<HTMLIFrameElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const [device, setDevice] = useState<DeviceType>('desktop')
   const [zoom, setZoom] = useState(100)
   const [darkMode, setDarkMode] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [autoResize, setAutoResize] = useState(true)
+  const [useLivePreview, setUseLivePreview] = useState(true)
 
   const components = useCanvasStore((state) => state.components)
   const designSystem = useDesignSystemStore((state) => state.designSystem)
+  const { setSelectedComponentId, setHoveredComponentId } = useEditorStore()
 
-  // Generate HTML content
+  // Live preview bridge
+  const { iframeRef, isReady, updateComponents, updateDesignSystem, setDarkMode: setPreviewDark } =
+    usePreviewBridge({
+      onComponentClicked: (id) => setSelectedComponentId(id),
+      onComponentHovered: (id) => setHoveredComponentId(id),
+    })
+
+  // Fallback HTML for non-live preview
+  const fallbackRef = useRef<HTMLIFrameElement>(null)
   const htmlContent = useMemo(() => {
+    if (useLivePreview) return ''
     return generatePreviewHtml(components, designSystem, { darkMode })
-  }, [components, designSystem, darkMode])
+  }, [components, designSystem, darkMode, useLivePreview])
 
-  // Debounced update to prevent too many re-renders
-  const debouncedUpdate = useDebouncedCallback((html: string) => {
-    if (iframeRef.current) {
-      setIsLoading(true)
-      iframeRef.current.srcdoc = html
-    }
-  }, 300)
-
-  // Update iframe when content changes
+  // Sync components to live preview
   useEffect(() => {
-    debouncedUpdate(htmlContent)
-  }, [htmlContent, debouncedUpdate])
+    if (useLivePreview && isReady) {
+      updateComponents(components)
+    }
+  }, [components, isReady, useLivePreview, updateComponents])
 
-  // Handle iframe load
+  // Sync design system
+  useEffect(() => {
+    if (useLivePreview && isReady) {
+      updateDesignSystem(designSystem)
+    }
+  }, [designSystem, isReady, useLivePreview, updateDesignSystem])
+
+  // Sync dark mode
+  useEffect(() => {
+    if (useLivePreview && isReady) {
+      setPreviewDark(darkMode)
+    }
+  }, [darkMode, isReady, useLivePreview, setPreviewDark])
+
+  // Fallback HTML update
+  useEffect(() => {
+    if (!useLivePreview && fallbackRef.current) {
+      setIsLoading(true)
+      fallbackRef.current.srcdoc = htmlContent
+    }
+  }, [htmlContent, useLivePreview])
+
   const handleIframeLoad = useCallback(() => {
     setIsLoading(false)
   }, [])
 
-  // Refresh preview
   const handleRefresh = useCallback(() => {
-    if (iframeRef.current) {
+    if (useLivePreview && iframeRef.current) {
       setIsLoading(true)
-      iframeRef.current.srcdoc = htmlContent
+      iframeRef.current.src = iframeRef.current.src
+    } else if (fallbackRef.current) {
+      setIsLoading(true)
+      fallbackRef.current.srcdoc = htmlContent
     }
-  }, [htmlContent])
+  }, [useLivePreview, htmlContent, iframeRef])
 
-  // Open in new tab
   const handleOpenNewTab = useCallback(() => {
-    const blob = new Blob([htmlContent], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank')
-    // Clean up after a delay
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }, [htmlContent])
+    if (useLivePreview) {
+      window.open('/preview', '_blank')
+    } else {
+      const blob = new Blob([htmlContent], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
+  }, [useLivePreview, htmlContent])
 
-  // Toggle fullscreen
   const handleToggleFullscreen = useCallback(() => {
     setIsFullscreen((prev) => !prev)
   }, [])
 
-  // Calculate container styles
   const deviceSize = DEVICE_SIZES[device]
   const scale = zoom / 100
 
   // Auto-resize to fit container
   useEffect(() => {
     if (!autoResize || !containerRef.current) return
-
     const container = containerRef.current
-    const containerWidth = container.clientWidth - 32 // padding
+    const containerWidth = container.clientWidth - 32
     const containerHeight = container.clientHeight - 32
-
     const scaleX = containerWidth / deviceSize.width
     const scaleY = containerHeight / deviceSize.height
     const fitScale = Math.min(scaleX, scaleY, 1) * 100
-
     if (Math.abs(fitScale - zoom) > 5) {
       setZoom(Math.round(fitScale))
     }
@@ -149,9 +167,8 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
             ))}
           </div>
 
-          {/* Dimensions badge */}
           <Badge variant="outline" className="text-xs font-mono">
-            {deviceSize.width} × {deviceSize.height}
+            {deviceSize.width} x {deviceSize.height}
           </Badge>
 
           {/* Zoom controls */}
@@ -194,7 +211,17 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Dark mode toggle */}
+          {/* Live/Static toggle */}
+          <Button
+            variant={useLivePreview ? 'secondary' : 'ghost'}
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => setUseLivePreview(!useLivePreview)}
+            title={useLivePreview ? 'Using live React preview' : 'Using static HTML preview'}
+          >
+            {useLivePreview ? 'Live' : 'Static'}
+          </Button>
+
           <Button
             variant="ghost"
             size="icon"
@@ -202,14 +229,9 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
             onClick={() => setDarkMode(!darkMode)}
             title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {darkMode ? (
-              <Moon className="h-4 w-4" />
-            ) : (
-              <Sun className="h-4 w-4" />
-            )}
+            {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </Button>
 
-          {/* Refresh */}
           <Button
             variant="ghost"
             size="icon"
@@ -221,7 +243,6 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
             <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
           </Button>
 
-          {/* Open in new tab */}
           <Button
             variant="ghost"
             size="icon"
@@ -232,7 +253,6 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
             <ExternalLink className="h-4 w-4" />
           </Button>
 
-          {/* Fullscreen */}
           <Button
             variant="ghost"
             size="icon"
@@ -240,11 +260,7 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
             onClick={handleToggleFullscreen}
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
-            {isFullscreen ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
         </div>
       </div>
@@ -268,23 +284,35 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
             transformOrigin: 'top center',
           }}
         >
-          {/* Loading overlay */}
           {isLoading && (
             <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-10">
               <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           )}
 
-          {/* Iframe */}
-          <iframe
-            ref={iframeRef}
-            title="Preview"
-            className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin"
-            onLoad={handleIframeLoad}
-          />
+          {/* Live React Preview */}
+          {useLivePreview && (
+            <iframe
+              ref={iframeRef}
+              src="/preview"
+              title="Live Preview"
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-same-origin"
+              onLoad={handleIframeLoad}
+            />
+          )}
 
-          {/* Device frame overlay */}
+          {/* Fallback HTML Preview */}
+          {!useLivePreview && (
+            <iframe
+              ref={fallbackRef}
+              title="Static Preview"
+              className="w-full h-full border-0"
+              sandbox="allow-scripts allow-same-origin"
+              onLoad={handleIframeLoad}
+            />
+          )}
+
           {device !== 'desktop' && (
             <div
               className="absolute inset-0 pointer-events-none border-4 rounded-lg"
@@ -300,7 +328,8 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
           {components.filter((c) => !c.isHidden).length} visible components
         </span>
         <span>
-          {darkMode ? 'Dark' : 'Light'} mode • {deviceSize.label}
+          {useLivePreview ? 'Live React' : 'Static HTML'} {' \u2022 '}
+          {darkMode ? 'Dark' : 'Light'} mode {' \u2022 '} {deviceSize.label}
         </span>
       </div>
     </div>

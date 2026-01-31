@@ -35,6 +35,13 @@ export interface ComponentProp {
   description?: string
 }
 
+export interface DependencyEntry {
+  package: string
+  version: string
+}
+
+export type ComponentLevel = 'section' | 'primitive' | 'effect' | 'layout'
+
 export interface ComponentRegistryItem {
   id: string
   name: string
@@ -47,6 +54,9 @@ export interface ComponentRegistryItem {
   previewDark?: string
   props: ComponentProp[]
   dependencies: string[]
+  dependencyManifest?: DependencyEntry[]
+  modulePath?: string
+  level?: ComponentLevel
   code: string
   suggestedWith: string[]
   docsUrl?: string

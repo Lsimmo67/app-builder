@@ -12,6 +12,8 @@ import type { ComponentInstance } from '@/types'
 import { Plus, GripVertical, Lock, Eye, EyeOff, Trash2, Copy } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
+import { ComponentRenderer } from './component-renderer'
+import { isComponentAvailable } from '@/lib/component-loader'
 
 interface SortableComponentProps {
   instance: ComponentInstance
@@ -155,27 +157,32 @@ function SortableComponent({ instance }: SortableComponentProps) {
       {/* Component Content */}
       <div
         className={cn(
-          'border rounded-lg cursor-pointer transition-all overflow-hidden',
+          'relative border rounded-lg cursor-pointer transition-all overflow-hidden',
           isSelected ? 'ring-2 ring-primary' : 'hover:border-primary/50',
           instance.isHidden && 'pointer-events-none'
         )}
       >
-        {/* Name overlay */}
-        <div className="relative z-10 flex items-center gap-1.5 px-2 py-1 bg-background/80 backdrop-blur-sm border-b text-xs">
-          <Badge variant={instance.source as any} className="text-[10px] px-1 py-0">
-            {instance.source}
-          </Badge>
-          <span className="font-medium truncate">{registryItem?.displayName || 'Unknown'}</span>
-        </div>
-        {/* Inline HTML preview */}
-        {previewHtml ? (
-          <div
-            className="pointer-events-none overflow-hidden max-h-[300px]"
-            dangerouslySetInnerHTML={{ __html: previewHtml }}
-          />
+        {isComponentAvailable(instance.componentRegistryId) ? (
+          <>
+            <div className="pointer-events-none">
+              <ComponentRenderer
+                registryId={instance.componentRegistryId}
+                props={instance.props}
+                componentName={registryItem?.displayName}
+              />
+            </div>
+            {/* Interactive overlay for selection */}
+            <div className="absolute inset-0" />
+          </>
         ) : (
           <div className="h-24 bg-muted/50 rounded flex items-center justify-center">
-            <p className="text-xs text-muted-foreground">No preview available</p>
+            <div className="text-center">
+              <p className="text-sm font-medium">{registryItem?.displayName || 'Unknown'}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {registryItem?.description?.slice(0, 50) || 'Component preview'}
+                {registryItem?.description && registryItem.description.length > 50 ? '...' : ''}
+              </p>
+            </div>
           </div>
         )}
       </div>
