@@ -1,12 +1,14 @@
 'use client'
 
-import { useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { useSortable } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useCanvasStore, useEditorStore } from '@/lib/store'
 import { componentRegistry } from '@/lib/components-registry'
-import { generateSingleComponentHtml } from '@/components/editor/preview/preview-generator'
 import { DEVICE_WIDTHS } from '@/types'
 import type { ComponentInstance } from '@/types'
 import { Plus, GripVertical, Lock, Eye, EyeOff, Trash2, Copy } from 'lucide-react'
@@ -23,15 +25,6 @@ function SortableComponent({ instance }: SortableComponentProps) {
   const { selectedComponentId, setSelectedComponentId, setHoveredComponentId } = useEditorStore()
   const { updateComponent, removeComponent, duplicateComponent } = useCanvasStore()
   const registryItem = componentRegistry.getById(instance.componentRegistryId)
-
-  // Generate inline HTML preview for this component
-  const previewHtml = useMemo(() => {
-    try {
-      return generateSingleComponentHtml(instance)
-    } catch {
-      return ''
-    }
-  }, [instance])
 
   const {
     attributes,
@@ -75,7 +68,7 @@ function SortableComponent({ instance }: SortableComponentProps) {
       {/* Component Toolbar */}
       <div
         className={cn(
-          'absolute -top-10 left-0 right-0 flex items-center justify-between px-2 py-1 bg-card border rounded-t-md opacity-0 group-hover:opacity-100 transition-opacity z-20',
+          'flex items-center justify-between px-2 py-1 bg-card border rounded-t-md opacity-0 group-hover:opacity-100 transition-opacity z-20',
           isSelected && 'opacity-100'
         )}
       >
@@ -193,7 +186,7 @@ function SortableComponent({ instance }: SortableComponentProps) {
 export function Canvas() {
   const { components } = useCanvasStore()
   const { previewDevice, setSelectedComponentId } = useEditorStore()
-  
+
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-drop-zone',
     data: {
@@ -203,6 +196,7 @@ export function Canvas() {
   })
 
   const canvasWidth = DEVICE_WIDTHS[previewDevice]
+  const sortedComponents = [...components].sort((a, b) => a.order - b.order)
 
   return (
     <div className="flex-1 bg-muted/30 overflow-auto p-8">
@@ -211,44 +205,47 @@ export function Canvas() {
         style={{ width: canvasWidth, maxWidth: '100%' }}
         onClick={() => setSelectedComponentId(null)}
       >
-        <div
-          ref={setNodeRef}
-          className={cn(
-            'min-h-[600px] p-4 transition-colors',
-            isOver && 'bg-primary/5 ring-2 ring-dashed ring-primary'
-          )}
+        <SortableContext
+          items={sortedComponents.map((c) => c.id)}
+          strategy={verticalListSortingStrategy}
         >
-          {components.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-20">
-              <div className={cn(
-                'w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors',
-                isOver ? 'bg-primary/20' : 'bg-muted'
-              )}>
-                <Plus className={cn(
-                  'h-8 w-8',
-                  isOver ? 'text-primary' : 'text-muted-foreground'
-                )} />
+          <div
+            ref={setNodeRef}
+            className={cn(
+              'min-h-[600px] p-4 transition-colors',
+              isOver && 'bg-primary/5 ring-2 ring-dashed ring-primary'
+            )}
+          >
+            {sortedComponents.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-center py-20">
+                <div className={cn(
+                  'w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors',
+                  isOver ? 'bg-primary/20' : 'bg-muted'
+                )}>
+                  <Plus className={cn(
+                    'h-8 w-8',
+                    isOver ? 'text-primary' : 'text-muted-foreground'
+                  )} />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  {isOver ? 'Drop to add' : 'Start building'}
+                </h3>
+                <p className="text-muted-foreground max-w-sm">
+                  {isOver
+                    ? 'Release to add the component to your page'
+                    : 'Drag components from the sidebar to start building your page.'
+                  }
+                </p>
               </div>
-              <h3 className="text-lg font-semibold mb-2">
-                {isOver ? 'Drop to add' : 'Start building'}
-              </h3>
-              <p className="text-muted-foreground max-w-sm">
-                {isOver 
-                  ? 'Release to add the component to your page'
-                  : 'Drag components from the sidebar to start building your page.'
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-6 pt-8">
-              {[...components]
-                .sort((a, b) => a.order - b.order)
-                .map((instance) => (
+            ) : (
+              <div className="space-y-4">
+                {sortedComponents.map((instance) => (
                   <SortableComponent key={instance.id} instance={instance} />
                 ))}
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
+        </SortableContext>
       </div>
     </div>
   )

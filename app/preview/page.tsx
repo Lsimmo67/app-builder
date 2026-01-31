@@ -18,6 +18,9 @@ export default function PreviewPage() {
         case 'UPDATE_COMPONENTS':
           setComponents(event.data.payload)
           break
+        case 'UPDATE_DESIGN_SYSTEM':
+          // Design system updates handled by parent CSS variables
+          break
         case 'SET_SELECTED':
           setSelectedId(event.data.payload)
           break
