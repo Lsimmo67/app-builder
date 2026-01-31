@@ -37,6 +37,9 @@ export const DEPENDENCY_VERSIONS: Record<string, string> = {
   '@gsap/react': '^2.1.0',
   'split-type': '^0.3.0',
 
+  // Utilities
+  'react-use-measure': '^2.1.0',
+
   // Particles
   '@tsparticles/react': '^3.0.0',
   '@tsparticles/slim': '^3.0.0',

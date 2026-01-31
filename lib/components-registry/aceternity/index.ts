@@ -908,6 +908,32 @@ const cards = [
     version: '1.0.0',
   },
   {
+    id: 'aceternity-scrollbar-animation',
+    name: 'AceternityScrollbar',
+    displayName: 'Scrollbar Animation',
+    source: 'aceternity',
+    categories: ['animation', 'effect'],
+    tags: ['scrollbar', 'scroll', 'progress', 'drag', 'navigation', 'animated'],
+    description: 'A custom animated scrollbar with draggable progress indicator and contextual code cards that appear as you scroll through sections',
+    previewImage: '/components/aceternity/scrollbar-animation.png',
+    props: [
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['framer-motion', 'react-use-measure'],
+    dependencyManifest: [
+      { package: 'framer-motion', version: '^12.0.0' },
+      { package: 'react-use-measure', version: '^2.1.0' },
+    ],
+    modulePath: 'aceternity-scrollbar-animation',
+    level: 'section',
+    code: `import AceternityScrollbar from '@/components/registry/aceternity/scrollbar-animation'
+
+<AceternityScrollbar />`,
+    suggestedWith: ['aceternity-tracing-beam', 'aceternity-floating-navbar'],
+    docsUrl: 'https://ui.aceternity.com/components',
+    version: '1.0.0',
+  },
+  {
     id: 'aceternity-text-reveal',
     name: 'TextRevealCard',
     displayName: 'Text Reveal Card',

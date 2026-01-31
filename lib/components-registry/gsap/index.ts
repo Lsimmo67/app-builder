@@ -1121,6 +1121,37 @@ function WaveText({ text, amplitude = 20, duration = 1 }) {
     version: '1.0.0',
   },
   {
+    id: 'gsap-inertia-grid',
+    name: 'InertiaGrid',
+    displayName: 'Inertia Media Grid',
+    source: 'gsap',
+    categories: ['animation', 'effect'],
+    tags: ['inertia', 'grid', 'mouse', 'hover', 'media', 'interactive', 'velocity'],
+    description: 'An interactive media grid where images react to mouse velocity with inertia-based displacement and rotation',
+    previewImage: '/components/gsap/inertia-grid.png',
+    props: [
+      { name: 'images', type: 'array', required: false, description: 'Array of image objects with src and alt' },
+      { name: 'headerTitle', type: 'string', required: false, default: '3d & stuff', description: 'Header category title' },
+      { name: 'headerCount', type: 'number', required: false, default: 12, description: 'Number displayed in header' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+    ],
+    modulePath: 'gsap-inertia-grid',
+    level: 'section',
+    code: `import InertiaGrid from '@/components/registry/gsap/inertia-grid'
+
+<InertiaGrid
+  headerTitle="3d & stuff"
+  headerCount={12}
+/>`,
+    suggestedWith: ['gsap-stagger-cards', 'gsap-magnetic-element'],
+    docsUrl: 'https://gsap.com/made-with-gsap/',
+    version: '1.0.0',
+  },
+  {
     id: 'gsap-parallax-section',
     name: 'ParallaxSection',
     displayName: 'Parallax Section',

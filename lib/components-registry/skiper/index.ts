@@ -513,6 +513,32 @@ export const skiperComponents: ComponentRegistryItem[] = [
     version: '1.0.0',
   },
   {
+    id: 'skiper-scrollbar-animation',
+    name: 'ScrollbarAnimation',
+    displayName: 'Scrollbar Animation',
+    source: 'skiper',
+    categories: ['animation', 'effect'],
+    tags: ['scrollbar', 'scroll', 'progress', 'drag', 'navigation', 'animated'],
+    description: 'A custom animated scrollbar with draggable progress indicator and contextual code cards that appear as you scroll through sections',
+    previewImage: '/components/skiper/scrollbar-animation.png',
+    props: [
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['framer-motion', 'react-use-measure'],
+    dependencyManifest: [
+      { package: 'framer-motion', version: '^12.0.0' },
+      { package: 'react-use-measure', version: '^2.1.0' },
+    ],
+    modulePath: 'skiper-scrollbar-animation',
+    level: 'section',
+    code: `import ScrollbarAnimation from '@/components/registry/skiper/scrollbar-animation'
+
+<ScrollbarAnimation />`,
+    suggestedWith: ['skiper-animated-tabs', 'skiper-progress-bar'],
+    docsUrl: 'https://skiper-ui.com/components',
+    version: '1.0.0',
+  },
+  {
     id: 'skiper-noise-card',
     name: 'NoiseCard',
     displayName: 'Noise Texture Card',

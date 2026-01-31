@@ -44,6 +44,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'osmo-integrations-grid': () => import('@/components/registry/osmo/integrations-grid'),
   'osmo-timeline': () => import('@/components/registry/osmo/timeline-section'),
   'osmo-metrics': () => import('@/components/registry/osmo/metrics-section'),
+  'osmo-testimonials-line-reveal': () => import('@/components/registry/osmo/testimonials-line-reveal'),
 
   // === Aceternity effects (30) ===
   'aceternity-hero-parallax': () => import('@/components/registry/aceternity/hero-parallax'),
@@ -76,6 +77,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'aceternity-meteors-bg': () => import('@/components/registry/aceternity/meteors-bg'),
   'aceternity-shooting-stars': () => import('@/components/registry/aceternity/shooting-stars'),
   'aceternity-text-reveal': () => import('@/components/registry/aceternity/text-reveal-card'),
+  'aceternity-scrollbar-animation': () => import('@/components/registry/aceternity/scrollbar-animation'),
 
   // === Skiper effects (30) ===
   'skiper-glass-card': () => import('@/components/registry/skiper/glass-card'),
@@ -108,6 +110,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'skiper-progress-bar': () => import('@/components/registry/skiper/progress-bar'),
   'skiper-stats-counter': () => import('@/components/registry/skiper/stats-counter'),
   'skiper-testimonial-card': () => import('@/components/registry/skiper/testimonial-card'),
+  'skiper-scrollbar-animation': () => import('@/components/registry/skiper/scrollbar-animation'),
 
   // === GSAP animations (20) ===
   'gsap-scroll-reveal': () => import('@/components/registry/gsap/scroll-reveal'),
@@ -130,6 +133,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'gsap-rotating-text': () => import('@/components/registry/gsap/rotating-text'),
   'gsap-typewriter': () => import('@/components/registry/gsap/typewriter-gsap'),
   'gsap-wave-text': () => import('@/components/registry/gsap/wave-text'),
+  'gsap-inertia-grid': () => import('@/components/registry/gsap/inertia-grid'),
 
   // === Shadcn wrappers (10) ===
   'shadcn-button': () => import('@/components/registry/shadcn/button-section'),
