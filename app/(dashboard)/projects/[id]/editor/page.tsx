@@ -16,9 +16,7 @@ import {
   UniqueIdentifier,
 } from '@dnd-kit/core'
 import {
-  SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { nanoid } from 'nanoid'
 import { EditorToolbar } from '@/components/editor/toolbar/editor-toolbar'
@@ -61,7 +59,7 @@ export default function EditorPage() {
   const params = useParams()
   const projectId = params.id as string
 
-  const { currentProject, currentPage, loadProject, isLoading: projectLoading } = useProjectStore()
+  const { currentProject, currentPage, loadProject, isLoading: projectLoading, error: projectError } = useProjectStore()
   const { components, loadComponents, addComponent, reorderComponents } = useCanvasStore()
   const { loadDesignSystem } = useDesignSystemStore()
   const { viewMode, sidebarOpen, propertiesOpen, layerTreeOpen } = useEditorStore()
@@ -211,6 +209,16 @@ export default function EditorPage() {
     )
   }
 
+  if (projectError || (!projectLoading && !currentProject)) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-4">
+        <p className="text-lg font-semibold">Project not found</p>
+        <p className="text-muted-foreground text-sm">{projectError || 'This project does not exist or has been deleted.'}</p>
+        <a href="/" className="text-primary underline text-sm">Back to Dashboard</a>
+      </div>
+    )
+  }
+
   // Render based on view mode
   const renderMainContent = () => {
     switch (viewMode) {
@@ -270,21 +278,16 @@ export default function EditorPage() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext
-        items={components.map((c) => c.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        <div className="h-screen flex flex-col overflow-hidden">
-          {/* Toolbar */}
-          <EditorToolbar />
+      <div className="h-screen flex flex-col overflow-hidden">
+        {/* Toolbar */}
+        <EditorToolbar />
 
-          {/* Main Editor Area */}
-          {renderMainContent()}
-        </div>
-      </SortableContext>
+        {/* Main Editor Area */}
+        {renderMainContent()}
+      </div>
 
       {/* Drag Overlay */}
-      <DragOverlay>
+      <DragOverlay dropAnimation={null}>
         {activeId && activeData?.type === 'registry' && activeData.registryId && (
           <DragOverlayContent registryId={activeData.registryId} />
         )}

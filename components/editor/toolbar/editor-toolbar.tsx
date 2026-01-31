@@ -57,10 +57,10 @@ const deviceIcons: Record<PreviewDevice, typeof Monitor> = {
 export function EditorToolbar() {
   const router = useRouter()
   const currentProject = useProjectStore((state) => state.currentProject)
-  const { 
-    viewMode, 
-    setViewMode, 
-    previewDevice, 
+  const {
+    viewMode,
+    setViewMode,
+    previewDevice,
     setPreviewDevice,
     layerTreeOpen,
     setLayerTreeOpen,
@@ -68,6 +68,10 @@ export function EditorToolbar() {
     setSidebarOpen,
     propertiesOpen,
     setPropertiesOpen,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useEditorStore()
   
   const [showExportDialog, setShowExportDialog] = useState(false)
@@ -223,8 +227,8 @@ export function EditorToolbar() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
-                  disabled={!useEditorStore.getState().canUndo()}
-                  onClick={() => useEditorStore.getState().undo()}
+                  disabled={!canUndo()}
+                  onClick={() => undo()}
                 >
                   <Undo2 className="h-4 w-4" />
                 </Button>
@@ -238,8 +242,8 @@ export function EditorToolbar() {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8"
-                  disabled={!useEditorStore.getState().canRedo()}
-                  onClick={() => useEditorStore.getState().redo()}
+                  disabled={!canRedo()}
+                  onClick={() => redo()}
                 >
                   <Redo2 className="h-4 w-4" />
                 </Button>
