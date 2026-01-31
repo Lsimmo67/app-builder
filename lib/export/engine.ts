@@ -502,18 +502,45 @@ MIT
   private collectDependencies(components: ComponentInstance[]): Record<string, string> {
     const deps: Record<string, string> = {
       clsx: '^2.1.0',
-      'tailwind-merge': '^2.2.0',
+      'tailwind-merge': '^3.0.0',
+      'class-variance-authority': '^0.7.0',
+      'lucide-react': '^0.400.0',
+    }
+
+    // Version map for known packages
+    const KNOWN_VERSIONS: Record<string, string> = {
+      'framer-motion': '^12.0.0',
+      'gsap': '^3.12.0',
+      '@gsap/react': '^2.1.0',
+      'clsx': '^2.1.0',
+      'tailwind-merge': '^3.0.0',
+      'lucide-react': '^0.400.0',
+      'three': '^0.160.0',
+      '@react-three/fiber': '^8.15.0',
+      '@react-three/drei': '^9.90.0',
+      '@radix-ui/react-accordion': '^1.2.0',
+      'tsparticles': '^3.0.0',
+      '@tsparticles/react': '^3.0.0',
+      '@tsparticles/slim': '^3.0.0',
+      'react-colorful': '^5.6.0',
     }
 
     const uniqueIds = new Set(components.map((c) => c.componentRegistryId))
-    
+
     for (const id of uniqueIds) {
       const registryItem = componentRegistry.getById(id)
       if (!registryItem) continue
 
-      for (const dep of registryItem.dependencies) {
-        if (!deps[dep]) {
-          deps[dep] = 'latest'
+      // Prefer dependencyManifest (version-locked) over dependencies (string[])
+      if (registryItem.dependencyManifest?.length) {
+        for (const dep of registryItem.dependencyManifest) {
+          deps[dep.package] = dep.version
+        }
+      } else {
+        for (const dep of registryItem.dependencies) {
+          if (!deps[dep]) {
+            deps[dep] = KNOWN_VERSIONS[dep] || 'latest'
+          }
         }
       }
     }
@@ -525,7 +552,15 @@ MIT
         return item?.source === 'aceternity' || item?.source === 'gsap'
       })
       if (hasAnimations) {
-        deps['framer-motion'] = '^11.0.0'
+        deps['framer-motion'] = KNOWN_VERSIONS['framer-motion']
+      }
+      const hasGsap = [...uniqueIds].some((id) => {
+        const item = componentRegistry.getById(id)
+        return item?.source === 'gsap'
+      })
+      if (hasGsap) {
+        deps['gsap'] = KNOWN_VERSIONS['gsap']
+        deps['@gsap/react'] = KNOWN_VERSIONS['@gsap/react']
       }
     }
 

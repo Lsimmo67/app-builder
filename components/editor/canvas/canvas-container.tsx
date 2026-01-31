@@ -10,6 +10,8 @@ import type { ComponentInstance } from '@/types'
 import { Plus, GripVertical, Lock, Eye, EyeOff, Trash2, Copy } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
+import { ComponentRenderer } from './component-renderer'
+import { isComponentAvailable } from '@/lib/component-loader'
 
 interface SortableComponentProps {
   instance: ComponentInstance
@@ -144,20 +146,34 @@ function SortableComponent({ instance }: SortableComponentProps) {
       {/* Component Content */}
       <div
         className={cn(
-          'p-4 border rounded-lg cursor-pointer transition-all',
+          'relative border rounded-lg cursor-pointer transition-all overflow-hidden',
           isSelected ? 'ring-2 ring-primary' : 'hover:border-primary/50',
           instance.isHidden && 'pointer-events-none'
         )}
       >
-        <div className="h-24 bg-muted/50 rounded flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-sm font-medium">{registryItem?.displayName || 'Unknown'}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {registryItem?.description?.slice(0, 50) || 'Component preview'}
-              {registryItem?.description && registryItem.description.length > 50 ? '...' : ''}
-            </p>
+        {isComponentAvailable(instance.componentRegistryId) ? (
+          <>
+            <div className="pointer-events-none">
+              <ComponentRenderer
+                registryId={instance.componentRegistryId}
+                props={instance.props}
+                componentName={registryItem?.displayName}
+              />
+            </div>
+            {/* Interactive overlay for selection */}
+            <div className="absolute inset-0" />
+          </>
+        ) : (
+          <div className="h-24 bg-muted/50 rounded flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-sm font-medium">{registryItem?.displayName || 'Unknown'}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {registryItem?.description?.slice(0, 50) || 'Component preview'}
+                {registryItem?.description && registryItem.description.length > 50 ? '...' : ''}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
