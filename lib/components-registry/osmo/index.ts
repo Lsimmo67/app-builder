@@ -1263,6 +1263,41 @@ export const osmoComponents: ComponentRegistryItem[] = [
     version: '1.0.0',
   },
   {
+    id: 'osmo-testimonials-line-reveal',
+    name: 'TestimonialsLineReveal',
+    displayName: 'Testimonials Line Reveal',
+    source: 'osmo',
+    categories: ['testimonial', 'section', 'animation'],
+    tags: ['testimonials', 'line-reveal', 'split-text', 'gsap', 'animated', 'slider'],
+    description: 'A testimonials section with GSAP-powered line-by-line text reveal animation and circular image clip-path transitions',
+    previewImage: '/components/osmo/testimonials-line-reveal.png',
+    props: [
+      { name: 'testimonials', type: 'array', required: false, description: 'Array of testimonial items with quote, name, company, and image' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+    ],
+    modulePath: 'osmo-testimonials-line-reveal',
+    level: 'section',
+    code: `import TestimonialsLineReveal from '@/components/registry/osmo/testimonials-line-reveal'
+
+<TestimonialsLineReveal
+  testimonials={[
+    {
+      quote: "Amazing service that transformed our workflow.",
+      name: "Jane Doe",
+      company: "Acme Corp",
+      image: "/avatar.jpg"
+    }
+  ]}
+/>`,
+    suggestedWith: ['osmo-cta-centered', 'osmo-logo-cloud'],
+    docsUrl: 'https://www.osmo.supply/vault',
+    version: '1.0.0',
+  },
+  {
     id: 'osmo-testimonials-carousel',
     name: 'TestimonialsCarousel',
     displayName: 'Testimonials Carousel',
