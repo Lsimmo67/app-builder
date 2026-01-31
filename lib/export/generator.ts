@@ -1,6 +1,7 @@
 import JSZip from 'jszip'
 import { componentRegistry } from '@/lib/components-registry'
 import type { Project, DesignSystem, ComponentInstance } from '@/types'
+import { getVersionForDep } from './dependency-versions'
 
 export interface ExportOptions {
   includeReadme?: boolean
@@ -216,16 +217,19 @@ ${componentRenders.join('\n')}
     const headingFont = fonts.heading || 'Inter'
     const bodyFont = fonts.body || 'Inter'
 
+    const headingFontImport = headingFont.replace(/\s+/g, '_')
+    const bodyFontImport = bodyFont.replace(/\s+/g, '_')
+
     return `import type { Metadata } from 'next'
-import { ${headingFont.split(' ')[0]}, ${bodyFont.split(' ')[0]} } from 'next/font/google'
+import { ${headingFontImport}, ${bodyFontImport} } from 'next/font/google'
 import './globals.css'
 
-const headingFont = ${headingFont.split(' ')[0]}({
+const headingFont = ${headingFontImport}({
   subsets: ['latin'],
   variable: '--font-heading',
 })
 
-const bodyFont = ${bodyFont.split(' ')[0]}({
+const bodyFont = ${bodyFontImport}({
   subsets: ['latin'],
   variable: '--font-body',
 })
@@ -263,31 +267,20 @@ export default function RootLayout({
       if (!registryComp) return
 
       const fileName = this.toKebabCase(registryComp.name)
-      const componentName = this.toPascalCase(registryComp.name)
+
+      // Use real code from the registry instead of stubs
+      let code = registryComp.code
+
+      // Add 'use client' directive if it uses hooks or interactivity
+      if (code.includes('useState') || code.includes('useEffect') || code.includes('onClick')) {
+        if (!code.startsWith("'use client'") && !code.startsWith('"use client"')) {
+          code = `'use client'\n\n${code}`
+        }
+      }
 
       files.push({
         path: `components/${registryComp.source}/${fileName}.tsx`,
-        content: `'use client'
-
-import { cn } from '@/lib/utils'
-
-interface ${componentName}Props {
-  className?: string
-}
-
-export function ${componentName}({ className }: ${componentName}Props) {
-  return (
-    <div className={cn("", className)}>
-      {/* ${registryComp.displayName} */}
-      {/* Source: ${registryComp.source} */}
-      {/* TODO: Implement component */}
-      <div className="p-8 text-center">
-        <p className="text-muted-foreground">${registryComp.displayName}</p>
-      </div>
-    </div>
-  )
-}
-`,
+        content: code,
       })
     })
 
@@ -443,11 +436,11 @@ export default config
     const devDependencies: Record<string, string> = {}
 
     deps.forEach((dep) => {
-      dependencies[dep] = 'latest'
+      dependencies[dep] = getVersionForDep(dep)
     })
 
     devDeps.forEach((dep) => {
-      devDependencies[dep] = 'latest'
+      devDependencies[dep] = getVersionForDep(dep)
     })
 
     return JSON.stringify(

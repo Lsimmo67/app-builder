@@ -9,6 +9,7 @@ import { ColorEditor } from './color-editor'
 import { ImageEditor } from './image-editor'
 import { RichTextEditor } from './richtext-editor'
 import { ArrayEditor } from './array-editor'
+import { ObjectEditor } from './object-editor'
 import { Badge } from '@/components/ui/badge'
 import { HelpCircle } from 'lucide-react'
 import {
@@ -112,11 +113,13 @@ export function PropField({ prop, value, onChange, disabled = false }: PropField
         )
 
       case 'object':
-        // For complex objects, show a JSON editor or nested fields
         return (
-          <div className="text-xs text-muted-foreground p-2 border rounded bg-muted/30">
-            Object editor not yet implemented
-          </div>
+          <ObjectEditor
+            value={value as Record<string, unknown>}
+            defaultValue={prop.default as Record<string, unknown>}
+            onChange={onChange}
+            disabled={disabled}
+          />
         )
 
       default:

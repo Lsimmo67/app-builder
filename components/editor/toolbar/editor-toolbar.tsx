@@ -219,7 +219,13 @@ export function EditorToolbar() {
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={!useEditorStore.getState().canUndo()}
+                  onClick={() => useEditorStore.getState().undo()}
+                >
                   <Undo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
@@ -228,7 +234,13 @@ export function EditorToolbar() {
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  disabled={!useEditorStore.getState().canRedo()}
+                  onClick={() => useEditorStore.getState().redo()}
+                >
                   <Redo2 className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
