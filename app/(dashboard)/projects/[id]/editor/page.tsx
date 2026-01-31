@@ -7,6 +7,8 @@ import {
   DndContext,
   DragOverlay,
   closestCenter,
+  pointerWithin,
+  rectIntersection,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -14,6 +16,7 @@ import {
   DragStartEvent,
   DragEndEvent,
   UniqueIdentifier,
+  CollisionDetection,
 } from '@dnd-kit/core'
 import {
   sortableKeyboardCoordinates,
@@ -54,6 +57,24 @@ const PreviewFrame = dynamic(
     )
   }
 )
+
+// Custom collision detection: pointerWithin for registry→canvas, closestCenter for reordering
+const customCollisionDetection: CollisionDetection = (args) => {
+  // First try pointerWithin (finds droppable zones the pointer is inside)
+  const pointerCollisions = pointerWithin(args)
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions
+  }
+
+  // Then try closestCenter (finds nearest sortable item)
+  const centerCollisions = closestCenter(args)
+  if (centerCollisions.length > 0) {
+    return centerCollisions
+  }
+
+  // Finally fallback to rectIntersection
+  return rectIntersection(args)
+}
 
 export default function EditorPage() {
   const params = useParams()
@@ -274,7 +295,7 @@ export default function EditorPage() {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
