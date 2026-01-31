@@ -6,7 +6,7 @@ type LazyComponent = React.LazyExoticComponent<ComponentType<Record<string, unkn
 
 // Dynamic import map: registry ID -> lazy-loaded component
 const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Record<string, unknown>> }>> = {
-  // === Osmo sections (28) ===
+  // === Osmo sections (37) ===
   'osmo-hero-centered': () => import('@/components/registry/osmo/hero-centered'),
   'osmo-hero-split': () => import('@/components/registry/osmo/hero-split'),
   'osmo-hero-video': () => import('@/components/registry/osmo/hero-video'),
@@ -39,6 +39,11 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'osmo-contact': () => import('@/components/registry/osmo/contact-section'),
   'osmo-blog-cards': () => import('@/components/registry/osmo/blog-cards'),
   'osmo-divider': () => import('@/components/registry/osmo/divider-section'),
+  'osmo-hero-app-download': () => import('@/components/registry/osmo/hero-app-download'),
+  'osmo-comparison-table': () => import('@/components/registry/osmo/comparison-table'),
+  'osmo-integrations-grid': () => import('@/components/registry/osmo/integrations-grid'),
+  'osmo-timeline': () => import('@/components/registry/osmo/timeline-section'),
+  'osmo-metrics': () => import('@/components/registry/osmo/metrics-section'),
 
   // === Aceternity effects (30) ===
   'aceternity-hero-parallax': () => import('@/components/registry/aceternity/hero-parallax'),
@@ -72,7 +77,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'aceternity-shooting-stars': () => import('@/components/registry/aceternity/shooting-stars'),
   'aceternity-text-reveal': () => import('@/components/registry/aceternity/text-reveal-card'),
 
-  // === Skiper effects (18) ===
+  // === Skiper effects (30) ===
   'skiper-glass-card': () => import('@/components/registry/skiper/glass-card'),
   'skiper-gradient-button': () => import('@/components/registry/skiper/gradient-button'),
   'skiper-glow-card': () => import('@/components/registry/skiper/glow-card'),
@@ -91,6 +96,18 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'skiper-retro-grid': () => import('@/components/registry/skiper/retro-grid'),
   'skiper-hero-particles': () => import('@/components/registry/skiper/hero-particles'),
   'skiper-animated-gradient-bg': () => import('@/components/registry/skiper/animated-gradient-bg'),
+  'skiper-animated-tabs': () => import('@/components/registry/skiper/animated-tabs'),
+  'skiper-cta-glow': () => import('@/components/registry/skiper/cta-glow'),
+  'skiper-feature-card-animated': () => import('@/components/registry/skiper/feature-card-animated'),
+  'skiper-feature-grid-glow': () => import('@/components/registry/skiper/feature-grid-glow'),
+  'skiper-gradient-divider': () => import('@/components/registry/skiper/gradient-divider'),
+  'skiper-hero-dark': () => import('@/components/registry/skiper/hero-dark'),
+  'skiper-hero-split-animated': () => import('@/components/registry/skiper/hero-split-animated'),
+  'skiper-logo-marquee': () => import('@/components/registry/skiper/logo-marquee'),
+  'skiper-pricing-card': () => import('@/components/registry/skiper/pricing-card'),
+  'skiper-progress-bar': () => import('@/components/registry/skiper/progress-bar'),
+  'skiper-stats-counter': () => import('@/components/registry/skiper/stats-counter'),
+  'skiper-testimonial-card': () => import('@/components/registry/skiper/testimonial-card'),
 
   // === GSAP animations (20) ===
   'gsap-scroll-reveal': () => import('@/components/registry/gsap/scroll-reveal'),
