@@ -33,6 +33,8 @@ export interface ComponentProp {
   required: boolean
   options?: string[]
   description?: string
+  group?: 'content' | 'style' | 'behavior' | 'advanced'
+  itemSchema?: ComponentProp[]
 }
 
 export interface DependencyEntry {

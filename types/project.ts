@@ -22,21 +22,35 @@ export interface DesignSystem {
   typography: TypographyTokens
   spacing: SpacingTokens
   borderRadius: BorderRadiusTokens
+  shadows?: ShadowTokens
 }
 
 export interface ColorTokens {
   primary: string
+  primaryForeground: string
   secondary: string
+  secondaryForeground: string
   accent: string
+  accentForeground: string
   background: string
   foreground: string
   muted: string
   mutedForeground: string
   border: string
   destructive: string
+  destructiveForeground: string
   success: string
   warning: string
   [key: string]: string
+}
+
+export interface ShadowTokens {
+  sm: string
+  md: string
+  lg: string
+  xl: string
+  '2xl': string
+  inner: string
 }
 
 export interface TypographyTokens {
