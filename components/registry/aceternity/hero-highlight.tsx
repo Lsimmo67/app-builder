@@ -1,122 +1,129 @@
 "use client"
 
+import { cn } from "@/lib/utils"
+import { useMotionValue, motion, useMotionTemplate } from "motion/react"
 import React from "react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
 
-export interface AceternityHeroHighlightProps {
-  title?: string
-  highlightedText?: string
-  subtitle?: string
-  ctaButtons?: { text: string; href: string; variant?: "primary" | "secondary" }[]
-  image?: string
+export const HeroHighlight = ({
+  children,
+  className,
+  containerClassName,
+}: {
+  children: React.ReactNode
   className?: string
-}
+  containerClassName?: string
+}) => {
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
 
-function HeroHighlightBackground({ className }: { className?: string }) {
+  const dotPatterns = {
+    light: {
+      default: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='16' height='16' fill='none'%3E%3Ccircle fill='%23d4d4d4' id='pattern-circle' cx='10' cy='10' r='2.5'%3E%3C/circle%3E%3C/svg%3E")`,
+      hover: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='16' height='16' fill='none'%3E%3Ccircle fill='%236366f1' id='pattern-circle' cx='10' cy='10' r='2.5'%3E%3C/circle%3E%3C/svg%3E")`,
+    },
+    dark: {
+      default: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='16' height='16' fill='none'%3E%3Ccircle fill='%23404040' id='pattern-circle' cx='10' cy='10' r='2.5'%3E%3C/circle%3E%3C/svg%3E")`,
+      hover: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='16' height='16' fill='none'%3E%3Ccircle fill='%238183f4' id='pattern-circle' cx='10' cy='10' r='2.5'%3E%3C/circle%3E%3C/svg%3E")`,
+    },
+  }
+
+  function handleMouseMove({
+    currentTarget,
+    clientX,
+    clientY,
+  }: React.MouseEvent<HTMLDivElement>) {
+    if (!currentTarget) return
+    const { left, top } = currentTarget.getBoundingClientRect()
+    mouseX.set(clientX - left)
+    mouseY.set(clientY - top)
+  }
+
   return (
-    <div className={cn("absolute inset-0 overflow-hidden", className)}>
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-transparent to-purple-50 dark:from-blue-950/20 dark:via-transparent dark:to-purple-950/20" />
+    <div
+      className={cn(
+        "group relative flex h-[40rem] w-full items-center justify-center bg-white dark:bg-black",
+        containerClassName,
+      )}
+      onMouseMove={handleMouseMove}
+    >
+      <div className="pointer-events-none absolute inset-0 dark:hidden" style={{ backgroundImage: dotPatterns.light.default }} />
+      <div className="pointer-events-none absolute inset-0 hidden dark:block" style={{ backgroundImage: dotPatterns.dark.default }} />
       <motion.div
-        className="absolute inset-0"
+        className="pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100 dark:hidden"
         style={{
-          background:
-            "radial-gradient(ellipse at var(--x, 50%) var(--y, 50%), rgba(120,119,198,0.15), transparent 80%)",
+          backgroundImage: dotPatterns.light.hover,
+          WebkitMaskImage: useMotionTemplate`radial-gradient(200px circle at ${mouseX}px ${mouseY}px, black 0%, transparent 100%)`,
+          maskImage: useMotionTemplate`radial-gradient(200px circle at ${mouseX}px ${mouseY}px, black 0%, transparent 100%)`,
         }}
-        animate={{
-          "--x": ["40%", "60%", "40%"],
-          "--y": ["40%", "60%", "40%"],
-        } as any}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
       />
+      <motion.div
+        className="pointer-events-none absolute inset-0 hidden opacity-0 transition duration-300 group-hover:opacity-100 dark:block"
+        style={{
+          backgroundImage: dotPatterns.dark.hover,
+          WebkitMaskImage: useMotionTemplate`radial-gradient(200px circle at ${mouseX}px ${mouseY}px, black 0%, transparent 100%)`,
+          maskImage: useMotionTemplate`radial-gradient(200px circle at ${mouseX}px ${mouseY}px, black 0%, transparent 100%)`,
+        }}
+      />
+      <div className={cn("relative z-20", className)}>{children}</div>
     </div>
   )
 }
 
-function Highlight({ children }: { children: React.ReactNode }) {
+export const Highlight = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) => {
   return (
     <motion.span
       initial={{ backgroundSize: "0% 100%" }}
       animate={{ backgroundSize: "100% 100%" }}
-      transition={{ duration: 1.5, ease: "easeInOut", delay: 0.5 }}
-      className="relative inline-block px-1 rounded-lg bg-gradient-to-r from-indigo-300 to-purple-300 dark:from-indigo-500 dark:to-purple-500 bg-no-repeat bg-left-bottom"
-      style={{ backgroundPosition: "0 85%" }}
+      transition={{ duration: 2, ease: "linear", delay: 0.5 }}
+      style={{
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "left center",
+        display: "inline",
+      }}
+      className={cn(
+        "relative inline-block rounded-lg bg-gradient-to-r from-indigo-300 to-purple-300 px-1 pb-1 dark:from-indigo-500 dark:to-purple-500",
+        className,
+      )}
     >
       {children}
     </motion.span>
   )
 }
 
-export default function AceternityHeroHighlight({
+export interface AceternityHeroHighlightProps {
+  title?: string
+  highlightedText?: string
+  subtitle?: string
+  ctaButtons?: { text: string; href: string; variant?: string }[]
+  image?: string
+  className?: string
+}
+
+export default function AceternityHeroHighlightWrapper({
   title = "Build amazing websites with",
   highlightedText = "incredible speed",
-  subtitle = "Create stunning, responsive web experiences using our powerful platform. No coding required.",
-  ctaButtons = [
-    { text: "Get Started", href: "#", variant: "primary" as const },
-    { text: "Learn More", href: "#", variant: "secondary" as const },
-  ],
-  image,
+  subtitle = "Create stunning, responsive web experiences with Aceternity UI components.",
   className,
 }: AceternityHeroHighlightProps) {
   return (
-    <div className={cn("relative min-h-[600px] flex items-center justify-center overflow-hidden", className)}>
-      <HeroHighlightBackground />
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          className="text-4xl md:text-6xl font-bold text-neutral-800 dark:text-white leading-tight"
-        >
-          {title}{" "}
-          <Highlight>{highlightedText}</Highlight>
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-          className="mt-6 text-lg md:text-xl text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto"
-        >
-          {subtitle}
-        </motion.p>
-        {ctaButtons.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut", delay: 0.6 }}
-            className="mt-8 flex flex-wrap gap-4 justify-center"
-          >
-            {ctaButtons.map((btn, i) => (
-              <a
-                key={i}
-                href={btn.href}
-                className={cn(
-                  "px-6 py-3 rounded-full font-medium text-sm transition-all duration-200",
-                  btn.variant === "secondary"
-                    ? "bg-white dark:bg-neutral-800 text-neutral-800 dark:text-white border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700"
-                    : "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 hover:bg-neutral-800 dark:hover:bg-neutral-100 shadow-lg"
-                )}
-              >
-                {btn.text}
-              </a>
-            ))}
-          </motion.div>
-        )}
-        {image && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
-            className="mt-12"
-          >
-            <img
-              src={image}
-              alt="Hero"
-              className="rounded-2xl shadow-2xl mx-auto max-w-full"
-            />
-          </motion.div>
-        )}
-      </div>
-    </div>
+    <HeroHighlight className={className}>
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: [20, -5, 0] }}
+        transition={{ duration: 0.5, ease: [0.4, 0.0, 0.2, 1] }}
+        className="text-2xl px-4 md:text-4xl lg:text-5xl font-bold text-neutral-700 dark:text-white max-w-4xl leading-relaxed lg:leading-snug text-center mx-auto"
+      >
+        {title}{" "}
+        <Highlight className="text-black dark:text-white">
+          {highlightedText}
+        </Highlight>
+      </motion.h1>
+    </HeroHighlight>
   )
 }

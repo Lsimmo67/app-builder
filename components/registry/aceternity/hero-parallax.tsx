@@ -1,61 +1,27 @@
 "use client"
 
-import React, { useRef } from "react"
-import { motion, useScroll, useTransform, useSpring } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import React from "react"
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  MotionValue,
+} from "motion/react"
 
-export interface AceternityHeroParallaxProps {
-  title?: string
-  subtitle?: string
-  products?: { title: string; thumbnail: string; link: string }[]
-  className?: string
-}
-
-function ProductCard({
-  product,
-  translate,
+export const HeroParallax = ({
+  products,
 }: {
-  product: { title: string; thumbnail: string; link: string }
-  translate: any
-}) {
-  return (
-    <motion.div
-      style={{ x: translate }}
-      whileHover={{ y: -20 }}
-      className="group/product relative flex-shrink-0 h-72 w-[30rem] rounded-xl overflow-hidden"
-    >
-      <a href={product.link} className="block">
-        <img
-          src={product.thumbnail}
-          alt={product.title}
-          className="absolute inset-0 h-full w-full object-cover object-left-top"
-        />
-        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/product:opacity-80 transition-opacity duration-300" />
-        <h3 className="absolute bottom-4 left-4 text-white font-semibold text-lg opacity-0 group-hover/product:opacity-100 transition-opacity duration-300">
-          {product.title}
-        </h3>
-      </a>
-    </motion.div>
-  )
-}
-
-export default function AceternityHeroParallax({
-  title = "The Ultimate Development Studio",
-  subtitle = "We build beautiful products with the latest technologies and frameworks.",
-  products = [
-    { title: "Moonbeam", thumbnail: "https://placehold.co/600x400/1a1a2e/ffffff?text=Moonbeam", link: "#" },
-    { title: "Cursor", thumbnail: "https://placehold.co/600x400/16213e/ffffff?text=Cursor", link: "#" },
-    { title: "Rogue", thumbnail: "https://placehold.co/600x400/0f3460/ffffff?text=Rogue", link: "#" },
-    { title: "Editorially", thumbnail: "https://placehold.co/600x400/533483/ffffff?text=Editorially", link: "#" },
-    { title: "Editrix AI", thumbnail: "https://placehold.co/600x400/e94560/ffffff?text=Editrix+AI", link: "#" },
-    { title: "Pixel Perfect", thumbnail: "https://placehold.co/600x400/1a1a2e/ffffff?text=Pixel+Perfect", link: "#" },
-    { title: "Algochurn", thumbnail: "https://placehold.co/600x400/16213e/ffffff?text=Algochurn", link: "#" },
-    { title: "Aceternity UI", thumbnail: "https://placehold.co/600x400/0f3460/ffffff?text=Aceternity+UI", link: "#" },
-    { title: "Tailwind Master Kit", thumbnail: "https://placehold.co/600x400/533483/ffffff?text=Tailwind+Kit", link: "#" },
-  ],
-  className,
-}: AceternityHeroParallaxProps) {
-  const ref = useRef<HTMLDivElement>(null)
+  products: {
+    title: string
+    link: string
+    thumbnail: string
+  }[]
+}) => {
+  const firstRow = products.slice(0, 5)
+  const secondRow = products.slice(5, 10)
+  const thirdRow = products.slice(10, 15)
+  const ref = React.useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ["start start", "end start"],
@@ -84,62 +50,127 @@ export default function AceternityHeroParallax({
     springConfig
   )
   const translateY = useSpring(
-    useTransform(scrollYProgress, [0, 0.2], [-700, 0]),
+    useTransform(scrollYProgress, [0, 0.2], [-700, 500]),
     springConfig
   )
-
-  const firstRow = products.slice(0, 3)
-  const secondRow = products.slice(3, 6)
-  const thirdRow = products.slice(6, 9)
-
   return (
     <div
       ref={ref}
-      className={cn(
-        "h-[300vh] py-40 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]",
-        className
-      )}
+      className="h-[300vh] py-40 overflow-hidden antialiased relative flex flex-col self-auto [perspective:1000px] [transform-style:preserve-3d]"
     >
-      <div className="max-w-7xl relative mx-auto py-20 md:py-40 px-4 w-full left-0 top-0">
-        <h1 className="text-2xl md:text-7xl font-bold text-neutral-800 dark:text-white">
-          {title}
-        </h1>
-        <p className="max-w-2xl text-base md:text-xl mt-8 text-neutral-600 dark:text-neutral-200">
-          {subtitle}
-        </p>
-      </div>
+      <Header />
       <motion.div
-        style={{ rotateX, rotateZ, translateY, opacity }}
-        className="flex flex-col gap-10"
+        style={{
+          rotateX,
+          rotateZ,
+          translateY,
+          opacity,
+        }}
       >
-        <div className="flex flex-row-reverse gap-10 mb-10">
+        <motion.div className="flex flex-row-reverse space-x-reverse space-x-20 mb-20">
           {firstRow.map((product) => (
             <ProductCard
-              key={product.title}
               product={product}
               translate={translateX}
+              key={product.title}
             />
           ))}
-        </div>
-        <div className="flex flex-row gap-10 mb-10">
+        </motion.div>
+        <motion.div className="flex flex-row mb-20 space-x-20">
           {secondRow.map((product) => (
             <ProductCard
-              key={product.title}
               product={product}
               translate={translateXReverse}
+              key={product.title}
             />
           ))}
-        </div>
-        <div className="flex flex-row-reverse gap-10">
+        </motion.div>
+        <motion.div className="flex flex-row-reverse space-x-reverse space-x-20">
           {thirdRow.map((product) => (
             <ProductCard
-              key={product.title}
               product={product}
               translate={translateX}
+              key={product.title}
             />
           ))}
-        </div>
+        </motion.div>
       </motion.div>
     </div>
   )
+}
+
+export const Header = () => {
+  return (
+    <div className="max-w-7xl relative mx-auto py-20 md:py-40 px-4 w-full left-0 top-0">
+      <h1 className="text-2xl md:text-7xl font-bold dark:text-white">
+        The Ultimate <br /> development studio
+      </h1>
+      <p className="max-w-2xl text-base md:text-xl mt-8 dark:text-neutral-200">
+        We build beautiful products with the latest technologies and frameworks.
+        We are a team of passionate developers and designers that love to build
+        amazing products.
+      </p>
+    </div>
+  )
+}
+
+export const ProductCard = ({
+  product,
+  translate,
+}: {
+  product: {
+    title: string
+    link: string
+    thumbnail: string
+  }
+  translate: MotionValue<number>
+}) => {
+  return (
+    <motion.div
+      style={{
+        x: translate,
+      }}
+      whileHover={{
+        y: -20,
+      }}
+      key={product.title}
+      className="group/product h-96 w-[30rem] relative shrink-0"
+    >
+      <a
+        href={product.link}
+        className="block group-hover/product:shadow-2xl"
+      >
+        <img
+          src={product.thumbnail}
+          height="600"
+          width="600"
+          className="object-cover object-left-top absolute h-full w-full inset-0"
+          alt={product.title}
+        />
+      </a>
+      <div className="absolute inset-0 h-full w-full opacity-0 group-hover/product:opacity-80 bg-black pointer-events-none"></div>
+      <h2 className="absolute bottom-4 left-4 opacity-0 group-hover/product:opacity-100 text-white">
+        {product.title}
+      </h2>
+    </motion.div>
+  )
+}
+
+export interface AceternityHeroParallaxProps {
+  title?: string
+  subtitle?: string
+  products?: { title: string; thumbnail: string; link: string }[]
+  className?: string
+}
+
+const defaultProducts = Array.from({ length: 15 }, (_, i) => ({
+  title: `Product ${i + 1}`,
+  link: "#",
+  thumbnail: `https://picsum.photos/seed/product${i}/600/400`,
+}))
+
+export default function AceternityHeroParallaxWrapper({
+  products = defaultProducts,
+}: AceternityHeroParallaxProps) {
+  return <HeroParallax products={products} />
 }

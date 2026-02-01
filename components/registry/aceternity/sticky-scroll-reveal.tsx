@@ -1,120 +1,121 @@
 "use client"
 
-import React, { useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import React, { useEffect, useRef, useState } from "react"
+import { useMotionValueEvent, useScroll, motion } from "motion/react"
+import { cn } from "@/lib/utils"
 
-export interface AceternityStickyScrollRevealProps {
-  items?: {
+export const StickyScroll = ({
+  content,
+  contentClassName,
+}: {
+  content: {
     title: string
     description: string
-    content?: string
-    image?: string
-    bgColor?: string
+    content?: React.ReactNode | any
   }[]
+  contentClassName?: string
+}) => {
+  const [activeCard, setActiveCard] = React.useState(0)
+  const ref = useRef<any>(null)
+  const { scrollYProgress } = useScroll({
+    container: ref,
+    offset: ["start start", "end start"],
+  })
+  const cardLength = content.length
+
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    const cardsBreakpoints = content.map((_, index) => index / cardLength)
+    const closestBreakpointIndex = cardsBreakpoints.reduce(
+      (acc, breakpoint, index) => {
+        const distance = Math.abs(latest - breakpoint)
+        if (distance < Math.abs(latest - cardsBreakpoints[acc])) {
+          return index
+        }
+        return acc
+      },
+      0,
+    )
+    setActiveCard(closestBreakpointIndex)
+  })
+
+  const backgroundColors = ["#0f172a", "#000000", "#171717"]
+  const linearGradients = [
+    "linear-gradient(to bottom right, #06b6d4, #10b981)",
+    "linear-gradient(to bottom right, #ec4899, #6366f1)",
+    "linear-gradient(to bottom right, #f97316, #eab308)",
+  ]
+
+  const [backgroundGradient, setBackgroundGradient] = useState(linearGradients[0])
+
+  useEffect(() => {
+    setBackgroundGradient(linearGradients[activeCard % linearGradients.length])
+  }, [activeCard])
+
+  return (
+    <motion.div
+      animate={{
+        backgroundColor: backgroundColors[activeCard % backgroundColors.length],
+      }}
+      className="relative flex h-[30rem] justify-center space-x-10 overflow-y-auto rounded-md p-10"
+      ref={ref}
+    >
+      <div className="div relative flex items-start px-4">
+        <div className="max-w-2xl">
+          {content.map((item, index) => (
+            <div key={item.title + index} className="my-20">
+              <motion.h2
+                initial={{ opacity: 0 }}
+                animate={{ opacity: activeCard === index ? 1 : 0.3 }}
+                className="text-2xl font-bold text-slate-100"
+              >
+                {item.title}
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: activeCard === index ? 1 : 0.3 }}
+                className="text-kg mt-10 max-w-sm text-slate-300"
+              >
+                {item.description}
+              </motion.p>
+            </div>
+          ))}
+          <div className="h-40" />
+        </div>
+      </div>
+      <div
+        style={{ background: backgroundGradient }}
+        className={cn(
+          "sticky top-10 hidden h-60 w-80 overflow-hidden rounded-md bg-white lg:block",
+          contentClassName
+        )}
+      >
+        {content[activeCard].content ?? null}
+      </div>
+    </motion.div>
+  )
+}
+
+export interface AceternityStickyScrollRevealProps {
+  items?: { title: string; description: string; image?: string; bgColor?: string }[]
   className?: string
 }
 
-export default function AceternityStickyScrollReveal({
-  items = [
-    {
-      title: "Collaborative Editing",
-      description:
-        "Work together in real-time with your team. See changes as they happen and collaborate seamlessly on projects of any size.",
-      image: "https://placehold.co/600x400/1a1a2e/ffffff?text=Collab",
-      bgColor: "linear-gradient(to bottom right, #06b6d4, #3b82f6)",
-    },
-    {
-      title: "Real-Time Changes",
-      description:
-        "See changes as they happen. Every edit, every update, reflected instantly across all collaborators without any delays.",
-      image: "https://placehold.co/600x400/16213e/ffffff?text=Real+Time",
-      bgColor: "linear-gradient(to bottom right, #8b5cf6, #ec4899)",
-    },
-    {
-      title: "Version Control",
-      description:
-        "Never lose your work. Every change is tracked and versioned, giving you the confidence to experiment freely.",
-      image: "https://placehold.co/600x400/0f3460/ffffff?text=Version",
-      bgColor: "linear-gradient(to bottom right, #f59e0b, #ef4444)",
-    },
-    {
-      title: "Running Out of Content",
-      description:
-        "Experience the power of our platform with real-time collaboration, version control, and seamless deployment workflows.",
-      image: "https://placehold.co/600x400/533483/ffffff?text=Deploy",
-      bgColor: "linear-gradient(to bottom right, #10b981, #3b82f6)",
-    },
-  ],
+const defaultItems = [
+  { title: "Collaborative Editing", description: "Work together in real time with your team. Built for speed and collaboration." },
+  { title: "Real time changes", description: "See changes as they happen. With our platform, you can track every modification." },
+  { title: "Version control", description: "Experience real-time updates and never lose your progress. Track changes effortlessly." },
+]
+
+export default function AceternityStickyScrollRevealWrapper({
+  items = defaultItems,
   className,
 }: AceternityStickyScrollRevealProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"],
-  })
-
-  const activeIndex = useTransform(
-    scrollYProgress,
-    items.map((_, i) => i / items.length),
-    items.map((_, i) => i)
-  )
-
   return (
-    <div ref={containerRef} className={cn("relative", className)}>
-      <div className="flex gap-10 max-w-7xl mx-auto px-4">
-        {/* Left side - scrolling text */}
-        <div className="flex-1 relative">
-          {items.map((item, i) => (
-            <div key={i} className="min-h-screen flex items-center py-20">
-              <motion.div
-                initial={{ opacity: 0.3 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: false, amount: 0.5 }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-2xl md:text-4xl font-bold text-neutral-800 dark:text-neutral-100 mb-4">
-                  {item.title}
-                </h2>
-                <p className="text-base text-neutral-600 dark:text-neutral-400 leading-relaxed max-w-md">
-                  {item.description}
-                </p>
-              </motion.div>
-            </div>
-          ))}
-        </div>
-
-        {/* Right side - sticky visual */}
-        <div className="flex-1 hidden md:block">
-          <div className="sticky top-20 h-[calc(100vh-10rem)] flex items-center">
-            <div className="relative w-full h-80 rounded-2xl overflow-hidden shadow-xl">
-              {items.map((item, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute inset-0 rounded-2xl flex items-center justify-center"
-                  style={{ background: item.bgColor || "#1a1a2e" }}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ amount: 0.5 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover rounded-2xl"
-                    />
-                  ) : (
-                    <p className="text-white text-xl font-bold">
-                      {item.title}
-                    </p>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className={cn("p-10", className)}>
+      <StickyScroll content={items.map(item => ({
+        title: item.title,
+        description: item.description,
+      }))} />
     </div>
   )
 }

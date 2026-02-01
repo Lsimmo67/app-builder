@@ -1,78 +1,159 @@
 "use client"
 
-import React, { useState } from "react"
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import * as HoverCardPrimitive from "@radix-ui/react-hover-card"
+import { encode } from "qss"
+import React from "react"
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useSpring,
+} from "motion/react"
+import { cn } from "@/lib/utils"
 
-export interface AceternityLinkPreviewProps {
-  text?: string
-  url?: string
+type LinkPreviewProps = {
+  children: React.ReactNode
+  url: string
   className?: string
-  previewImage?: string
-}
+  width?: number
+  height?: number
+  quality?: number
+  layout?: string
+} & (
+  | { isStatic: true; imageSrc: string }
+  | { isStatic?: false; imageSrc?: never }
+)
 
-export default function AceternityLinkPreview({
-  text = "Visit Aceternity UI",
-  url = "https://ui.aceternity.com",
+export const LinkPreview = ({
+  children,
+  url,
   className,
-  previewImage = "https://placehold.co/400x250/1a1a2e/ffffff?text=Link+Preview",
-}: AceternityLinkPreviewProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  width = 200,
+  height = 125,
+  quality = 50,
+  isStatic = false,
+  imageSrc = "",
+}: LinkPreviewProps) => {
+  let src: string
+  if (!isStatic) {
+    const params = encode({
+      url,
+      screenshot: true,
+      meta: false,
+      embed: "screenshot.url",
+      colorScheme: "dark",
+      "viewport.isMobile": true,
+      "viewport.deviceScaleFactor": 1,
+      "viewport.width": width * 3,
+      "viewport.height": height * 3,
+    })
+    src = `https://api.microlink.io/?${params}`
+  } else {
+    src = imageSrc
+  }
+
+  const [isOpen, setOpen] = React.useState(false)
+  const [isMounted, setIsMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   const springConfig = { stiffness: 100, damping: 15 }
   const x = useMotionValue(0)
   const translateX = useSpring(x, springConfig)
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    const targetRect = event.currentTarget.getBoundingClientRect()
+  const handleMouseMove = (event: React.MouseEvent) => {
+    const targetRect = (event.target as HTMLElement).getBoundingClientRect()
     const eventOffsetX = event.clientX - targetRect.left
     const offsetFromCenter = (eventOffsetX - targetRect.width / 2) / 2
     x.set(offsetFromCenter)
   }
 
   return (
-    <span className={cn("inline-block relative", className)}>
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="font-bold text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 underline underline-offset-4 decoration-blue-500/30 hover:decoration-blue-500 transition-all"
-        onMouseEnter={() => setIsOpen(true)}
-        onMouseLeave={() => setIsOpen(false)}
-        onMouseMove={handleMouseMove}
+    <>
+      {isMounted ? (
+        <div className="hidden">
+          <img src={src} width={width} height={height} alt="hidden image" />
+        </div>
+      ) : null}
+
+      <HoverCardPrimitive.Root
+        openDelay={50}
+        closeDelay={100}
+        onOpenChange={(open: boolean) => { setOpen(open) }}
       >
-        {text}
-      </a>
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.6 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              transition: { type: "spring", stiffness: 260, damping: 20 },
-            }}
-            exit={{ opacity: 0, y: 20, scale: 0.6 }}
-            style={{ translateX }}
-            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 z-50"
-          >
-            <div className="shadow-xl rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
-              <img
-                src={previewImage}
-                alt={`Preview of ${url}`}
-                className="w-[250px] h-[160px] object-cover"
-              />
-              <div className="p-3">
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate max-w-[240px]">
-                  {url}
-                </p>
-              </div>
-            </div>
-            {/* Arrow */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-transparent border-t-white dark:border-t-neutral-950" />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </span>
+        <HoverCardPrimitive.Trigger
+          onMouseMove={handleMouseMove}
+          className={cn("text-black dark:text-white", className)}
+          href={url}
+        >
+          {children}
+        </HoverCardPrimitive.Trigger>
+
+        <HoverCardPrimitive.Content
+          className="[transform-origin:var(--radix-hover-card-content-transform-origin)]"
+          side="top"
+          align="center"
+          sideOffset={10}
+        >
+          <AnimatePresence>
+            {isOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.6 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: { type: "spring", stiffness: 260, damping: 20 },
+                }}
+                exit={{ opacity: 0, y: 20, scale: 0.6 }}
+                className="shadow-xl rounded-xl"
+                style={{ x: translateX }}
+              >
+                <a
+                  href={url}
+                  className="block p-1 bg-white border-2 border-transparent shadow rounded-xl hover:border-neutral-200 dark:hover:border-neutral-800"
+                  style={{ fontSize: 0 }}
+                >
+                  <img
+                    src={isStatic ? imageSrc : src}
+                    width={width}
+                    height={height}
+                    className="rounded-lg"
+                    alt="preview image"
+                  />
+                </a>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </HoverCardPrimitive.Content>
+      </HoverCardPrimitive.Root>
+    </>
+  )
+}
+
+export interface AceternityLinkPreviewProps {
+  text?: string
+  url?: string
+  previewImage?: string
+  className?: string
+}
+
+export default function AceternityLinkPreviewWrapper({
+  text = "Visit Aceternity UI",
+  url = "https://ui.aceternity.com",
+  previewImage,
+  className,
+}: AceternityLinkPreviewProps) {
+  return (
+    <div className={cn("flex items-center justify-center p-8", className)}>
+      <p className="text-neutral-500 dark:text-neutral-400 text-xl md:text-3xl max-w-3xl mx-auto">
+        <LinkPreview url={url} className="font-bold">
+          {text}
+        </LinkPreview>{" "}
+        is a curation of beautiful components built using Tailwind CSS and Framer Motion.
+      </p>
+    </div>
   )
 }

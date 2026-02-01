@@ -1,8 +1,156 @@
 "use client"
 
-import React, { useRef, useState } from "react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { cn } from "@/lib/utils"
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useRef,
+  useEffect,
+} from "react"
+
+const MouseEnterContext = createContext<
+  [boolean, React.Dispatch<React.SetStateAction<boolean>>] | undefined
+>(undefined)
+
+export const CardContainer = ({
+  children,
+  className,
+  containerClassName,
+}: {
+  children?: React.ReactNode
+  className?: string
+  containerClassName?: string
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [isMouseEntered, setIsMouseEntered] = useState(false)
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return
+    const { left, top, width, height } =
+      containerRef.current.getBoundingClientRect()
+    const x = (e.clientX - left - width / 2) / 25
+    const y = (e.clientY - top - height / 2) / 25
+    containerRef.current.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`
+  }
+
+  const handleMouseEnter = () => {
+    setIsMouseEntered(true)
+    if (!containerRef.current) return
+  }
+
+  const handleMouseLeave = () => {
+    if (!containerRef.current) return
+    setIsMouseEntered(false)
+    containerRef.current.style.transform = `rotateY(0deg) rotateX(0deg)`
+  }
+  return (
+    <MouseEnterContext.Provider value={[isMouseEntered, setIsMouseEntered]}>
+      <div
+        className={cn(
+          "py-20 flex items-center justify-center",
+          containerClassName
+        )}
+        style={{
+          perspective: "1000px",
+        }}
+      >
+        <div
+          ref={containerRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className={cn(
+            "flex items-center justify-center relative transition-all duration-200 ease-linear",
+            className
+          )}
+          style={{
+            transformStyle: "preserve-3d",
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    </MouseEnterContext.Provider>
+  )
+}
+
+export const CardBody = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) => {
+  return (
+    <div
+      className={cn(
+        "h-96 w-96 [transform-style:preserve-3d] [&>*]:[transform-style:preserve-3d]",
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+export const CardItem = ({
+  as: Tag = "div",
+  children,
+  className,
+  translateX = 0,
+  translateY = 0,
+  translateZ = 0,
+  rotateX = 0,
+  rotateY = 0,
+  rotateZ = 0,
+  ...rest
+}: {
+  as?: React.ElementType
+  children: React.ReactNode
+  className?: string
+  translateX?: number | string
+  translateY?: number | string
+  translateZ?: number | string
+  rotateX?: number | string
+  rotateY?: number | string
+  rotateZ?: number | string
+  [key: string]: unknown
+}) => {
+  const ref = useRef<HTMLDivElement>(null)
+  const [isMouseEntered] = useMouseEnter()
+
+  useEffect(() => {
+    handleAnimations()
+  }, [isMouseEntered])
+
+  const handleAnimations = () => {
+    if (!ref.current) return
+    if (isMouseEntered) {
+      ref.current.style.transform = `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`
+    } else {
+      ref.current.style.transform = `translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)`
+    }
+  }
+
+  return (
+    <Tag
+      ref={ref}
+      className={cn("w-fit transition duration-200 ease-linear", className)}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  )
+}
+
+export const useMouseEnter = () => {
+  const context = useContext(MouseEnterContext)
+  if (context === undefined) {
+    throw new Error("useMouseEnter must be used within a MouseEnterProvider")
+  }
+  return context
+}
 
 export interface Aceternity3DCardProps {
   title?: string
@@ -15,130 +163,59 @@ export interface Aceternity3DCardProps {
   className?: string
 }
 
-function CardContainer({
-  children,
-  className,
-}: {
-  children: React.ReactNode
-  className?: string
-}) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [rotateX, setRotateX] = useState(0)
-  const [rotateY, setRotateY] = useState(0)
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const centerX = rect.left + rect.width / 2
-    const centerY = rect.top + rect.height / 2
-    const x = e.clientX - centerX
-    const y = e.clientY - centerY
-    setRotateX(-y / 10)
-    setRotateY(x / 10)
-  }
-
-  const handleMouseLeave = () => {
-    setRotateX(0)
-    setRotateY(0)
-  }
-
-  return (
-    <div
-      ref={containerRef}
-      className={cn("relative group/card", className)}
-      style={{ perspective: "1000px" }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      <motion.div
-        animate={{ rotateX, rotateY }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        style={{ transformStyle: "preserve-3d" }}
-        className="relative"
-      >
-        {children}
-      </motion.div>
-    </div>
-  )
-}
-
-function CardItem({
-  children,
-  className,
-  translateZ = 0,
-  as: Tag = "div",
-}: {
-  children: React.ReactNode
-  className?: string
-  translateZ?: number
-  as?: React.ElementType
-}) {
-  return (
-    <Tag
-      className={cn(className)}
-      style={{
-        transform: `translateZ(${translateZ}px)`,
-        transformStyle: "preserve-3d",
-      }}
-    >
-      {children}
-    </Tag>
-  )
-}
-
 export default function Aceternity3DCard({
   title = "Make things float in air",
-  description = "Hover over this card to unleash the power of CSS perspective. Create stunning 3D effects with ease.",
-  image = "https://placehold.co/600x400/1a1a2e/ffffff?text=3D+Card",
+  description = "Hover over this card to unleash the power of CSS perspective",
+  image = "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop",
   imageAlt = "3D Card thumbnail",
   link = "#",
-  linkText = "Try now →",
+  linkText = "Try now \u2192",
   tags = ["Next.js", "Tailwind", "Framer Motion"],
   className,
 }: Aceternity3DCardProps) {
   return (
-    <CardContainer className={cn("inter-var w-full max-w-sm", className)}>
-      <div className="relative rounded-xl p-6 bg-gray-50 dark:bg-black dark:border dark:border-white/[0.2] border border-black/[0.1] group-hover/card:shadow-2xl transition-shadow duration-300">
-        <CardItem translateZ={50}>
-          <h3 className="text-xl font-bold text-neutral-600 dark:text-white">
-            {title}
-          </h3>
+    <CardContainer className={className}>
+      <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[30rem] h-auto rounded-xl p-6 border">
+        <CardItem
+          translateZ="50"
+          className="text-xl font-bold text-neutral-600 dark:text-white"
+        >
+          {title}
         </CardItem>
-        <CardItem translateZ={60} className="mt-2">
-          <p className="text-sm text-neutral-500 dark:text-neutral-300 max-w-sm">
-            {description}
-          </p>
+        <CardItem
+          as="p"
+          translateZ="60"
+          className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300"
+        >
+          {description}
         </CardItem>
-        <CardItem translateZ={100} className="mt-4 w-full">
+        <CardItem translateZ="100" className="w-full mt-4">
           <img
             src={image}
+            height="1000"
+            width="1000"
+            className="h-60 w-full object-cover rounded-xl group-hover/card:shadow-xl"
             alt={imageAlt}
-            className="h-60 w-full object-cover rounded-xl group-hover/card:shadow-xl transition-shadow duration-300"
           />
         </CardItem>
-        <div className="flex justify-between items-center mt-6">
-          <CardItem translateZ={20}>
-            <div className="flex gap-2 flex-wrap">
-              {tags.map((tag, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-2 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
+        <div className="flex justify-between items-center mt-20">
+          <CardItem
+            translateZ={20}
+            as="a"
+            href={link}
+            className="px-4 py-2 rounded-xl text-xs font-normal dark:text-white"
+          >
+            {linkText}
           </CardItem>
-          <CardItem translateZ={20}>
-            <a
-              href={link}
-              className="px-4 py-2 rounded-xl bg-black dark:bg-white dark:text-black text-white text-xs font-bold hover:opacity-80 transition-opacity"
-            >
-              {linkText}
-            </a>
+          <CardItem
+            translateZ={20}
+            as="button"
+            className="px-4 py-2 rounded-xl bg-black dark:bg-white dark:text-black text-white text-xs font-bold"
+          >
+            Sign up
           </CardItem>
         </div>
-      </div>
+      </CardBody>
     </CardContainer>
   )
 }

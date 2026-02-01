@@ -1,88 +1,88 @@
 "use client"
 
 import React, { useState } from "react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { cn } from "@/lib/utils"
+
+export const Card = React.memo(
+  ({
+    card,
+    index,
+    hovered,
+    setHovered,
+  }: {
+    card: { title: string; src: string }
+    index: number
+    hovered: number | null
+    setHovered: React.Dispatch<React.SetStateAction<number | null>>
+  }) => (
+    <div
+      onMouseEnter={() => setHovered(index)}
+      onMouseLeave={() => setHovered(null)}
+      className={cn(
+        "rounded-lg relative bg-gray-100 dark:bg-neutral-900 overflow-hidden h-60 md:h-96 w-full transition-all duration-300 ease-out",
+        hovered !== null && hovered !== index && "blur-sm scale-[0.98]"
+      )}
+    >
+      <img
+        src={card.src}
+        alt={card.title}
+        className="object-cover absolute inset-0 w-full h-full"
+      />
+      <div
+        className={cn(
+          "absolute inset-0 bg-black/50 flex items-end py-8 px-4 transition-opacity duration-300",
+          hovered === index ? "opacity-100" : "opacity-0"
+        )}
+      >
+        <div className="text-xl md:text-2xl font-medium bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-200">
+          {card.title}
+        </div>
+      </div>
+    </div>
+  )
+)
+
+Card.displayName = "Card"
+
+export function FocusCards({ cards }: { cards: { title: string; src: string }[] }) {
+  const [hovered, setHovered] = useState<number | null>(null)
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto md:px-8 w-full">
+      {cards.map((card, index) => (
+        <Card
+          key={card.title}
+          card={card}
+          index={index}
+          hovered={hovered}
+          setHovered={setHovered}
+        />
+      ))}
+    </div>
+  )
+}
 
 export interface AceternityFocusCardsProps {
   cards?: { title: string; src: string }[]
   className?: string
 }
 
-function FocusCard({
-  card,
-  index,
-  focusedIndex,
-  setFocusedIndex,
-}: {
-  card: { title: string; src: string }
-  index: number
-  focusedIndex: number | null
-  setFocusedIndex: (index: number | null) => void
-}) {
-  const isFocused = focusedIndex === index
-  const isBlurred = focusedIndex !== null && focusedIndex !== index
+const defaultCards = [
+  { title: "Forest Adventure", src: "https://images.unsplash.com/photo-1518710843675-2540dd79065c?q=80&w=3387&auto=format&fit=crop" },
+  { title: "Valley of life", src: "https://images.unsplash.com/photo-1600271772470-bd22a42787b3?q=80&w=3072&auto=format&fit=crop" },
+  { title: "Sala Behnam", src: "https://images.unsplash.com/photo-1505142468610-359e7d316be0?q=80&w=3070&auto=format&fit=crop" },
+  { title: "Camping is life", src: "https://images.unsplash.com/photo-1476041800959-2f6bb412c8ce?q=80&w=3456&auto=format&fit=crop" },
+  { title: "The road ahead", src: "https://images.unsplash.com/photo-1507041957456-9c397ce39c97?q=80&w=3456&auto=format&fit=crop" },
+  { title: "Mountain peak", src: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=3540&auto=format&fit=crop" },
+]
 
-  return (
-    <motion.div
-      className={cn(
-        "relative rounded-lg overflow-hidden cursor-pointer h-60 md:h-96 w-full"
-      )}
-      onClick={() => setFocusedIndex(isFocused ? null : index)}
-      animate={{
-        filter: isBlurred ? "blur(4px)" : "blur(0px)",
-        scale: isFocused ? 1.02 : isBlurred ? 0.98 : 1,
-      }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-    >
-      <img
-        src={card.src}
-        alt={card.title}
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 p-6"
-        animate={{ opacity: isFocused || focusedIndex === null ? 1 : 0.3 }}
-        transition={{ duration: 0.3 }}
-      >
-        <h3 className="text-xl md:text-2xl font-medium text-white">
-          {card.title}
-        </h3>
-      </motion.div>
-    </motion.div>
-  )
-}
-
-export default function AceternityFocusCards({
-  cards = [
-    { title: "Forest Adventure", src: "https://placehold.co/600x400/2d5a27/ffffff?text=Forest" },
-    { title: "Ocean Breeze", src: "https://placehold.co/600x400/1a3a5c/ffffff?text=Ocean" },
-    { title: "Mountain Peak", src: "https://placehold.co/600x400/4a3a2a/ffffff?text=Mountain" },
-    { title: "Desert Sunset", src: "https://placehold.co/600x400/8b4513/ffffff?text=Desert" },
-    { title: "City Lights", src: "https://placehold.co/600x400/1a1a2e/ffffff?text=City" },
-    { title: "Northern Lights", src: "https://placehold.co/600x400/0a3a3a/ffffff?text=Aurora" },
-  ],
+export default function AceternityFocusCardsWrapper({
+  cards = defaultCards,
   className,
 }: AceternityFocusCardsProps) {
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null)
-
   return (
-    <div
-      className={cn(
-        "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-5xl mx-auto w-full",
-        className
-      )}
-    >
-      {cards.map((card, i) => (
-        <FocusCard
-          key={i}
-          card={card}
-          index={i}
-          focusedIndex={focusedIndex}
-          setFocusedIndex={setFocusedIndex}
-        />
-      ))}
+    <div className={cn("p-8", className)}>
+      <FocusCards cards={cards} />
     </div>
   )
 }

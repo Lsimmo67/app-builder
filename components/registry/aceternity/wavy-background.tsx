@@ -1,8 +1,139 @@
 "use client"
 
-import React, { useEffect, useRef } from "react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { cn } from "@/lib/utils"
+import React, { useEffect, useRef, useState } from "react"
+import { createNoise3D } from "simplex-noise"
+
+export const WavyBackground = ({
+  children,
+  className,
+  containerClassName,
+  colors,
+  waveWidth,
+  backgroundFill,
+  blur = 10,
+  speed = "fast",
+  waveOpacity = 0.5,
+  ...props
+}: {
+  children?: React.ReactNode
+  className?: string
+  containerClassName?: string
+  colors?: string[]
+  waveWidth?: number
+  backgroundFill?: string
+  blur?: number
+  speed?: "slow" | "fast"
+  waveOpacity?: number
+  [key: string]: unknown
+}) => {
+  const noise = createNoise3D()
+  let w: number,
+    h: number,
+    nt: number,
+    i: number,
+    x: number,
+    ctx: CanvasRenderingContext2D | null,
+    canvas: HTMLCanvasElement | null
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  const getSpeed = () => {
+    switch (speed) {
+      case "slow":
+        return 0.001
+      case "fast":
+        return 0.002
+      default:
+        return 0.001
+    }
+  }
+
+  const init = () => {
+    canvas = canvasRef.current
+    if (!canvas) return
+    ctx = canvas.getContext("2d")
+    w = ctx!.canvas.width = window.innerWidth
+    h = ctx!.canvas.height = window.innerHeight
+    ctx!.filter = `blur(${blur}px)`
+    nt = 0
+    window.onresize = function () {
+      w = ctx!.canvas.width = window.innerWidth
+      h = ctx!.canvas.height = window.innerHeight
+      ctx!.filter = `blur(${blur}px)`
+    }
+    render()
+  }
+
+  const waveColors = colors ?? [
+    "#38bdf8",
+    "#818cf8",
+    "#c084fc",
+    "#e879f9",
+    "#22d3ee",
+  ]
+
+  const drawWave = (n: number) => {
+    nt += getSpeed()
+    for (i = 0; i < n; i++) {
+      ctx!.beginPath()
+      ctx!.lineWidth = waveWidth || 50
+      ctx!.strokeStyle = waveColors[i % waveColors.length]
+      for (x = 0; x < w; x += 5) {
+        const y = noise(x / 800, 0.3 * i, nt) * 100
+        ctx!.lineTo(x, y + h * 0.5)
+      }
+      ctx!.stroke()
+      ctx!.closePath()
+    }
+  }
+
+  let animationId: number
+  const render = () => {
+    if (!ctx) return
+    ctx.fillStyle = backgroundFill || "black"
+    ctx.globalAlpha = waveOpacity || 0.5
+    ctx.fillRect(0, 0, w, h)
+    drawWave(5)
+    animationId = requestAnimationFrame(render)
+  }
+
+  useEffect(() => {
+    init()
+    return () => {
+      cancelAnimationFrame(animationId)
+    }
+  }, [])
+
+  const [isSafari, setIsSafari] = useState(false)
+  useEffect(() => {
+    setIsSafari(
+      typeof window !== "undefined" &&
+        navigator.userAgent.includes("Safari") &&
+        !navigator.userAgent.includes("Chrome")
+    )
+  }, [])
+
+  return (
+    <div
+      className={cn(
+        "h-screen flex flex-col items-center justify-center",
+        containerClassName
+      )}
+    >
+      <canvas
+        className="absolute inset-0 z-0"
+        ref={canvasRef}
+        id="canvas"
+        style={{
+          ...(isSafari ? { filter: `blur(${blur}px)` } : {}),
+        }}
+      ></canvas>
+      <div className={cn("relative z-10", className)} {...props}>
+        {children}
+      </div>
+    </div>
+  )
+}
 
 export interface AceternityWavyBackgroundProps {
   title?: string
@@ -15,111 +146,31 @@ export interface AceternityWavyBackgroundProps {
   className?: string
 }
 
-export default function AceternityWavyBackground({
+export default function AceternityWavyBackgroundWrapper({
   title = "Wavy Background Effect",
-  subtitle = "A beautiful canvas-based wave animation that creates depth and motion in your backgrounds.",
+  subtitle = "A beautiful canvas-based wave animation for your hero sections.",
   blur = 10,
   speed = "slow",
   waveWidth = 50,
   waveOpacity = 0.5,
-  colors = ["#38bdf8", "#818cf8", "#c084fc", "#e879f9", "#22d3ee"],
+  colors,
   className,
 }: AceternityWavyBackgroundProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animationId = useRef<number>(0)
-
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    let w = (canvas.width = window.innerWidth)
-    let h = (canvas.height = window.innerHeight)
-    let nt = 0
-    const speedVal = speed === "fast" ? 0.002 : 0.001
-
-    const handleResize = () => {
-      w = canvas.width = window.innerWidth
-      h = canvas.height = window.innerHeight
-      ctx.filter = `blur(${blur}px)`
-    }
-
-    window.addEventListener("resize", handleResize)
-    ctx.filter = `blur(${blur}px)`
-
-    const drawWave = (n: number) => {
-      nt += speedVal
-      for (let i = 0; i < n; i++) {
-        ctx.beginPath()
-        ctx.lineWidth = waveWidth
-        ctx.strokeStyle = colors[i % colors.length]
-        ctx.globalAlpha = waveOpacity
-        for (let x = 0; x < w; x += 5) {
-          const y =
-            Math.sin(x / 200 + i * 0.5 + nt) * 100 +
-            Math.sin(x / 100 + i * 0.3 + nt * 0.5) * 50 +
-            h * 0.5
-          if (x === 0) {
-            ctx.moveTo(x, y)
-          } else {
-            ctx.lineTo(x, y)
-          }
-        }
-        ctx.stroke()
-        ctx.closePath()
-      }
-    }
-
-    const render = () => {
-      ctx.fillStyle = "rgba(0, 0, 0, 1)"
-      ctx.globalAlpha = 1
-      ctx.fillRect(0, 0, w, h)
-      drawWave(5)
-      animationId.current = requestAnimationFrame(render)
-    }
-
-    render()
-
-    return () => {
-      cancelAnimationFrame(animationId.current)
-      window.removeEventListener("resize", handleResize)
-    }
-  }, [blur, speed, waveWidth, waveOpacity, colors])
-
   return (
-    <div
-      className={cn(
-        "relative flex flex-col items-center justify-center min-h-[500px] overflow-hidden",
-        className
-      )}
+    <WavyBackground
+      blur={blur}
+      speed={speed}
+      waveWidth={waveWidth}
+      waveOpacity={waveOpacity}
+      colors={colors}
+      className={className}
     >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 z-0"
-        style={{ width: "100%", height: "100%" }}
-      />
-      <div className="relative z-10 text-center px-4">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-2xl md:text-5xl lg:text-7xl text-white font-bold inter-var"
-        >
-          {title}
-        </motion.h1>
-        {subtitle && (
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-base md:text-lg mt-4 text-white/70 font-normal inter-var max-w-xl mx-auto"
-          >
-            {subtitle}
-          </motion.p>
-        )}
-      </div>
-    </div>
+      <p className="text-2xl md:text-4xl lg:text-7xl text-white font-bold inter-var text-center">
+        {title}
+      </p>
+      <p className="text-base md:text-lg mt-4 text-white font-normal inter-var text-center">
+        {subtitle}
+      </p>
+    </WavyBackground>
   )
 }

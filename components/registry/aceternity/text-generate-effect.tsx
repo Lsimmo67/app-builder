@@ -1,9 +1,67 @@
 "use client"
 
-import React from "react"
-import { motion, stagger, useAnimate, useInView } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
 import { useEffect } from "react"
+import { motion, stagger, useAnimate } from "motion/react"
+import { cn } from "@/lib/utils"
+
+export const TextGenerateEffect = ({
+  words,
+  className,
+  filter = true,
+  duration = 0.5,
+}: {
+  words: string
+  className?: string
+  filter?: boolean
+  duration?: number
+}) => {
+  const [scope, animate] = useAnimate()
+  const wordsArray = words.split(" ")
+
+  useEffect(() => {
+    animate(
+      "span",
+      {
+        opacity: 1,
+        filter: filter ? "blur(0px)" : "none",
+      },
+      {
+        duration: duration ? duration : 1,
+        delay: stagger(0.2),
+      }
+    )
+  }, [scope.current])
+
+  const renderWords = () => {
+    return (
+      <motion.div ref={scope}>
+        {wordsArray.map((word, idx) => {
+          return (
+            <motion.span
+              key={word + idx}
+              className="dark:text-white text-black opacity-0"
+              style={{
+                filter: filter ? "blur(10px)" : "none",
+              }}
+            >
+              {word}{" "}
+            </motion.span>
+          )
+        })}
+      </motion.div>
+    )
+  }
+
+  return (
+    <div className={cn("font-bold", className)}>
+      <div className="mt-4">
+        <div className="dark:text-white text-black text-2xl leading-snug tracking-wide">
+          {renderWords()}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export interface AceternityTextGenerateProps {
   text?: string
@@ -12,41 +70,13 @@ export interface AceternityTextGenerateProps {
 }
 
 export default function AceternityTextGenerate({
-  text = "Generating text effects has never been this smooth. Watch each word fade in with perfect timing and beautiful animations.",
+  text = "Generating text effects has never been this smooth and beautiful with Aceternity UI",
   speed = 0.05,
   className,
 }: AceternityTextGenerateProps) {
-  const [scope, animate] = useAnimate()
-  const isInView = useInView(scope)
-  const words = text.split(" ")
-
-  useEffect(() => {
-    if (isInView) {
-      animate(
-        "span",
-        { opacity: 1, filter: "blur(0px)" },
-        { duration: 0.5, delay: stagger(speed) }
-      )
-    }
-  }, [isInView, animate, speed])
-
   return (
-    <div className={cn("font-bold", className)}>
-      <div className="mt-4">
-        <div className="text-2xl md:text-4xl lg:text-6xl leading-snug tracking-wide text-black dark:text-white">
-          <motion.div ref={scope}>
-            {words.map((word, idx) => (
-              <motion.span
-                key={`${word}-${idx}`}
-                className="opacity-0 inline-block mr-[0.3em]"
-                style={{ filter: "blur(10px)" }}
-              >
-                {word}
-              </motion.span>
-            ))}
-          </motion.div>
-        </div>
-      </div>
+    <div className="flex items-center justify-center p-8">
+      <TextGenerateEffect words={text} className={className} duration={speed * 10} />
     </div>
   )
 }
