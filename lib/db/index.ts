@@ -92,25 +92,3 @@ export async function getPageWithComponents(pageId: string) {
   }
 }
 
-export async function deleteProject(projectId: string) {
-  await db.transaction('rw', [
-    db.projects,
-    db.designSystems,
-    db.pages,
-    db.componentInstances,
-    db.relumeImports,
-    db.history,
-  ], async () => {
-    // Get all pages for the project
-    const pages = await db.pages.where('projectId').equals(projectId).toArray()
-    const pageIds = pages.map(p => p.id)
-
-    // Delete all related data
-    await db.componentInstances.where('pageId').anyOf(pageIds).delete()
-    await db.relumeImports.where('pageId').anyOf(pageIds).delete()
-    await db.history.where('pageId').anyOf(pageIds).delete()
-    await db.pages.where('projectId').equals(projectId).delete()
-    await db.designSystems.where('projectId').equals(projectId).delete()
-    await db.projects.delete(projectId)
-  })
-}

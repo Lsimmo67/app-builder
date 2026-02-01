@@ -166,7 +166,7 @@ export default function EditorPage() {
         );
         if (comp && !comp.isLocked) {
           canvasState.removeComponent(editorState.selectedComponentId);
-          editorState.setSelectedComponentId(null);
+          editorState.selectComponent(null);
         }
         return;
       }
@@ -184,7 +184,7 @@ export default function EditorPage() {
 
       // Escape: deselect
       if (e.key === "Escape") {
-        editorState.setSelectedComponentId(null);
+        editorState.selectComponent(null);
         return;
       }
     };

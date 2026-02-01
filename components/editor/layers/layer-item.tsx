@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef, useEffect } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useEditorStore, useCanvasStore } from '@/lib/store'
@@ -29,7 +29,7 @@ import {
   Image,
   Sparkles,
   MousePointer2,
-  Zap,
+  Pencil,
 } from 'lucide-react'
 import { ComponentInstance, ComponentSource, SOURCE_COLORS } from '@/types/component'
 import { cn } from '@/lib/utils'
@@ -102,17 +102,47 @@ export function LayerItem({
     transition,
   }
 
+  const [isRenaming, setIsRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState('')
+  const renameInputRef = useRef<HTMLInputElement>(null)
+
   const registry = componentRegistry.getById(component.componentRegistryId)
   const Icon = getComponentIcon(component.componentRegistryId)
   const sourceColor = SOURCE_COLORS[component.source]
+
+  const displayName = component.displayName || registry?.displayName || component.componentRegistryId
 
   const handleClick = useCallback(() => {
     selectComponent(component.id)
   }, [component.id, selectComponent])
 
   const handleDoubleClick = useCallback(() => {
-    // TODO: Enable rename
-  }, [])
+    setRenameValue(displayName)
+    setIsRenaming(true)
+  }, [displayName])
+
+  const handleRenameSubmit = useCallback(() => {
+    const trimmed = renameValue.trim()
+    if (trimmed && trimmed !== displayName) {
+      updateComponent(component.id, { displayName: trimmed })
+    }
+    setIsRenaming(false)
+  }, [renameValue, displayName, component.id, updateComponent])
+
+  const handleRenameKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit()
+    } else if (e.key === 'Escape') {
+      setIsRenaming(false)
+    }
+  }, [handleRenameSubmit])
+
+  useEffect(() => {
+    if (isRenaming && renameInputRef.current) {
+      renameInputRef.current.focus()
+      renameInputRef.current.select()
+    }
+  }, [isRenaming])
 
   return (
     <ContextMenu>
@@ -179,15 +209,27 @@ export function LayerItem({
           </div>
 
           {/* Name */}
-          <span
-            className={cn(
-              'flex-1 truncate text-xs',
-              component.isHidden && 'line-through',
-              component.isLocked && 'text-muted-foreground'
-            )}
-          >
-            {registry?.displayName || component.componentRegistryId}
-          </span>
+          {isRenaming ? (
+            <input
+              ref={renameInputRef}
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onBlur={handleRenameSubmit}
+              onKeyDown={handleRenameKeyDown}
+              className="flex-1 text-xs bg-background border border-primary rounded px-1 py-0 outline-none min-w-0"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <span
+              className={cn(
+                'flex-1 truncate text-xs',
+                component.isHidden && 'line-through',
+                component.isLocked && 'text-muted-foreground'
+              )}
+            >
+              {displayName}
+            </span>
+          )}
 
           {/* Status indicators */}
           <div className="flex items-center gap-0.5">
@@ -205,6 +247,10 @@ export function LayerItem({
         <ContextMenuItem onClick={handleClick}>
           <MousePointer2 className="h-4 w-4 mr-2" />
           Select
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleDoubleClick}>
+          <Pencil className="h-4 w-4 mr-2" />
+          Rename
         </ContextMenuItem>
         <ContextMenuItem onClick={() => duplicateComponent(component.id)}>
           <Copy className="h-4 w-4 mr-2" />
