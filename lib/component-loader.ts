@@ -146,6 +146,9 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'shadcn-separator': () => import('@/components/registry/shadcn/separator-section'),
   'shadcn-switch': () => import('@/components/registry/shadcn/switch-settings'),
   'shadcn-tooltip': () => import('@/components/registry/shadcn/tooltip-demo'),
+
+  // === Custom imported components ===
+  'custom-html-block': () => import('@/components/registry/custom/html-block'),
 }
 
 // Cache of loaded lazy components

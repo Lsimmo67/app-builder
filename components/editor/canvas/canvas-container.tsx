@@ -17,6 +17,23 @@ import { cn } from '@/lib/utils/cn'
 import { ComponentRenderer } from './component-renderer'
 import { isComponentAvailable } from '@/lib/component-loader'
 
+// Parse CSS string into React CSSProperties
+function parseInlineStyles(css: string | undefined): React.CSSProperties | undefined {
+  if (!css) return undefined
+  const styles: Record<string, string> = {}
+  const rules = css.split(';').filter(Boolean)
+  for (const rule of rules) {
+    const colonIdx = rule.indexOf(':')
+    if (colonIdx === -1) continue
+    const prop = rule.slice(0, colonIdx).trim()
+    const val = rule.slice(colonIdx + 1).trim()
+    if (!prop || !val) continue
+    const camelProp = prop.replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+    styles[camelProp] = val
+  }
+  return Object.keys(styles).length > 0 ? styles : undefined
+}
+
 interface SortableComponentProps {
   instance: ComponentInstance
 }
@@ -152,8 +169,10 @@ function SortableComponent({ instance }: SortableComponentProps) {
         className={cn(
           'relative border rounded-lg cursor-pointer transition-all overflow-hidden',
           isSelected ? 'ring-2 ring-primary' : 'hover:border-primary/50',
-          instance.isHidden && 'pointer-events-none'
+          instance.isHidden && 'pointer-events-none',
+          instance.customCode
         )}
+        style={parseInlineStyles(instance.customStyles)}
       >
         {isComponentAvailable(instance.componentRegistryId) ? (
           <>
@@ -199,7 +218,7 @@ export function Canvas() {
   const sortedComponents = [...components].sort((a, b) => a.order - b.order)
 
   return (
-    <div className="flex-1 bg-muted/30 overflow-auto p-8">
+    <div className="h-full bg-muted/30 overflow-auto p-8">
       <div
         className="mx-auto bg-background border rounded-lg shadow-sm min-h-[600px] transition-all duration-300"
         style={{ width: canvasWidth, maxWidth: '100%' }}
