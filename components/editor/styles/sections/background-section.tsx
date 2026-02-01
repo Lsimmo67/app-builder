@@ -64,7 +64,10 @@ export function BackgroundSection({ styles, onChange, onReset, disabled }: Backg
 
       {/* Background Image */}
       <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">Image / Gradient</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Image / Gradient</Label>
+          {styles.backgroundImage && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <Input
           value={styles.backgroundImage || ''}
           onChange={(e) => onChange('backgroundImage', e.target.value)}
@@ -99,7 +102,10 @@ export function BackgroundSection({ styles, onChange, onReset, disabled }: Backg
       {styles.backgroundImage && (
         <>
           <div className="space-y-1.5">
-            <Label className="text-[10px] text-muted-foreground">Size</Label>
+            <div className="flex items-center gap-1">
+              <Label className="text-[10px] text-muted-foreground">Size</Label>
+              {styles.backgroundSize && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+            </div>
             <ToggleGroup
               value={styles.backgroundSize}
               onChange={(v) => onChange('backgroundSize', v)}

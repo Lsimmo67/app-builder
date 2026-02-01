@@ -33,7 +33,10 @@ export function PositionSection({ styles, onChange, onReset, disabled }: Positio
   return (
     <StyleSectionHeader title="Position" defaultOpen={false} hasValues={hasValues} onReset={onReset}>
       <div className="space-y-1.5">
-        <Label className="text-[10px] text-muted-foreground">Position</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Position</Label>
+          {styles.position && styles.position !== 'static' && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <ToggleGroup
           value={styles.position}
           onChange={(v) => onChange('position', v)}
@@ -89,7 +92,10 @@ export function PositionSection({ styles, onChange, onReset, disabled }: Positio
       )}
 
       <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">Z-Index</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Z-Index</Label>
+          {styles.zIndex && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <Input
           value={styles.zIndex || ''}
           onChange={(e) => onChange('zIndex', e.target.value)}

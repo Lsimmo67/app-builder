@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select'
 import { ArrowLeft, Save } from 'lucide-react'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
+import { DEBOUNCE_CONTENT } from '@/lib/constants/debounce'
 
 interface ItemEditorProps {
   collection: CMSCollection
@@ -29,12 +30,13 @@ interface ItemEditorProps {
 export function ItemEditor({ collection, item, onBack }: ItemEditorProps) {
   const { updateItem, updateItemStatus } = useCMSStore()
   const [data, setData] = useState<Record<string, unknown>>({ ...item.data })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const debouncedSave = useDebouncedCallback(
     (newData: Record<string, unknown>) => {
       updateItem(item.id, newData)
     },
-    300
+    DEBOUNCE_CONTENT
   )
 
   const handleFieldChange = useCallback(
@@ -48,7 +50,24 @@ export function ItemEditor({ collection, item, onBack }: ItemEditorProps) {
     [debouncedSave]
   )
 
+  const validateFields = useCallback(() => {
+    const newErrors: Record<string, string> = {}
+    if (!collection) return newErrors
+    for (const field of collection.fields) {
+      if (field.required) {
+        const val = data[field.slug]
+        if (val === undefined || val === null || val === '') {
+          newErrors[field.slug] = `${field.name} is required`
+        }
+      }
+    }
+    setErrors(newErrors)
+    return newErrors
+  }, [collection, data])
+
   const handleSave = () => {
+    const fieldErrors = validateFields()
+    if (Object.keys(fieldErrors).length > 0) return
     updateItem(item.id, data)
   }
 
@@ -84,6 +103,7 @@ export function ItemEditor({ collection, item, onBack }: ItemEditorProps) {
               field={field}
               value={data[field.slug]}
               onChange={(value) => handleFieldChange(field.slug, value)}
+              error={errors[field.slug]}
             />
           ))}
 
@@ -103,11 +123,14 @@ function FieldInput({
   field,
   value,
   onChange,
+  error,
 }: {
-  field: { name: string; slug: string; type: CMSFieldType; required: boolean; helpText?: string; validation?: { options?: string[] } }
+  field: { name: string; slug: string; type: CMSFieldType; required: boolean; helpText?: string; validation?: { options?: string[] }; referenceCollectionId?: string }
   value: unknown
   onChange: (value: unknown) => void
+  error?: string
 }) {
+  const { items: allItems } = useCMSStore()
   const renderInput = () => {
     switch (field.type) {
       case 'text':
@@ -207,6 +230,61 @@ function FieldInput({
           </Select>
         )
 
+      case 'reference': {
+        const refCollectionId = field.referenceCollectionId
+        const refItems = refCollectionId
+          ? allItems.filter(i => i.collectionId === refCollectionId)
+          : []
+        return (
+          <Select value={String(value || '')} onValueChange={(v) => onChange(v)}>
+            <SelectTrigger className="h-8 text-sm">
+              <SelectValue placeholder="Select item..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_none">None</SelectItem>
+              {refItems.map((ri) => (
+                <SelectItem key={ri.id} value={ri.id}>
+                  {ri.data.title ? String(ri.data.title) : ri.id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )
+      }
+      case 'multi-reference': {
+        const refCollectionId = field.referenceCollectionId
+        const refItems = refCollectionId
+          ? allItems.filter(i => i.collectionId === refCollectionId)
+          : []
+        const selectedIds = Array.isArray(value) ? value as string[] : []
+        return (
+          <div className="space-y-1 max-h-32 overflow-y-auto border rounded p-2">
+            {refItems.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No items available</p>
+            ) : (
+              refItems.map((ri) => (
+                <label key={ri.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(ri.id)}
+                    onChange={(e) => {
+                      const newIds = e.target.checked
+                        ? [...selectedIds, ri.id]
+                        : selectedIds.filter(id => id !== ri.id)
+                      onChange(newIds)
+                    }}
+                    className="rounded"
+                  />
+                  <span className="text-xs">
+                    {ri.data.title ? String(ri.data.title) : ri.id}
+                  </span>
+                </label>
+              ))
+            )}
+          </div>
+        )
+      }
+
       default:
         return (
           <Input
@@ -226,6 +304,7 @@ function FieldInput({
         {field.required && <span className="text-red-500 text-xs">*</span>}
       </div>
       {renderInput()}
+      {error && <p className="text-xs text-destructive mt-0.5">{error}</p>}
       {field.helpText && (
         <p className="text-xs text-muted-foreground">{field.helpText}</p>
       )}

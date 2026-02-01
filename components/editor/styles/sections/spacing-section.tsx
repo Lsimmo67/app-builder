@@ -25,7 +25,10 @@ export function SpacingSection({ styles, onChange, onReset, disabled }: SpacingS
       <div className="relative bg-muted/30 rounded-lg p-1">
         {/* Margin layer */}
         <div className="relative border border-dashed border-orange-300/50 rounded-md p-1">
-          <span className="absolute top-0 left-1 text-[8px] text-orange-400 font-medium">margin</span>
+          <span className="absolute top-0 left-1 text-[8px] text-orange-400 font-medium inline-flex items-center gap-0.5">
+            margin
+            {(styles.marginTop || styles.marginRight || styles.marginBottom || styles.marginLeft) && <span className="w-1.5 h-1.5 rounded-full bg-orange-400 shrink-0" />}
+          </span>
 
           {/* Margin inputs */}
           <div className="flex justify-center mb-1 mt-2">
@@ -51,7 +54,10 @@ export function SpacingSection({ styles, onChange, onReset, disabled }: SpacingS
 
             {/* Padding layer */}
             <div className="flex-1 relative border border-dashed border-green-400/50 rounded p-1">
-              <span className="absolute top-0 left-1 text-[8px] text-green-500 font-medium">padding</span>
+              <span className="absolute top-0 left-1 text-[8px] text-green-500 font-medium inline-flex items-center gap-0.5">
+                padding
+                {(styles.paddingTop || styles.paddingRight || styles.paddingBottom || styles.paddingLeft) && <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />}
+              </span>
 
               <div className="flex justify-center mb-1 mt-2">
                 <UnitInput

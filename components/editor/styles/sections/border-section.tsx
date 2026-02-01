@@ -56,7 +56,10 @@ export function BorderSection({ styles, onChange, onReset, disabled }: BorderSec
     <StyleSectionHeader title="Border" defaultOpen={false} hasValues={hasValues} onReset={onReset}>
       {/* Border Style */}
       <div className="space-y-1.5">
-        <Label className="text-[10px] text-muted-foreground">Style</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Style</Label>
+          {styles.borderStyle && styles.borderStyle !== 'none' && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <ToggleGroup
           value={styles.borderStyle}
           onChange={(v) => onChange('borderStyle', v)}
@@ -76,7 +79,10 @@ export function BorderSection({ styles, onChange, onReset, disabled }: BorderSec
       {/* Border Width */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] text-muted-foreground">Width</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground">Width</Label>
+            {(styles.borderWidth || styles.borderTopWidth || styles.borderRightWidth || styles.borderBottomWidth || styles.borderLeftWidth) && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -136,7 +142,10 @@ export function BorderSection({ styles, onChange, onReset, disabled }: BorderSec
       {/* Border Radius */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] text-muted-foreground">Radius</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground">Radius</Label>
+            {(styles.borderRadius || styles.borderTopLeftRadius || styles.borderTopRightRadius || styles.borderBottomRightRadius || styles.borderBottomLeftRadius) && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+          </div>
           <Button
             variant="ghost"
             size="sm"

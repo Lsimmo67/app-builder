@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { RotateCcw, Bold, Italic, Underline } from 'lucide-react'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
+import { DEBOUNCE_CONTENT } from '@/lib/constants/debounce'
 import { cn } from '@/lib/utils'
 
 interface RichTextEditorProps {
@@ -33,7 +34,7 @@ export function RichTextEditor({
 
   const debouncedOnChange = useDebouncedCallback((newValue: string) => {
     onChange(newValue)
-  }, 300)
+  }, DEBOUNCE_CONTENT)
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { RotateCcw } from 'lucide-react'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
+import { DEBOUNCE_CONTENT } from '@/lib/constants/debounce'
 
 interface StringEditorProps {
   value: string
@@ -29,7 +30,7 @@ export function StringEditor({
 
   const debouncedOnChange = useDebouncedCallback((newValue: string) => {
     onChange(newValue)
-  }, 300)
+  }, DEBOUNCE_CONTENT)
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

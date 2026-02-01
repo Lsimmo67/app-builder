@@ -1,5 +1,7 @@
 'use client'
 
+import { useMemo } from 'react'
+import { useDesignSystemStore } from '@/lib/store'
 import { StyleSectionHeader } from '../shared/style-section-header'
 import { ToggleGroup } from '../shared/toggle-group'
 import { UnitInput } from '../shared/unit-input'
@@ -63,18 +65,24 @@ const FONT_WEIGHTS = [
   { label: 'Black', value: '900' },
 ]
 
-const FONT_FAMILIES = [
-  'inherit',
-  'Inter, sans-serif',
-  'system-ui, sans-serif',
-  'Arial, sans-serif',
-  'Georgia, serif',
-  'Times New Roman, serif',
-  'Courier New, monospace',
-  'Fira Code, monospace',
-]
-
 export function TypographySection({ styles, onChange, onReset, disabled }: TypographySectionProps) {
+  const { designSystem } = useDesignSystemStore()
+
+  const fontFamilies = useMemo(() => {
+    const ds = designSystem
+    const dsfonts: string[] = []
+    if (ds?.typography.fontFamily.heading) dsfonts.push(ds.typography.fontFamily.heading)
+    if (ds?.typography.fontFamily.body) dsfonts.push(ds.typography.fontFamily.body)
+    if (ds?.typography.fontFamily.mono) dsfonts.push(ds.typography.fontFamily.mono)
+    const systemFonts = [
+      'system-ui, sans-serif',
+      'Arial, sans-serif',
+      'Georgia, serif',
+      'Times New Roman, serif',
+      'Courier New, monospace',
+    ]
+    return ['inherit', ...new Set([...dsfonts, ...systemFonts])]
+  }, [designSystem])
   const hasValues = !!(
     styles.fontFamily || styles.fontSize || styles.fontWeight || styles.lineHeight ||
     styles.letterSpacing || styles.textAlign || styles.textDecoration ||
@@ -85,7 +93,10 @@ export function TypographySection({ styles, onChange, onReset, disabled }: Typog
     <StyleSectionHeader title="Typography" hasValues={hasValues} onReset={onReset}>
       {/* Font Family */}
       <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">Font Family</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Font Family</Label>
+          {styles.fontFamily && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <Select
           value={styles.fontFamily || ''}
           onValueChange={(v) => onChange('fontFamily', v)}
@@ -95,7 +106,7 @@ export function TypographySection({ styles, onChange, onReset, disabled }: Typog
             <SelectValue placeholder="Inherit" />
           </SelectTrigger>
           <SelectContent>
-            {FONT_FAMILIES.map((font) => (
+            {fontFamilies.map((font) => (
               <SelectItem key={font} value={font} className="text-xs">
                 <span style={{ fontFamily: font }}>{font.split(',')[0]}</span>
               </SelectItem>
@@ -107,7 +118,10 @@ export function TypographySection({ styles, onChange, onReset, disabled }: Typog
       {/* Font Size / Weight */}
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Size</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground">Size</Label>
+            {styles.fontSize && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+          </div>
           <UnitInput
             value={styles.fontSize}
             onChange={(v) => onChange('fontSize', v)}
@@ -116,7 +130,10 @@ export function TypographySection({ styles, onChange, onReset, disabled }: Typog
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Weight</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground">Weight</Label>
+            {styles.fontWeight && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+          </div>
           <Select
             value={styles.fontWeight || ''}
             onValueChange={(v) => onChange('fontWeight', v)}

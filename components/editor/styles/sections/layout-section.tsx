@@ -83,7 +83,10 @@ export function LayoutSection({ styles, onChange, onReset, disabled }: LayoutSec
     <StyleSectionHeader title="Layout" hasValues={hasValues} onReset={onReset}>
       {/* Display */}
       <div className="space-y-1.5">
-        <Label className="text-[10px] text-muted-foreground">Display</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Display</Label>
+          {styles.display && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <ToggleGroup
           value={styles.display}
           onChange={(v) => onChange('display', v)}
@@ -96,7 +99,10 @@ export function LayoutSection({ styles, onChange, onReset, disabled }: LayoutSec
       {isFlex && (
         <>
           <div className="space-y-1.5">
-            <Label className="text-[10px] text-muted-foreground">Direction</Label>
+            <div className="flex items-center gap-1">
+              <Label className="text-[10px] text-muted-foreground">Direction</Label>
+              {styles.flexDirection && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+            </div>
             <ToggleGroup
               value={styles.flexDirection}
               onChange={(v) => onChange('flexDirection', v)}
@@ -106,7 +112,10 @@ export function LayoutSection({ styles, onChange, onReset, disabled }: LayoutSec
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] text-muted-foreground">Justify</Label>
+            <div className="flex items-center gap-1">
+              <Label className="text-[10px] text-muted-foreground">Justify</Label>
+              {styles.justifyContent && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+            </div>
             <ToggleGroup
               value={styles.justifyContent}
               onChange={(v) => onChange('justifyContent', v)}
@@ -136,7 +145,10 @@ export function LayoutSection({ styles, onChange, onReset, disabled }: LayoutSec
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-[10px] text-muted-foreground">Gap</Label>
+            <div className="flex items-center gap-1">
+              <Label className="text-[10px] text-muted-foreground">Gap</Label>
+              {styles.gap && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+            </div>
             <UnitInput
               value={styles.gap}
               onChange={(v) => onChange('gap', v)}
