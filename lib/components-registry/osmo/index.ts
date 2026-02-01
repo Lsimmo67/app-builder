@@ -1337,4 +1337,168 @@ export const osmoComponents: ComponentRegistryItem[] = [
     docsUrl: 'https://www.osmo.supply/vault',
     version: '1.0.0',
   },
+  {
+    id: 'osmo-hero-app-download',
+    name: 'HeroAppDownload',
+    displayName: 'Hero App Download',
+    source: 'osmo',
+    categories: ['hero', 'section'],
+    tags: ['hero', 'app', 'download', 'mobile', 'store'],
+    description: 'A hero section designed for app downloads with store badges and phone mockup',
+    previewImage: '/components/osmo/hero-app-download.png',
+    props: [
+      { name: 'headline', type: 'string', required: true, description: 'Main headline' },
+      { name: 'subheadline', type: 'string', required: false, description: 'Subheadline text' },
+      { name: 'appStoreUrl', type: 'string', required: false, description: 'App Store URL' },
+      { name: 'playStoreUrl', type: 'string', required: false, description: 'Play Store URL' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: [],
+    dependencyManifest: [],
+    modulePath: 'osmo-hero-app-download',
+    level: 'section',
+    code: `import HeroAppDownload from '@/components/registry/osmo/hero-app-download'
+
+<HeroAppDownload
+  headline="Download Our App"
+  subheadline="Available on iOS and Android"
+/>`,
+    suggestedWith: ['osmo-features-grid', 'osmo-testimonials'],
+    docsUrl: 'https://www.osmo.supply/vault',
+    version: '1.0.0',
+  },
+  {
+    id: 'osmo-comparison-table',
+    name: 'ComparisonTable',
+    displayName: 'Comparison Table',
+    source: 'osmo',
+    categories: ['section', 'pricing'],
+    tags: ['comparison', 'table', 'features', 'versus', 'plans'],
+    description: 'A comparison table for showing feature differences between products or plans',
+    previewImage: '/components/osmo/comparison-table.png',
+    props: [
+      { name: 'headline', type: 'string', required: false, description: 'Section headline' },
+      { name: 'columns', type: 'array', required: true, description: 'Array of column headers' },
+      { name: 'rows', type: 'array', required: true, description: 'Array of row objects with feature name and column values' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['lucide-react'],
+    dependencyManifest: [
+      { package: 'lucide-react', version: '^0.400.0' },
+    ],
+    modulePath: 'osmo-comparison-table',
+    level: 'section',
+    code: `import ComparisonTable from '@/components/registry/osmo/comparison-table'
+
+<ComparisonTable
+  headline="Compare Plans"
+  columns={["Starter", "Pro", "Enterprise"]}
+  rows={[
+    { feature: "Users", values: ["1", "10", "Unlimited"] },
+    { feature: "Storage", values: ["1 GB", "10 GB", "Unlimited"] }
+  ]}
+/>`,
+    suggestedWith: ['osmo-pricing-cards', 'osmo-cta-centered'],
+    docsUrl: 'https://www.osmo.supply/vault',
+    version: '1.0.0',
+  },
+  {
+    id: 'osmo-integrations-grid',
+    name: 'IntegrationsGrid',
+    displayName: 'Integrations Grid',
+    source: 'osmo',
+    categories: ['section', 'feature'],
+    tags: ['integrations', 'grid', 'logos', 'partners', 'apps'],
+    description: 'A grid section showcasing integration logos and connection points',
+    previewImage: '/components/osmo/integrations-grid.png',
+    props: [
+      { name: 'headline', type: 'string', required: false, description: 'Section headline' },
+      { name: 'subheadline', type: 'string', required: false, description: 'Section subheadline' },
+      { name: 'integrations', type: 'array', required: true, description: 'Array of integration items with name, logo, and description' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: [],
+    dependencyManifest: [],
+    modulePath: 'osmo-integrations-grid',
+    level: 'section',
+    code: `import IntegrationsGrid from '@/components/registry/osmo/integrations-grid'
+
+<IntegrationsGrid
+  headline="Integrations"
+  subheadline="Connect with your favorite tools"
+  integrations={[
+    { name: "Slack", logo: "/logos/slack.svg", description: "Team messaging" },
+    { name: "GitHub", logo: "/logos/github.svg", description: "Code hosting" }
+  ]}
+/>`,
+    suggestedWith: ['osmo-logo-cloud', 'osmo-features-grid'],
+    docsUrl: 'https://www.osmo.supply/vault',
+    version: '1.0.0',
+  },
+  {
+    id: 'osmo-timeline',
+    name: 'TimelineSection',
+    displayName: 'Timeline Section',
+    source: 'osmo',
+    categories: ['section'],
+    tags: ['timeline', 'history', 'milestones', 'events', 'chronology'],
+    description: 'A vertical timeline section showing chronological events or milestones',
+    previewImage: '/components/osmo/timeline-section.png',
+    props: [
+      { name: 'headline', type: 'string', required: false, description: 'Section headline' },
+      { name: 'events', type: 'array', required: true, description: 'Array of timeline event objects with date, title, and description' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: [],
+    dependencyManifest: [],
+    modulePath: 'osmo-timeline',
+    level: 'section',
+    code: `import TimelineSection from '@/components/registry/osmo/timeline-section'
+
+<TimelineSection
+  headline="Our Journey"
+  events={[
+    { date: "2020", title: "Founded", description: "Started with a vision" },
+    { date: "2022", title: "Series A", description: "Raised $10M" },
+    { date: "2024", title: "Global", description: "Expanded worldwide" }
+  ]}
+/>`,
+    suggestedWith: ['osmo-team', 'osmo-stats'],
+    docsUrl: 'https://www.osmo.supply/vault',
+    version: '1.0.0',
+  },
+  {
+    id: 'osmo-metrics',
+    name: 'MetricsSection',
+    displayName: 'Metrics Section',
+    source: 'osmo',
+    categories: ['section'],
+    tags: ['metrics', 'stats', 'numbers', 'dashboard', 'kpi'],
+    description: 'A metrics/KPI section with animated counters and visual indicators',
+    previewImage: '/components/osmo/metrics-section.png',
+    props: [
+      { name: 'headline', type: 'string', required: false, description: 'Section headline' },
+      { name: 'metrics', type: 'array', required: true, description: 'Array of metric items with value, label, and optional change indicator' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['lucide-react'],
+    dependencyManifest: [
+      { package: 'lucide-react', version: '^0.400.0' },
+    ],
+    modulePath: 'osmo-metrics',
+    level: 'section',
+    code: `import MetricsSection from '@/components/registry/osmo/metrics-section'
+
+<MetricsSection
+  headline="Key Metrics"
+  metrics={[
+    { value: "99.9%", label: "Uptime", change: "+0.1%" },
+    { value: "50ms", label: "Avg Response", change: "-10ms" },
+    { value: "10K+", label: "Active Users", change: "+25%" }
+  ]}
+/>`,
+    suggestedWith: ['osmo-stats', 'osmo-features-grid'],
+    docsUrl: 'https://www.osmo.supply/vault',
+    version: '1.0.0',
+  },
 ]

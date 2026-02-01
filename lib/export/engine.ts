@@ -1,9 +1,34 @@
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
-import type { Project, Page, DesignSystem, ComponentInstance } from '@/types'
+import type { Project, Page, DesignSystem, ComponentInstance, CMSCollection, CMSItem } from '@/types'
 import { componentRegistry } from '@/lib/components-registry'
+import { stylesToCSSString } from '@/lib/styles/styles-to-css'
 import { db } from '@/lib/db'
 import { getVersionForDep } from './dependency-versions'
+
+// Map builtin registry IDs to their HTML element tags
+const BUILTIN_TAG_MAP: Record<string, string> = {
+  'builtin-section': 'section',
+  'builtin-container': 'div',
+  'builtin-div-block': 'div',
+  'builtin-flex-box': 'div',
+  'builtin-grid-layout': 'div',
+  'builtin-columns': 'div',
+  'builtin-heading': 'h2',
+  'builtin-paragraph': 'p',
+  'builtin-text-block': 'span',
+  'builtin-link-element': 'a',
+  'builtin-rich-text': 'div',
+  'builtin-list-element': 'ul',
+  'builtin-image': 'img',
+  'builtin-video': 'video',
+  'builtin-form-block': 'form',
+  'builtin-input-field': 'input',
+  'builtin-text-area': 'textarea',
+  'builtin-select-field': 'select',
+  'builtin-button-element': 'button',
+  'builtin-link-block': 'a',
+}
 
 export interface ExportOptions {
   includeReadme: boolean
@@ -26,6 +51,8 @@ export class ExportEngine {
   private designSystem: DesignSystem
   private pages: Page[]
   private componentsByPage: Map<string, ComponentInstance[]>
+  private cmsCollections: CMSCollection[]
+  private cmsItems: CMSItem[]
   private options: ExportOptions
 
   constructor(
@@ -33,12 +60,16 @@ export class ExportEngine {
     designSystem: DesignSystem,
     pages: Page[],
     componentsByPage: Map<string, ComponentInstance[]>,
-    options: Partial<ExportOptions> = {}
+    options: Partial<ExportOptions> = {},
+    cmsCollections: CMSCollection[] = [],
+    cmsItems: CMSItem[] = [],
   ) {
     this.project = project
     this.designSystem = designSystem
     this.pages = pages
     this.componentsByPage = componentsByPage
+    this.cmsCollections = cmsCollections
+    this.cmsItems = cmsItems
     this.options = { ...DEFAULT_OPTIONS, ...options }
   }
 
@@ -58,7 +89,8 @@ export class ExportEngine {
     await this.generatePages(zip)
     await this.generateComponents(zip)
     await this.generateLibFiles(zip)
-    
+    await this.generateCMSFiles(zip)
+
     if (this.options.includeReadme) {
       await this.generateReadme(zip)
     }
@@ -415,6 +447,68 @@ export function cn(...inputs: ClassValue[]) {
 `)
   }
 
+  private async generateCMSFiles(zip: JSZip): Promise<void> {
+    if (this.cmsCollections.length === 0) return
+
+    const cmsFolder = zip.folder('lib/cms')!
+
+    // Generate TypeScript types for each collection
+    const typeDefs = this.cmsCollections.map((col) => {
+      const fields = col.fields.map((f) => {
+        let tsType = 'string'
+        switch (f.type) {
+          case 'number': tsType = 'number'; break
+          case 'boolean': tsType = 'boolean'; break
+          case 'date': tsType = 'string'; break
+          case 'option': tsType = f.validation?.options
+            ? f.validation.options.map((o) => `'${o}'`).join(' | ')
+            : 'string'; break
+          default: tsType = 'string'
+        }
+        return `  ${f.slug}${f.required ? '' : '?'}: ${tsType}`
+      })
+      const typeName = this.toPascalCase(col.name)
+      return `export interface ${typeName} {\n  id: string\n${fields.join('\n')}\n  _status: 'draft' | 'published'\n}`
+    }).join('\n\n')
+
+    cmsFolder.file('types.ts', typeDefs + '\n')
+
+    // Generate static data
+    const dataExports = this.cmsCollections.map((col) => {
+      const typeName = this.toPascalCase(col.name)
+      const varName = col.slug.replace(/-/g, '_')
+      const items = this.cmsItems
+        .filter((i) => i.collectionId === col.id)
+        .map((item) => ({
+          id: item.id,
+          ...item.data,
+          _status: item.status,
+        }))
+      return `export const ${varName}: ${typeName}[] = ${JSON.stringify(items, null, 2)}`
+    }).join('\n\n')
+
+    cmsFolder.file('data.ts', `import type { ${this.cmsCollections.map((c) => this.toPascalCase(c.name)).join(', ')} } from './types'\n\n${dataExports}\n`)
+
+    // Generate helper functions
+    const helpers = `// CMS Helpers - Auto-generated
+${this.cmsCollections.map((col) => {
+  const typeName = this.toPascalCase(col.name)
+  const varName = col.slug.replace(/-/g, '_')
+  return `import { ${varName} } from './data'
+import type { ${typeName} } from './types'
+
+export function get${typeName}s(onlyPublished = true): ${typeName}[] {
+  return onlyPublished ? ${varName}.filter(i => i._status === 'published') : ${varName}
+}
+
+export function get${typeName}ById(id: string): ${typeName} | undefined {
+  return ${varName}.find(i => i.id === id)
+}`
+}).join('\n\n')}
+`
+    cmsFolder.file('helpers.ts', helpers)
+  }
+
   private async generateReadme(zip: JSZip): Promise<void> {
     const readme = `# ${this.project.name}
 
@@ -555,7 +649,12 @@ MIT
   }
 
   private generateImports(components: ComponentInstance[]): string {
-    const uniqueIds = new Set(components.map((c) => c.componentRegistryId))
+    // Only import non-builtin components (builtins emit raw HTML)
+    const uniqueIds = new Set(
+      components
+        .filter((c) => c.source !== 'builtin')
+        .map((c) => c.componentRegistryId)
+    )
     const imports: string[] = []
 
     for (const id of uniqueIds) {
@@ -569,21 +668,110 @@ MIT
     return imports.join('\n')
   }
 
-  private generateComponentsJsx(components: ComponentInstance[]): string {
+  /**
+   * Recursively generate JSX for nested component tree
+   */
+  private generateComponentsJsx(components: ComponentInstance[], indent = 6): string {
     if (components.length === 0) return ''
 
-    return components
+    // Build tree: only root-level components (no parentId) at top
+    const rootComponents = components
+      .filter((c) => !c.parentId)
       .sort((a, b) => a.order - b.order)
-      .map((comp) => {
-        const registryItem = componentRegistry.getById(comp.componentRegistryId)
-        if (!registryItem) return `      {/* Unknown component: ${comp.componentRegistryId} */}`
 
-        const componentName = this.toPascalCase(registryItem.name)
-        const propsString = this.generatePropsString(comp.props)
-
-        return `      <${componentName}${propsString} />`
-      })
+    return rootComponents
+      .map((comp) => this.renderComponentNode(comp, components, indent))
       .join('\n')
+  }
+
+  private renderComponentNode(
+    comp: ComponentInstance,
+    allComponents: ComponentInstance[],
+    indent: number,
+  ): string {
+    const pad = ' '.repeat(indent)
+    const registryItem = componentRegistry.getById(comp.componentRegistryId)
+    if (!registryItem) return `${pad}{/* Unknown: ${comp.componentRegistryId} */}`
+
+    // Build inline style string from structured styles
+    const styleStr = this.buildStyleAttribute(comp)
+
+    // Get children (nested components)
+    const children = allComponents
+      .filter((c) => c.parentId === comp.id)
+      .sort((a, b) => a.order - b.order)
+
+    // Builtin elements → emit semantic HTML
+    const builtinTag = BUILTIN_TAG_MAP[comp.componentRegistryId]
+    if (builtinTag) {
+      return this.renderBuiltinElement(comp, builtinTag, children, allComponents, indent, styleStr)
+    }
+
+    // Library components → emit <ComponentName />
+    const componentName = this.toPascalCase(registryItem.name)
+    const propsString = this.generatePropsString(comp.props)
+
+    if (children.length > 0) {
+      const childrenJsx = children
+        .map((child) => this.renderComponentNode(child, allComponents, indent + 2))
+        .join('\n')
+      return `${pad}<${componentName}${propsString}${styleStr}>\n${childrenJsx}\n${pad}</${componentName}>`
+    }
+
+    return `${pad}<${componentName}${propsString}${styleStr} />`
+  }
+
+  private renderBuiltinElement(
+    comp: ComponentInstance,
+    tag: string,
+    children: ComponentInstance[],
+    allComponents: ComponentInstance[],
+    indent: number,
+    styleStr: string,
+  ): string {
+    const pad = ' '.repeat(indent)
+
+    // Special self-closing tags
+    if (tag === 'img') {
+      const src = comp.props.src as string || '/placeholder.jpg'
+      const alt = comp.props.alt as string || ''
+      return `${pad}<img src="${src}" alt="${alt}"${styleStr} />`
+    }
+    if (tag === 'input') {
+      const type = comp.props.type as string || 'text'
+      const placeholder = comp.props.placeholder as string || ''
+      const name = comp.props.name as string || ''
+      return `${pad}<input type="${type}" name="${name}" placeholder="${placeholder}"${styleStr} />`
+    }
+
+    // Text content from props
+    const textContent = (comp.props.text || comp.props.content || comp.props.label || comp.props.children || '') as string
+
+    // Tags with children
+    if (children.length > 0) {
+      const childrenJsx = children
+        .map((child) => this.renderComponentNode(child, allComponents, indent + 2))
+        .join('\n')
+      return `${pad}<${tag}${styleStr}>\n${childrenJsx}\n${pad}</${tag}>`
+    }
+
+    if (textContent) {
+      return `${pad}<${tag}${styleStr}>${textContent}</${tag}>`
+    }
+
+    return `${pad}<${tag}${styleStr} />`
+  }
+
+  private buildStyleAttribute(comp: ComponentInstance): string {
+    const cssString = stylesToCSSString(comp.styles)
+    if (!cssString) return ''
+    // Convert CSS string to React style object entries
+    const entries = cssString.split(';').filter(Boolean).map((rule) => {
+      const [prop, val] = rule.split(':').map((s) => s.trim())
+      const camelProp = prop.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+      return `${camelProp}: '${val}'`
+    })
+    return ` style={{ ${entries.join(', ')} }}`
   }
 
   private generatePropsString(props: Record<string, unknown>): string {
@@ -701,7 +889,30 @@ export async function exportProject(
     componentsByPage.set(page.id, components)
   }
 
+  // Load CMS data
+  const cmsCollections = await db.cmsCollections
+    .where('projectId')
+    .equals(projectId)
+    .toArray()
+
+  const cmsItems: CMSItem[] = []
+  for (const collection of cmsCollections) {
+    const items = await db.cmsItems
+      .where('collectionId')
+      .equals(collection.id)
+      .toArray()
+    cmsItems.push(...items)
+  }
+
   // Create exporter and generate ZIP
-  const exporter = new ExportEngine(project, designSystem, pages, componentsByPage, options)
+  const exporter = new ExportEngine(
+    project,
+    designSystem,
+    pages,
+    componentsByPage,
+    options,
+    cmsCollections,
+    cmsItems,
+  )
   await exporter.exportToZip()
 }

@@ -588,7 +588,11 @@ export const useCanvasStore = create<CanvasState>()(
       try {
         set((state) => { state.error = null })
         const { components } = get()
-        const maxOrder = Math.max(...components.map((c) => c.order), -1)
+
+        // Calculate order relative to siblings (same parentId)
+        const parentId = ('parentId' in componentData) ? componentData.parentId : undefined
+        const siblings = components.filter((c) => c.parentId === parentId)
+        const maxOrder = Math.max(...siblings.map((c) => c.order), -1)
 
         const component: ComponentInstance = 'id' in componentData && componentData.id
           ? { ...componentData, order: componentData.order ?? maxOrder + 1 } as ComponentInstance
@@ -629,10 +633,27 @@ export const useCanvasStore = create<CanvasState>()(
     removeComponent: async (id) => {
       try {
         set((state) => { state.error = null })
-        await db.componentInstances.delete(id)
+
+        // Collect all descendant IDs (cascade delete)
+        const { components } = get()
+        const idsToDelete = new Set<string>()
+        const collectDescendants = (parentId: string) => {
+          idsToDelete.add(parentId)
+          components
+            .filter((c) => c.parentId === parentId)
+            .forEach((c) => collectDescendants(c.id))
+        }
+        collectDescendants(id)
+
+        // Delete all from DB
+        await db.transaction('rw', db.componentInstances, async () => {
+          for (const delId of idsToDelete) {
+            await db.componentInstances.delete(delId)
+          }
+        })
 
         set((state) => {
-          state.components = state.components.filter((c) => c.id !== id)
+          state.components = state.components.filter((c) => !idsToDelete.has(c.id))
         })
         pushToHistory()
       } catch (error) {
@@ -665,21 +686,52 @@ export const useCanvasStore = create<CanvasState>()(
     duplicateComponent: async (id) => {
       try {
         set((state) => { state.error = null })
-        const original = get().components.find((c) => c.id === id)
+        const { components } = get()
+        const original = components.find((c) => c.id === id)
         if (!original) return
 
-        const maxOrder = Math.max(...get().components.map((c) => c.order), -1)
+        // Deep clone: duplicate component and all descendants
+        const newComponents: ComponentInstance[] = []
+        const idMapping = new Map<string, string>() // old ID -> new ID
 
-        const duplicate: ComponentInstance = {
-          ...original,
-          id: nanoid(),
-          order: maxOrder + 1,
+        const cloneTree = (compId: string, newParentId?: string) => {
+          const comp = components.find((c) => c.id === compId)
+          if (!comp) return
+
+          const newId = nanoid()
+          idMapping.set(compId, newId)
+
+          // Calculate sibling order for this clone
+          const siblings = newParentId
+            ? [...components, ...newComponents].filter((c) => c.parentId === newParentId)
+            : [...components, ...newComponents].filter((c) => c.parentId === comp.parentId)
+          const maxOrder = Math.max(...siblings.map((c) => c.order), -1)
+
+          newComponents.push({
+            ...comp,
+            id: newId,
+            parentId: newParentId !== undefined ? newParentId : comp.parentId,
+            order: maxOrder + 1,
+          })
+
+          // Clone all children
+          components
+            .filter((c) => c.parentId === compId)
+            .sort((a, b) => a.order - b.order)
+            .forEach((child) => cloneTree(child.id, newId))
         }
 
-        await db.componentInstances.add(duplicate)
+        cloneTree(id)
+
+        // Persist to DB
+        await db.transaction('rw', db.componentInstances, async () => {
+          for (const comp of newComponents) {
+            await db.componentInstances.add(comp)
+          }
+        })
 
         set((state) => {
-          state.components.push(duplicate)
+          state.components.push(...newComponents)
         })
         pushToHistory()
       } catch (error) {
