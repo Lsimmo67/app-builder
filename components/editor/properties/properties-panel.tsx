@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useEditorStore, useCanvasStore } from '@/lib/store'
 import { componentRegistry } from '@/lib/components-registry'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PropField } from './prop-editors'
+import { StyleEditor } from './style-editor'
+import { CodeEditorDialog } from './code-editor'
 import {
   Copy,
   Trash2,
@@ -34,20 +36,21 @@ function groupProps(props: ComponentProp[]): Record<string, ComponentProp[]> {
   }
 
   for (const prop of props) {
-    if (['children', 'title', 'subtitle', 'text', 'description', 'label', 'placeholder'].some(k => 
+    if (['children', 'title', 'subtitle', 'text', 'description', 'label', 'placeholder', 'heading', 'name', 'content', 'items', 'features', 'testimonials', 'plans', 'questions', 'links', 'stats', 'logos', 'images', 'cards', 'tabs', 'sections', 'buttons', 'actions', 'navigation', 'menu'].some(k =>
       prop.name.toLowerCase().includes(k)
-    ) || prop.type === 'richtext') {
+    ) || prop.type === 'richtext' || prop.type === 'array') {
       groups.content.push(prop)
-    } else if (['color', 'background', 'border', 'size', 'variant', 'className'].some(k =>
+    } else if (['color', 'background', 'border', 'size', 'variant', 'className', 'theme', 'dark', 'gradient', 'shadow', 'rounded', 'opacity'].some(k =>
       prop.name.toLowerCase().includes(k)
     ) || prop.type === 'color') {
       groups.style.push(prop)
-    } else if (['onClick', 'onChange', 'onSubmit', 'disabled', 'loading', 'href', 'target'].some(k =>
+    } else if (['onClick', 'onChange', 'onSubmit', 'disabled', 'loading', 'href', 'target', 'open', 'visible', 'active', 'animated', 'autoplay', 'loop', 'delay', 'duration', 'speed'].some(k =>
       prop.name.toLowerCase().includes(k)
     ) || prop.type === 'boolean') {
       groups.behavior.push(prop)
     } else {
-      groups.advanced.push(prop)
+      // Put remaining props in content by default instead of advanced
+      groups.content.push(prop)
     }
   }
 
@@ -59,6 +62,7 @@ export function PropertiesPanel() {
   const components = useCanvasStore((state) => state.components)
   const { updateComponent, removeComponent, duplicateComponent } = useCanvasStore()
   const { selectComponent } = useEditorStore()
+  const [showCodeEditor, setShowCodeEditor] = useState(false)
 
   const selectedComponent = components.find((c) => c.id === selectedComponentId)
 
@@ -88,6 +92,29 @@ export function PropertiesPanel() {
     [selectedComponent, updateComponent]
   )
 
+  // Handle custom styles change
+  const handleStylesChange = useCallback(
+    (styles: string) => {
+      if (!selectedComponent) return
+      updateComponent(selectedComponent.id, {
+        customStyles: styles || undefined,
+      })
+    },
+    [selectedComponent, updateComponent]
+  )
+
+  // Handle code editor save
+  const handleCodeSave = useCallback(
+    (code: string | undefined, styles: string | undefined) => {
+      if (!selectedComponent) return
+      updateComponent(selectedComponent.id, {
+        customCode: code,
+        customStyles: styles,
+      })
+    },
+    [selectedComponent, updateComponent]
+  )
+
   // Handle delete
   const handleDelete = useCallback(() => {
     if (!selectedComponent) return
@@ -98,7 +125,7 @@ export function PropertiesPanel() {
   // Empty state
   if (!selectedComponent || !registryItem) {
     return (
-      <div className="w-80 border-l bg-card/50 backdrop-blur-sm">
+      <div className="w-80 min-w-[320px] border-l bg-card/50 backdrop-blur-sm">
         <div className="h-full flex flex-col items-center justify-center text-center p-6">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
             <Settings className="h-8 w-8 text-muted-foreground" />
@@ -116,7 +143,7 @@ export function PropertiesPanel() {
   const sourceLabel = SOURCE_LABELS[selectedComponent.source]
 
   return (
-    <div className="w-80 border-l bg-card/50 backdrop-blur-sm flex flex-col">
+    <div className="w-80 min-w-[320px] border-l bg-card/50 backdrop-blur-sm flex flex-col">
       {/* Header */}
       <div className="p-4 border-b space-y-3">
         <div className="flex items-start justify-between gap-2">
@@ -236,6 +263,7 @@ export function PropertiesPanel() {
         </div>
 
         <ScrollArea className="flex-1">
+          {/* Content Tab */}
           <TabsContent value="content" className="p-4 space-y-4 m-0">
             {groupedProps?.content.length === 0 && groupedProps?.behavior.length === 0 ? (
               <p className="text-sm text-muted-foreground">No content properties</p>
@@ -271,52 +299,77 @@ export function PropertiesPanel() {
             )}
           </TabsContent>
 
+          {/* Style Tab - Enhanced with visual CSS editor */}
           <TabsContent value="style" className="p-4 space-y-4 m-0">
-            {groupedProps?.style.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No style properties</p>
-            ) : (
-              groupedProps?.style.map((prop) => (
-                <PropField
-                  key={prop.name}
-                  prop={prop}
-                  value={selectedComponent.props[prop.name]}
-                  onChange={(value) => handlePropChange(prop.name, value)}
-                  disabled={selectedComponent.isLocked}
-                />
-              ))
+            {/* Component prop-based styles first */}
+            {groupedProps?.style && groupedProps.style.length > 0 && (
+              <>
+                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Component Properties
+                </h4>
+                {groupedProps.style.map((prop) => (
+                  <PropField
+                    key={prop.name}
+                    prop={prop}
+                    value={selectedComponent.props[prop.name]}
+                    onChange={(value) => handlePropChange(prop.name, value)}
+                    disabled={selectedComponent.isLocked}
+                  />
+                ))}
+                <div className="h-px bg-border my-4" />
+              </>
             )}
+
+            {/* Visual CSS style editor */}
+            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Custom Styles
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Override component appearance with custom CSS styles
+            </p>
+            <StyleEditor
+              customStyles={selectedComponent.customStyles}
+              onChange={handleStylesChange}
+              disabled={selectedComponent.isLocked}
+            />
           </TabsContent>
 
+          {/* Advanced Tab */}
           <TabsContent value="advanced" className="p-4 space-y-4 m-0">
-            {groupedProps?.advanced.length === 0 ? (
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">No advanced properties</p>
-              </div>
-            ) : (
-              groupedProps?.advanced.map((prop) => (
-                <PropField
-                  key={prop.name}
-                  prop={prop}
-                  value={selectedComponent.props[prop.name]}
-                  onChange={(value) => handlePropChange(prop.name, value)}
-                  disabled={selectedComponent.isLocked}
-                />
-              ))
+            {groupedProps?.advanced && groupedProps.advanced.length > 0 && (
+              <>
+                {groupedProps.advanced.map((prop) => (
+                  <PropField
+                    key={prop.name}
+                    prop={prop}
+                    value={selectedComponent.props[prop.name]}
+                    onChange={(value) => handlePropChange(prop.name, value)}
+                    disabled={selectedComponent.isLocked}
+                  />
+                ))}
+                <div className="h-px bg-border my-4" />
+              </>
             )}
 
-            <div className="h-px bg-border my-4" />
-
-            {/* Custom Code Section */}
+            {/* Custom Code Section - Now functional */}
             <div className="space-y-2">
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Custom Code
               </h4>
               <p className="text-xs text-muted-foreground">
-                Override the component with custom code
+                Override styles with CSS or add custom Tailwind classes
               </p>
-              <Button variant="outline" size="sm" className="w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => setShowCodeEditor(true)}
+              >
                 <Code className="h-4 w-4 mr-2" />
                 Edit Code
+                {(selectedComponent.customCode || selectedComponent.customStyles) && (
+                  <Badge variant="secondary" className="ml-2 text-[10px]">Active</Badge>
+                )}
               </Button>
             </div>
 
@@ -341,11 +394,33 @@ export function PropertiesPanel() {
                     {selectedComponent.componentRegistryId}
                   </code>
                 </div>
+                {selectedComponent.customStyles && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Custom Styles</span>
+                    <Badge variant="secondary" className="text-[10px]">Yes</Badge>
+                  </div>
+                )}
+                {selectedComponent.customCode && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Custom Classes</span>
+                    <Badge variant="secondary" className="text-[10px]">Yes</Badge>
+                  </div>
+                )}
               </div>
             </div>
           </TabsContent>
         </ScrollArea>
       </Tabs>
+
+      {/* Code Editor Dialog */}
+      <CodeEditorDialog
+        open={showCodeEditor}
+        onOpenChange={setShowCodeEditor}
+        customCode={selectedComponent.customCode}
+        customStyles={selectedComponent.customStyles}
+        onSave={handleCodeSave}
+        componentName={registryItem.displayName}
+      />
     </div>
   )
 }

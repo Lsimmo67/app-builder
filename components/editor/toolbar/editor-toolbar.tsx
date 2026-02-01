@@ -27,18 +27,19 @@ import {
   Undo2,
   Redo2,
   Download,
-  Settings,
   Loader2,
   Check,
   Layers,
   Eye,
-  Upload,
   PanelLeft,
   PanelRight,
 } from 'lucide-react'
 import { useEditorStore, useProjectStore } from '@/lib/store'
 import { exportProject } from '@/lib/export'
 import { RelumeImportDialog } from '@/components/relume'
+import { PageSelector } from './page-selector'
+import { DesignSystemPanel } from './design-system-panel'
+import { ComponentImportDialog } from './component-import-dialog'
 import type { ViewMode, PreviewDevice } from '@/types'
 
 const viewModeIcons: Record<ViewMode, typeof Layout> = {
@@ -73,17 +74,17 @@ export function EditorToolbar() {
     canUndo,
     canRedo,
   } = useEditorStore()
-  
+
   const [showExportDialog, setShowExportDialog] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [exportSuccess, setExportSuccess] = useState(false)
 
   const handleExport = async () => {
     if (!currentProject) return
-    
+
     setIsExporting(true)
     setExportSuccess(false)
-    
+
     try {
       await exportProject(currentProject.id)
       setExportSuccess(true)
@@ -100,28 +101,33 @@ export function EditorToolbar() {
 
   return (
     <>
-      <div className="h-12 border-b bg-card flex items-center justify-between px-4">
+      <div className="h-12 border-b bg-card flex items-center justify-between px-2 sm:px-4 gap-1">
         {/* Left section */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 min-w-0">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.push('/')}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Back to projects</TooltipContent>
           </Tooltip>
 
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px bg-border shrink-0" />
 
-          <span className="font-medium truncate max-w-[150px]">
-            {currentProject?.name || 'Untitled Project'}
+          <span className="font-medium truncate max-w-[120px] text-sm">
+            {currentProject?.name || 'Untitled'}
           </span>
 
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px bg-border shrink-0" />
+
+          {/* Page Selector */}
+          <PageSelector />
+
+          <div className="h-6 w-px bg-border shrink-0" />
 
           {/* Panel toggles */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -165,14 +171,18 @@ export function EditorToolbar() {
             </Tooltip>
           </div>
 
-          <div className="h-6 w-px bg-border" />
+          <div className="h-6 w-px bg-border shrink-0" />
 
-          {/* Relume Import */}
+          {/* Import tools */}
           <RelumeImportDialog />
+          <ComponentImportDialog />
+
+          {/* Design System */}
+          <DesignSystemPanel />
         </div>
 
         {/* Center section - Device toggles */}
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-muted rounded-lg p-1 shrink-0">
           {(Object.keys(deviceIcons) as PreviewDevice[]).map((device) => {
             const Icon = deviceIcons[device]
             return (
@@ -194,7 +204,7 @@ export function EditorToolbar() {
         </div>
 
         {/* Right section - View mode & actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 shrink-0">
           {/* View mode toggles */}
           <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
             {(Object.keys(viewModeIcons) as ViewMode[]).map((mode) => {
@@ -220,7 +230,7 @@ export function EditorToolbar() {
           <div className="h-6 w-px bg-border" />
 
           {/* Undo/Redo */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -255,9 +265,9 @@ export function EditorToolbar() {
           <div className="h-6 w-px bg-border" />
 
           {/* Export */}
-          <Button size="sm" onClick={() => setShowExportDialog(true)}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
+          <Button size="sm" className="h-8" onClick={() => setShowExportDialog(true)}>
+            <Download className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Export</span>
           </Button>
         </div>
       </div>
@@ -274,14 +284,14 @@ export function EditorToolbar() {
 
           <div className="py-4 space-y-4">
             <div className="bg-muted rounded-lg p-4">
-              <h4 className="font-medium mb-2">What's included:</h4>
+              <h4 className="font-medium mb-2">What&apos;s included:</h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>✓ Next.js 14 with App Router</li>
-                <li>✓ TypeScript configuration</li>
-                <li>✓ Tailwind CSS with your design system</li>
-                <li>✓ All page components</li>
-                <li>✓ UI components from your selection</li>
-                <li>✓ Ready to deploy to Vercel</li>
+                <li>Next.js 14 with App Router</li>
+                <li>TypeScript configuration</li>
+                <li>Tailwind CSS with your design system</li>
+                <li>All page components</li>
+                <li>UI components from your selection</li>
+                <li>Ready to deploy to Vercel</li>
               </ul>
             </div>
 

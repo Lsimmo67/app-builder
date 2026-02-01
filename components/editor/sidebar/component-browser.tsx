@@ -57,40 +57,41 @@ function ComponentCard({ component }: ComponentCardProps) {
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative border rounded-lg p-3 cursor-grab hover:border-primary/50 transition-colors bg-card',
+        'group relative border rounded-lg p-2.5 cursor-grab hover:border-primary/50 transition-colors bg-card',
         isDragging && 'opacity-50 z-50 shadow-lg'
       )}
       onMouseEnter={handleMouseEnter}
       {...listeners}
       {...attributes}
     >
-      <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <GripVertical className="h-4 w-4 text-muted-foreground" />
-      </div>
-
-      {/* Preview thumbnail */}
-      <div className="aspect-video bg-muted rounded mb-2 overflow-hidden flex items-center justify-center">
-        {hasImpl ? (
-          <div className="flex items-center gap-1">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span className="text-muted-foreground text-[10px]">Live</span>
-          </div>
-        ) : (
-          <span className="text-muted-foreground text-xs">Preview</span>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <span className="font-medium text-sm truncate">{component.displayName}</span>
-          <Badge variant={component.source as any} className="text-[10px] px-1.5 py-0">
-            {component.source}
-          </Badge>
+      <div className="flex items-start gap-2.5">
+        <div className="shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2">
-          {component.description}
-        </p>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            {hasImpl ? (
+              <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+            ) : (
+              <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+            )}
+            <span className="font-medium text-sm truncate">{component.displayName}</span>
+          </div>
+          <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+            {component.description}
+          </p>
+          <div className="flex items-center gap-1.5">
+            <Badge variant={component.source as any} className="text-[10px] px-1.5 py-0">
+              {component.source}
+            </Badge>
+            {component.categories[0] && (
+              <span className="text-[10px] text-muted-foreground capitalize">
+                {component.categories[0]}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -117,7 +118,7 @@ export function ComponentBrowser() {
   const virtualizer = useVirtualizer({
     count: filteredComponents.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 130,
+    estimateSize: () => 82,
     overscan: 5,
   })
 
@@ -140,7 +141,7 @@ export function ComponentBrowser() {
   const totalCount = componentRegistry.getAll().length
 
   return (
-    <div className="w-80 border-r bg-card flex flex-col h-full">
+    <div className="w-80 min-w-[320px] border-r bg-card flex flex-col h-full overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b space-y-3">
         <div className="relative">

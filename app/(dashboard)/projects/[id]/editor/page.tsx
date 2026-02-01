@@ -285,11 +285,13 @@ export default function EditorPage() {
           <div className="flex-1 flex overflow-hidden">
             {sidebarOpen && <ComponentBrowser />}
             {layerTreeOpen && (
-              <div className="w-64 border-r bg-card overflow-hidden">
+              <div className="w-64 min-w-[256px] border-r bg-card overflow-hidden">
                 <LayerTree />
               </div>
             )}
-            <Canvas />
+            <div className="flex-1 min-w-0">
+              <Canvas />
+            </div>
             {propertiesOpen && <PropertiesPanel />}
           </div>
         );
