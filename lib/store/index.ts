@@ -45,9 +45,7 @@ interface EditorState {
   toggleProperties: () => void
   toggleLayerTree: () => void
   selectComponent: (id: string | null) => void
-  setSelectedComponentId: (id: string | null) => void
   hoverComponent: (id: string | null) => void
-  setHoveredComponentId: (id: string | null) => void
 
   // Undo/Redo
   pushHistory: (snapshot: string) => void
@@ -117,17 +115,7 @@ export const useEditorStore = create<EditorState>()(
           state.selectedComponentId = id
         }),
 
-      setSelectedComponentId: (id) =>
-        set((state) => {
-          state.selectedComponentId = id
-        }),
-
       hoverComponent: (id) =>
-        set((state) => {
-          state.hoveredComponentId = id
-        }),
-
-      setHoveredComponentId: (id) =>
         set((state) => {
           state.hoveredComponentId = id
         }),
@@ -158,10 +146,11 @@ export const useEditorStore = create<EditorState>()(
           state.historyIndex = newIndex
         })
 
-        // Restore canvas state
+        // Restore canvas state and sync to Dexie
         try {
           const components = JSON.parse(snapshot) as ComponentInstance[]
           useCanvasStore.setState({ components })
+          syncComponentsToDexie(components)
         } catch {
           // Ignore invalid snapshots
         }
@@ -179,10 +168,11 @@ export const useEditorStore = create<EditorState>()(
           state.historyIndex = newIndex
         })
 
-        // Restore canvas state
+        // Restore canvas state and sync to Dexie
         try {
           const components = JSON.parse(snapshot) as ComponentInstance[]
           useCanvasStore.setState({ components })
+          syncComponentsToDexie(components)
         } catch {
           // Ignore invalid snapshots
         }
@@ -213,11 +203,38 @@ export const useEditorStore = create<EditorState>()(
 /**
  * Push current canvas state to history.
  * Call this after every canvas mutation.
+ * Debounced to avoid flooding history on rapid style changes.
  */
+let historyTimer: ReturnType<typeof setTimeout> | null = null
 function pushToHistory() {
-  const components = useCanvasStore.getState().components
-  const snapshot = JSON.stringify(components)
-  useEditorStore.getState().pushHistory(snapshot)
+  if (historyTimer) clearTimeout(historyTimer)
+  historyTimer = setTimeout(() => {
+    const components = useCanvasStore.getState().components
+    const snapshot = JSON.stringify(components)
+    useEditorStore.getState().pushHistory(snapshot)
+    historyTimer = null
+  }, 300)
+}
+
+/**
+ * Sync component state back to Dexie after undo/redo.
+ * Replaces all components for the current page.
+ */
+async function syncComponentsToDexie(components: ComponentInstance[]) {
+  if (components.length === 0) return
+  const pageId = components[0].pageId
+  if (!pageId) return
+
+  try {
+    await db.transaction('rw', db.componentInstances, async () => {
+      // Remove existing components for this page
+      await db.componentInstances.where('pageId').equals(pageId).delete()
+      // Re-add all components from the snapshot
+      await db.componentInstances.bulkAdd(components)
+    })
+  } catch {
+    // Silently fail — in-memory state is still correct
+  }
 }
 
 // ============================================
@@ -380,10 +397,21 @@ export const useProjectStore = create<ProjectState>()(
         db.componentInstances,
         db.relumeImports,
         db.history,
+        db.cmsCollections,
+        db.cmsItems,
       ], async () => {
         const pages = await db.pages.where('projectId').equals(id).toArray()
         const pageIds = pages.map((p) => p.id)
 
+        // Delete CMS data
+        const collections = await db.cmsCollections.where('projectId').equals(id).toArray()
+        const collectionIds = collections.map((c) => c.id)
+        if (collectionIds.length > 0) {
+          await db.cmsItems.where('collectionId').anyOf(collectionIds).delete()
+        }
+        await db.cmsCollections.where('projectId').equals(id).delete()
+
+        // Delete page-scoped data
         await db.componentInstances.where('pageId').anyOf(pageIds).delete()
         await db.relumeImports.where('pageId').anyOf(pageIds).delete()
         await db.history.where('pageId').anyOf(pageIds).delete()
@@ -435,6 +463,8 @@ export const useProjectStore = create<ProjectState>()(
         db.designSystems,
         db.pages,
         db.componentInstances,
+        db.cmsCollections,
+        db.cmsItems,
       ], async () => {
         await db.projects.add(newProject)
 
@@ -448,6 +478,7 @@ export const useProjectStore = create<ProjectState>()(
 
         for (const page of originalPages) {
           const newPageId = nanoid()
+          const componentIdMap = new Map<string, string>()
 
           await db.pages.add({
             ...page,
@@ -462,11 +493,47 @@ export const useProjectStore = create<ProjectState>()(
             .equals(page.id)
             .toArray()
 
+          // First pass: create ID mapping
+          for (const comp of components) {
+            componentIdMap.set(comp.id, nanoid())
+          }
+
+          // Second pass: add with remapped IDs and parentIds
           for (const comp of components) {
             await db.componentInstances.add({
               ...comp,
-              id: nanoid(),
+              id: componentIdMap.get(comp.id)!,
               pageId: newPageId,
+              parentId: comp.parentId ? componentIdMap.get(comp.parentId) : undefined,
+            })
+          }
+        }
+
+        // Duplicate CMS collections and items
+        const collections = await db.cmsCollections
+          .where('projectId')
+          .equals(id)
+          .toArray()
+
+        for (const col of collections) {
+          const newColId = nanoid()
+
+          await db.cmsCollections.add({
+            ...col,
+            id: newColId,
+            projectId: newProjectId,
+          })
+
+          const items = await db.cmsItems
+            .where('collectionId')
+            .equals(col.id)
+            .toArray()
+
+          for (const item of items) {
+            await db.cmsItems.add({
+              ...item,
+              id: nanoid(),
+              collectionId: newColId,
             })
           }
         }
@@ -554,7 +621,7 @@ interface CanvasState {
   removeComponent: (id: string) => Promise<void>
   moveComponent: (id: string, newOrder: number, newParentId?: string) => Promise<void>
   duplicateComponent: (id: string) => Promise<void>
-  reorderComponents: (oldIndex: number, newIndex: number) => Promise<void>
+  reorderComponents: (oldIndex: number, newIndex: number, parentId?: string) => Promise<void>
   setDragState: (isDragging: boolean, source?: 'library' | 'canvas', componentId?: string) => void
   clearComponents: () => void
 }
@@ -588,7 +655,11 @@ export const useCanvasStore = create<CanvasState>()(
       try {
         set((state) => { state.error = null })
         const { components } = get()
-        const maxOrder = Math.max(...components.map((c) => c.order), -1)
+
+        // Calculate order relative to siblings (same parentId)
+        const parentId = ('parentId' in componentData) ? componentData.parentId : undefined
+        const siblings = components.filter((c) => c.parentId === parentId)
+        const maxOrder = Math.max(...siblings.map((c) => c.order), -1)
 
         const component: ComponentInstance = 'id' in componentData && componentData.id
           ? { ...componentData, order: componentData.order ?? maxOrder + 1 } as ComponentInstance
@@ -629,10 +700,27 @@ export const useCanvasStore = create<CanvasState>()(
     removeComponent: async (id) => {
       try {
         set((state) => { state.error = null })
-        await db.componentInstances.delete(id)
+
+        // Collect all descendant IDs (cascade delete)
+        const { components } = get()
+        const idsToDelete = new Set<string>()
+        const collectDescendants = (parentId: string) => {
+          idsToDelete.add(parentId)
+          components
+            .filter((c) => c.parentId === parentId)
+            .forEach((c) => collectDescendants(c.id))
+        }
+        collectDescendants(id)
+
+        // Delete all from DB
+        await db.transaction('rw', db.componentInstances, async () => {
+          for (const delId of idsToDelete) {
+            await db.componentInstances.delete(delId)
+          }
+        })
 
         set((state) => {
-          state.components = state.components.filter((c) => c.id !== id)
+          state.components = state.components.filter((c) => !idsToDelete.has(c.id))
         })
         pushToHistory()
       } catch (error) {
@@ -665,21 +753,52 @@ export const useCanvasStore = create<CanvasState>()(
     duplicateComponent: async (id) => {
       try {
         set((state) => { state.error = null })
-        const original = get().components.find((c) => c.id === id)
+        const { components } = get()
+        const original = components.find((c) => c.id === id)
         if (!original) return
 
-        const maxOrder = Math.max(...get().components.map((c) => c.order), -1)
+        // Deep clone: duplicate component and all descendants
+        const newComponents: ComponentInstance[] = []
+        const idMapping = new Map<string, string>() // old ID -> new ID
 
-        const duplicate: ComponentInstance = {
-          ...original,
-          id: nanoid(),
-          order: maxOrder + 1,
+        const cloneTree = (compId: string, newParentId?: string) => {
+          const comp = components.find((c) => c.id === compId)
+          if (!comp) return
+
+          const newId = nanoid()
+          idMapping.set(compId, newId)
+
+          // Calculate sibling order for this clone
+          const siblings = newParentId
+            ? [...components, ...newComponents].filter((c) => c.parentId === newParentId)
+            : [...components, ...newComponents].filter((c) => c.parentId === comp.parentId)
+          const maxOrder = Math.max(...siblings.map((c) => c.order), -1)
+
+          newComponents.push({
+            ...comp,
+            id: newId,
+            parentId: newParentId !== undefined ? newParentId : comp.parentId,
+            order: maxOrder + 1,
+          })
+
+          // Clone all children
+          components
+            .filter((c) => c.parentId === compId)
+            .sort((a, b) => a.order - b.order)
+            .forEach((child) => cloneTree(child.id, newId))
         }
 
-        await db.componentInstances.add(duplicate)
+        cloneTree(id)
+
+        // Persist to DB
+        await db.transaction('rw', db.componentInstances, async () => {
+          for (const comp of newComponents) {
+            await db.componentInstances.add(comp)
+          }
+        })
 
         set((state) => {
-          state.components.push(duplicate)
+          state.components.push(...newComponents)
         })
         pushToHistory()
       } catch (error) {
@@ -687,19 +806,26 @@ export const useCanvasStore = create<CanvasState>()(
       }
     },
 
-    reorderComponents: async (oldIndex, newIndex) => {
+    reorderComponents: async (oldIndex, newIndex, parentId?: string) => {
       try {
         set((state) => { state.error = null })
         const { components } = get()
+
+        // Scope to siblings with the same parentId
+        const siblings = components
+          .filter((c) => c.parentId === parentId)
+          .sort((a, b) => a.order - b.order)
+
         if (oldIndex === newIndex) return
-        if (oldIndex < 0 || oldIndex >= components.length) return
-        if (newIndex < 0 || newIndex >= components.length) return
+        if (oldIndex < 0 || oldIndex >= siblings.length) return
+        if (newIndex < 0 || newIndex >= siblings.length) return
 
-        const newComponents = [...components]
-        const [movedItem] = newComponents.splice(oldIndex, 1)
-        newComponents.splice(newIndex, 0, movedItem)
+        const reordered = [...siblings]
+        const [movedItem] = reordered.splice(oldIndex, 1)
+        reordered.splice(newIndex, 0, movedItem)
 
-        const updates: Promise<void>[] = newComponents.map((comp, index) => {
+        // Update order for the reordered siblings
+        const updates: Promise<void>[] = reordered.map((comp, index) => {
           if (comp.order !== index) {
             return db.componentInstances.update(comp.id, { order: index }).then(() => {})
           }
@@ -708,11 +834,16 @@ export const useCanvasStore = create<CanvasState>()(
 
         await Promise.all(updates)
 
+        // Build new full component list: replace siblings, keep others
+        const siblingIds = new Set(siblings.map((c) => c.id))
+        const otherComponents = components.filter((c) => !siblingIds.has(c.id))
+        const updatedSiblings = reordered.map((comp, index) => ({
+          ...comp,
+          order: index,
+        }))
+
         set((state) => {
-          state.components = newComponents.map((comp, index) => ({
-            ...comp,
-            order: index,
-          }))
+          state.components = [...otherComponents, ...updatedSiblings]
         })
         pushToHistory()
       } catch (error) {

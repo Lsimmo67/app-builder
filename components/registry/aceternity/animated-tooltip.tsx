@@ -1,87 +1,112 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils/cn'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import React, { useState } from "react"
+import {
+  motion,
+  useTransform,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+} from "motion/react"
 
-interface Person {
-  id: number
-  name: string
-  role: string
-  color: string
-  initials: string
-}
-
-interface AnimatedTooltipProps {
-  className?: string
-  people?: Person[]
-  avatarSize?: number
-}
-
-const defaultPeople: Person[] = [
-  { id: 1, name: 'Sarah Chen', role: 'CEO & Founder', color: 'from-violet-500 to-purple-600', initials: 'SC' },
-  { id: 2, name: 'Marcus Johnson', role: 'CTO', color: 'from-blue-500 to-cyan-600', initials: 'MJ' },
-  { id: 3, name: 'Emily Parker', role: 'Lead Designer', color: 'from-pink-500 to-rose-600', initials: 'EP' },
-  { id: 4, name: 'David Kim', role: 'Engineering Lead', color: 'from-amber-500 to-orange-600', initials: 'DK' },
-  { id: 5, name: 'Lisa Wang', role: 'Product Manager', color: 'from-emerald-500 to-teal-600', initials: 'LW' },
-  { id: 6, name: 'James Miller', role: 'DevOps Engineer', color: 'from-indigo-500 to-blue-600', initials: 'JM' },
-]
-
-export default function AnimatedTooltip({
-  className,
-  people = defaultPeople,
-  avatarSize = 48,
-}: AnimatedTooltipProps) {
-  const [hoveredId, setHoveredId] = useState<number | null>(null)
+export const AnimatedTooltip = ({
+  items,
+}: {
+  items: {
+    id: number
+    name: string
+    designation: string
+    image: string
+  }[]
+}) => {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const springConfig = { stiffness: 100, damping: 5 }
+  const x = useMotionValue(0)
+  const rotate = useSpring(
+    useTransform(x, [-100, 100], [-45, 45]),
+    springConfig
+  )
+  const translateX = useSpring(
+    useTransform(x, [-100, 100], [-50, 50]),
+    springConfig
+  )
+  const handleMouseMove = (event: React.MouseEvent<HTMLImageElement>) => {
+    const halfWidth = event.currentTarget.offsetWidth / 2
+    x.set(event.nativeEvent.offsetX - halfWidth)
+  }
 
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center py-10',
-        className
-      )}
-    >
-      <div className="flex -space-x-3">
-        {people.map((person) => (
-          <div
-            key={person.id}
-            className="group relative"
-            onMouseEnter={() => setHoveredId(person.id)}
-            onMouseLeave={() => setHoveredId(null)}
-          >
-            <AnimatePresence>
-              {hoveredId === person.id && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className="absolute -top-16 left-1/2 z-50 -translate-x-1/2 whitespace-nowrap"
-                >
-                  <div className="rounded-xl border border-white/10 bg-black px-4 py-2 text-center shadow-2xl">
-                    <p className="text-sm font-bold text-white">{person.name}</p>
-                    <p className="text-xs text-neutral-400">{person.role}</p>
-                  </div>
-                  {/* Tooltip arrow */}
-                  <div className="absolute -bottom-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 border-b border-r border-white/10 bg-black" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+    <div className="flex flex-row items-center justify-center mb-10 w-full">
+      {items.map((item) => (
+        <div
+          className="-mr-4 relative group"
+          key={item.name}
+          onMouseEnter={() => setHoveredIndex(item.id)}
+          onMouseLeave={() => setHoveredIndex(null)}
+        >
+          <AnimatePresence mode="popLayout">
+            {hoveredIndex === item.id && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.6 }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: {
+                    type: "spring",
+                    stiffness: 260,
+                    damping: 10,
+                  },
+                }}
+                exit={{ opacity: 0, y: 20, scale: 0.6 }}
+                style={{
+                  translateX: translateX,
+                  rotate: rotate,
+                  whiteSpace: "nowrap",
+                }}
+                className="absolute -top-16 -left-1/2 translate-x-1/2 flex text-xs flex-col items-center justify-center rounded-md bg-black z-50 shadow-xl px-4 py-2"
+              >
+                <div className="absolute inset-x-10 z-30 w-[20%] -bottom-px bg-gradient-to-r from-transparent via-emerald-500 to-transparent h-px" />
+                <div className="absolute left-10 w-[40%] z-30 -bottom-px bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px" />
+                <div className="font-bold text-white relative z-30 text-base">
+                  {item.name}
+                </div>
+                <div className="text-white text-xs">{item.designation}</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <img
+            onMouseMove={handleMouseMove}
+            height={100}
+            width={100}
+            src={item.image}
+            alt={item.name}
+            className="object-cover !m-0 !p-0 object-top rounded-full h-14 w-14 border-2 group-hover:scale-105 group-hover:z-30 border-white relative transition duration-500"
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
 
-            <motion.div
-              whileHover={{ y: -4, scale: 1.1, zIndex: 30 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 15 }}
-              className={cn(
-                'relative flex items-center justify-center rounded-full border-2 border-neutral-900 bg-gradient-to-br text-sm font-bold text-white shadow-lg',
-                person.color
-              )}
-              style={{ width: avatarSize, height: avatarSize }}
-            >
-              {person.initials}
-            </motion.div>
-          </div>
-        ))}
-      </div>
+export interface AceternityAnimatedTooltipProps {
+  items?: { id: number; name: string; designation: string; image: string }[]
+  className?: string
+}
+
+const defaultItems = [
+  { id: 1, name: "John Doe", designation: "Software Engineer", image: "https://images.unsplash.com/photo-1599566150163-29194dcabd9c?ixlib=rb-4.0.3&auto=format&fit=crop&w=3387&q=80" },
+  { id: 2, name: "Robert Johnson", designation: "Product Manager", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&auto=format&fit=crop&w=3560&q=80" },
+  { id: 3, name: "Jane Smith", designation: "Data Scientist", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=3561&q=80" },
+  { id: 4, name: "Emily Davis", designation: "UX Designer", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=3540&q=80" },
+]
+
+export default function AceternityAnimatedTooltipWrapper({
+  items = defaultItems,
+}: AceternityAnimatedTooltipProps) {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <AnimatedTooltip items={items} />
     </div>
   )
 }

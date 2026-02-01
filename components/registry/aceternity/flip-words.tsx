@@ -1,77 +1,105 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils/cn'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
+import { cn } from "@/lib/utils"
 
-interface FlipWordsProps {
-  className?: string
-  words?: string[]
-  duration?: number
-  prefix?: string
-  suffix?: string
-}
-
-export default function FlipWords({
-  className,
-  words = ['amazing', 'beautiful', 'powerful', 'innovative', 'creative'],
+export const FlipWords = ({
+  words,
   duration = 3000,
-  prefix = 'Build something',
-  suffix = 'today.',
-}: FlipWordsProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  className,
+}: {
+  words: string[]
+  duration?: number
+  className?: string
+}) => {
+  const [currentWord, setCurrentWord] = useState(words[0])
+  const [isAnimating, setIsAnimating] = useState<boolean>(false)
 
-  const next = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % words.length)
-  }, [words.length])
+  const startAnimation = useCallback(() => {
+    const word = words[words.indexOf(currentWord) + 1] || words[0]
+    setCurrentWord(word)
+    setIsAnimating(true)
+  }, [currentWord, words])
 
   useEffect(() => {
-    const interval = setInterval(next, duration)
-    return () => clearInterval(interval)
-  }, [next, duration])
+    if (!isAnimating)
+      setTimeout(() => {
+        startAnimation()
+      }, duration)
+  }, [isAnimating, duration, startAnimation])
 
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center px-4 py-20',
-        className
-      )}
+    <AnimatePresence
+      onExitComplete={() => {
+        setIsAnimating(false)
+      }}
     >
-      <div className="text-center text-3xl font-bold text-white md:text-5xl lg:text-6xl">
-        {prefix}{' '}
-        <span className="relative inline-block w-auto">
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={words[currentIndex]}
-              initial={{
-                opacity: 0,
-                rotateX: -90,
-                y: 10,
-                filter: 'blur(8px)',
-              }}
-              animate={{
-                opacity: 1,
-                rotateX: 0,
-                y: 0,
-                filter: 'blur(0px)',
-              }}
-              exit={{
-                opacity: 0,
-                rotateX: 90,
-                y: -10,
-                filter: 'blur(8px)',
-              }}
-              transition={{
-                duration: 0.4,
-                ease: 'easeInOut',
-              }}
-              className="inline-block bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
-            >
-              {words[currentIndex]}
-            </motion.span>
-          </AnimatePresence>
-        </span>{' '}
-        {suffix}
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: 10,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 100,
+          damping: 10,
+        }}
+        exit={{
+          opacity: 0,
+          y: -40,
+          x: 40,
+          filter: "blur(8px)",
+          scale: 2,
+          position: "absolute",
+        }}
+        className={cn(
+          "z-10 inline-block relative text-left text-neutral-900 dark:text-neutral-100 px-2",
+          className
+        )}
+        key={currentWord}
+      >
+        {currentWord.split("").map((letter, index) => (
+          <motion.span
+            key={currentWord + index}
+            initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{
+              delay: index * 0.08,
+              duration: 0.4,
+            }}
+            className="inline-block"
+          >
+            {letter}
+          </motion.span>
+        ))}
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+export interface AceternityFlipWordsProps {
+  words?: string[]
+  duration?: number
+  className?: string
+}
+
+export default function AceternityFlipWordsWrapper({
+  words = ["better", "modern", "beautiful", "awesome"],
+  duration = 3000,
+  className,
+}: AceternityFlipWordsProps) {
+  return (
+    <div className="flex items-center justify-center p-8">
+      <div className="text-4xl font-bold text-neutral-600 dark:text-neutral-400">
+        Build{" "}
+        <FlipWords words={words} duration={duration} className={className} />
+        <br />
+        websites with Aceternity UI
       </div>
     </div>
   )

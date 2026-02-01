@@ -1,92 +1,95 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils/cn'
+import React, { useState } from "react"
 import {
   motion,
-  useMotionValueEvent,
-  useScroll,
   AnimatePresence,
-} from 'framer-motion'
-import { useState } from 'react'
+  useScroll,
+  useMotionValueEvent,
+} from "motion/react"
+import { cn } from "@/lib/utils"
 
-interface NavItem {
-  name: string
-  link: string
-  icon?: React.ReactNode
-}
-
-interface FloatingNavbarProps {
-  className?: string
-  navItems?: NavItem[]
-  brandName?: string
-}
-
-const defaultNavItems: NavItem[] = [
-  { name: 'Home', link: '#home' },
-  { name: 'About', link: '#about' },
-  { name: 'Features', link: '#features' },
-  { name: 'Pricing', link: '#pricing' },
-  { name: 'Contact', link: '#contact' },
-]
-
-export default function FloatingNavbar({
+export const FloatingNav = ({
+  navItems,
   className,
-  navItems = defaultNavItems,
-  brandName = 'Acme',
-}: FloatingNavbarProps) {
-  const { scrollY } = useScroll()
-  const [visible, setVisible] = useState(true)
-  const [lastScrollY, setLastScrollY] = useState(0)
+}: {
+  navItems: {
+    name: string
+    link: string
+    icon?: React.ReactNode
+  }[]
+  className?: string
+}) => {
+  const { scrollYProgress } = useScroll()
+  const [visible, setVisible] = useState(false)
 
-  useMotionValueEvent(scrollY, 'change', (current) => {
-    if (typeof current === 'number') {
-      const direction = current - lastScrollY
-
-      if (current < 50) {
-        setVisible(true)
-      } else if (direction < 0) {
-        setVisible(true)
-      } else {
+  useMotionValueEvent(scrollYProgress, "change", (current) => {
+    if (typeof current === "number") {
+      const direction = current! - scrollYProgress.getPrevious()!
+      if (scrollYProgress.get() < 0.05) {
         setVisible(false)
+      } else {
+        if (direction < 0) {
+          setVisible(true)
+        } else {
+          setVisible(false)
+        }
       }
-
-      setLastScrollY(current)
     }
   })
 
   return (
     <AnimatePresence mode="wait">
-      <motion.nav
+      <motion.div
         initial={{ opacity: 1, y: -100 }}
-        animate={{
-          y: visible ? 0 : -100,
-          opacity: visible ? 1 : 0,
-        }}
+        animate={{ y: visible ? 0 : -100, opacity: visible ? 1 : 0 }}
         transition={{ duration: 0.2 }}
         className={cn(
-          'fixed inset-x-0 top-4 z-[5000] mx-auto flex max-w-fit items-center justify-center gap-2 rounded-full border border-white/[0.1] bg-black/80 px-8 py-3 shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] backdrop-blur-md',
+          "flex max-w-fit fixed top-10 inset-x-0 mx-auto border border-transparent dark:border-white/[0.2] rounded-full dark:bg-black bg-white shadow-[0px_2px_3px_-1px_rgba(0,0,0,0.1),0px_1px_0px_0px_rgba(25,28,33,0.02),0px_0px_0px_1px_rgba(25,28,33,0.08)] z-[5000] pr-2 pl-8 py-2 items-center justify-center space-x-4",
           className
         )}
       >
-        <span className="mr-4 text-sm font-bold text-white">{brandName}</span>
-
-        {navItems.map((item, i) => (
+        {navItems.map((navItem, idx) => (
           <a
-            key={i}
-            href={item.link}
+            key={`link-${idx}`}
+            href={navItem.link}
             className={cn(
-              'relative flex items-center gap-1 px-3 py-2 text-sm text-neutral-400 transition-colors hover:text-neutral-200'
+              "relative dark:text-neutral-50 items-center flex space-x-1 text-neutral-600 dark:hover:text-neutral-300 hover:text-neutral-500"
             )}
           >
-            {item.icon}
-            <span>{item.name}</span>
+            <span className="block sm:hidden">{navItem.icon}</span>
+            <span className="hidden sm:block text-sm">{navItem.name}</span>
           </a>
         ))}
-
-        <button className="ml-2 rounded-full border border-white/[0.15] bg-white/10 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white/20">
-          Sign In
+        <button className="border text-sm font-medium relative border-neutral-200 dark:border-white/[0.2] text-black dark:text-white px-4 py-2 rounded-full">
+          <span>Login</span>
+          <span className="absolute inset-x-0 w-1/2 mx-auto -bottom-px bg-gradient-to-r from-transparent via-blue-500 to-transparent h-px" />
         </button>
-      </motion.nav>
+      </motion.div>
     </AnimatePresence>
+  )
+}
+
+export interface AceternityFloatingNavbarProps {
+  items?: { name: string; link: string; icon?: string }[]
+  className?: string
+}
+
+export default function AceternityFloatingNavbarWrapper({
+  items = [
+    { name: "Home", link: "#" },
+    { name: "About", link: "#about" },
+    { name: "Contact", link: "#contact" },
+  ],
+  className,
+}: AceternityFloatingNavbarProps) {
+  return (
+    <div className={cn("relative w-full h-[40rem] overflow-auto", className)}>
+      <FloatingNav navItems={items} />
+      <div className="h-[200vh] flex flex-col items-center pt-40">
+        <p className="text-neutral-500 dark:text-neutral-400">Scroll down to see the floating navbar</p>
+        <div className="mt-[100vh] text-neutral-500">Keep scrolling...</div>
+      </div>
+    </div>
   )
 }

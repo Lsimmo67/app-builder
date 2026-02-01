@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { RotateCcw, Plus, Minus } from 'lucide-react'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
+import { DEBOUNCE_CONTENT } from '@/lib/constants/debounce'
 
 interface NumberEditorProps {
   value: number
@@ -33,7 +34,7 @@ export function NumberEditor({
 
   const debouncedOnChange = useDebouncedCallback((newValue: number) => {
     onChange(newValue)
-  }, 300)
+  }, DEBOUNCE_CONTENT)
 
   const clamp = useCallback(
     (val: number) => {

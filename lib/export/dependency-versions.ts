@@ -4,13 +4,13 @@
  */
 export const DEPENDENCY_VERSIONS: Record<string, string> = {
   // Core
-  react: '^18.3.0',
-  'react-dom': '^18.3.0',
-  next: '^14.2.0',
+  react: '^19.0.0',
+  'react-dom': '^19.0.0',
+  next: '^15.2.0',
 
   // Styling utilities
   clsx: '^2.1.0',
-  'tailwind-merge': '^2.2.0',
+  'tailwind-merge': '^3.0.0',
   'class-variance-authority': '^0.7.0',
 
   // Icons
@@ -32,10 +32,13 @@ export const DEPENDENCY_VERSIONS: Record<string, string> = {
   '@radix-ui/react-popover': '^1.1.0',
 
   // Animation
-  'framer-motion': '^11.0.0',
+  'framer-motion': '^12.0.0',
   gsap: '^3.12.0',
   '@gsap/react': '^2.1.0',
   'split-type': '^0.3.0',
+
+  // Utilities
+  'react-use-measure': '^2.1.0',
 
   // Particles
   '@tsparticles/react': '^3.0.0',
@@ -44,14 +47,14 @@ export const DEPENDENCY_VERSIONS: Record<string, string> = {
 
   // Dev dependencies
   typescript: '^5.0.0',
-  '@types/react': '^18.3.0',
-  '@types/react-dom': '^18.3.0',
-  '@types/node': '^20.0.0',
-  tailwindcss: '^3.4.0',
+  '@types/react': '^19.0.0',
+  '@types/react-dom': '^19.0.0',
+  '@types/node': '^22.0.0',
+  tailwindcss: '^4.0.0',
+  '@tailwindcss/postcss': '^4.0.0',
   postcss: '^8.4.0',
-  autoprefixer: '^10.4.0',
-  eslint: '^8.0.0',
-  'eslint-config-next': '^14.2.0',
+  eslint: '^9.0.0',
+  'eslint-config-next': '^15.2.0',
 }
 
 export function getVersionForDep(dep: string): string {

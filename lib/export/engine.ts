@@ -1,9 +1,34 @@
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
-import type { Project, Page, DesignSystem, ComponentInstance } from '@/types'
+import type { Project, Page, DesignSystem, ComponentInstance, CMSCollection, CMSItem } from '@/types'
 import { componentRegistry } from '@/lib/components-registry'
+import { stylesToCSSString } from '@/lib/styles/styles-to-css'
 import { db } from '@/lib/db'
 import { getVersionForDep } from './dependency-versions'
+
+// Map builtin registry IDs to their HTML element tags
+const BUILTIN_TAG_MAP: Record<string, string> = {
+  'builtin-section': 'section',
+  'builtin-container': 'div',
+  'builtin-div-block': 'div',
+  'builtin-flex-box': 'div',
+  'builtin-grid-layout': 'div',
+  'builtin-columns': 'div',
+  'builtin-heading': 'h2',
+  'builtin-paragraph': 'p',
+  'builtin-text-block': 'span',
+  'builtin-link-element': 'a',
+  'builtin-rich-text': 'div',
+  'builtin-list-element': 'ul',
+  'builtin-image': 'img',
+  'builtin-video': 'video',
+  'builtin-form-block': 'form',
+  'builtin-input-field': 'input',
+  'builtin-text-area': 'textarea',
+  'builtin-select-field': 'select',
+  'builtin-button-element': 'button',
+  'builtin-link-block': 'a',
+}
 
 export interface ExportOptions {
   includeReadme: boolean
@@ -26,6 +51,8 @@ export class ExportEngine {
   private designSystem: DesignSystem
   private pages: Page[]
   private componentsByPage: Map<string, ComponentInstance[]>
+  private cmsCollections: CMSCollection[]
+  private cmsItems: CMSItem[]
   private options: ExportOptions
 
   constructor(
@@ -33,12 +60,16 @@ export class ExportEngine {
     designSystem: DesignSystem,
     pages: Page[],
     componentsByPage: Map<string, ComponentInstance[]>,
-    options: Partial<ExportOptions> = {}
+    options: Partial<ExportOptions> = {},
+    cmsCollections: CMSCollection[] = [],
+    cmsItems: CMSItem[] = [],
   ) {
     this.project = project
     this.designSystem = designSystem
     this.pages = pages
     this.componentsByPage = componentsByPage
+    this.cmsCollections = cmsCollections
+    this.cmsItems = cmsItems
     this.options = { ...DEFAULT_OPTIONS, ...options }
   }
 
@@ -58,7 +89,9 @@ export class ExportEngine {
     await this.generatePages(zip)
     await this.generateComponents(zip)
     await this.generateLibFiles(zip)
-    
+    await this.generateCMSFiles(zip)
+    await this.generateCMSHelpers(zip)
+
     if (this.options.includeReadme) {
       await this.generateReadme(zip)
     }
@@ -86,7 +119,7 @@ export class ExportEngine {
     files['package.json'] = this.getPackageJsonContent()
     files['next.config.js'] = this.getNextConfigContent()
     files['tsconfig.json'] = this.getTsConfigContent()
-    files['tailwind.config.js'] = this.getTailwindConfigContent()
+    files['postcss.config.mjs'] = this.getPostCssConfigContent()
     files['app/globals.css'] = this.getGlobalsCssContent()
     files['app/layout.tsx'] = this.getLayoutContent()
 
@@ -123,21 +156,21 @@ export class ExportEngine {
         lint: 'next lint',
       },
       dependencies: {
-        next: '^14.2.0',
-        react: '^18.3.0',
-        'react-dom': '^18.3.0',
+        next: getVersionForDep('next'),
+        react: getVersionForDep('react'),
+        'react-dom': getVersionForDep('react-dom'),
         ...dependencies,
       },
       devDependencies: {
-        '@types/node': '^20.0.0',
-        '@types/react': '^18.3.0',
-        '@types/react-dom': '^18.3.0',
-        typescript: '^5.0.0',
-        tailwindcss: '^3.4.0',
-        postcss: '^8.4.0',
-        autoprefixer: '^10.4.0',
-        eslint: '^8.0.0',
-        'eslint-config-next': '^14.2.0',
+        '@types/node': getVersionForDep('@types/node'),
+        '@types/react': getVersionForDep('@types/react'),
+        '@types/react-dom': getVersionForDep('@types/react-dom'),
+        typescript: getVersionForDep('typescript'),
+        tailwindcss: getVersionForDep('tailwindcss'),
+        '@tailwindcss/postcss': getVersionForDep('@tailwindcss/postcss'),
+        postcss: getVersionForDep('postcss'),
+        eslint: getVersionForDep('eslint'),
+        'eslint-config-next': getVersionForDep('eslint-config-next'),
       },
     }
 
@@ -153,11 +186,14 @@ export class ExportEngine {
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['images.unsplash.com', 'via.placeholder.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+    ],
   },
 }
 
-module.exports = nextConfig
+export default nextConfig
 `
   }
 
@@ -194,69 +230,14 @@ module.exports = nextConfig
   }
 
   private async generateTailwindConfig(zip: JSZip): Promise<void> {
-    zip.file('tailwind.config.js', this.getTailwindConfigContent())
-    zip.file('postcss.config.js', this.getPostCssConfigContent())
-  }
-
-  private getTailwindConfigContent(): string {
-    const { colors, borderRadius } = this.designSystem
-
-    return `/** @type {import('tailwindcss').Config} */
-module.exports = {
-  darkMode: 'class',
-  content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        background: '${colors.background}',
-        foreground: '${colors.foreground}',
-        primary: {
-          DEFAULT: '${colors.primary}',
-          foreground: '${colors.primaryForeground}',
-        },
-        secondary: {
-          DEFAULT: '${colors.secondary}',
-          foreground: '${colors.secondaryForeground}',
-        },
-        muted: {
-          DEFAULT: '${colors.muted}',
-          foreground: '${colors.mutedForeground}',
-        },
-        accent: {
-          DEFAULT: '${colors.accent}',
-          foreground: '${colors.accentForeground}',
-        },
-        destructive: {
-          DEFAULT: '${colors.destructive}',
-          foreground: '#ffffff',
-        },
-        border: '${colors.border}',
-        ring: '${colors.primary}',
-      },
-      borderRadius: {
-        none: '${borderRadius.none}',
-        sm: '${borderRadius.sm}',
-        DEFAULT: '${borderRadius.md}',
-        md: '${borderRadius.md}',
-        lg: '${borderRadius.lg}',
-        xl: '${borderRadius.xl}',
-        full: '${borderRadius.full}',
-      },
-    },
-  },
-  plugins: [],
-}
-`
+    // Tailwind v4 uses CSS-based config, no tailwind.config.js needed
+    zip.file('postcss.config.mjs', this.getPostCssConfigContent())
   }
 
   private getPostCssConfigContent(): string {
-    return `module.exports = {
+    return `export default {
   plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
+    '@tailwindcss/postcss': {},
   },
 }
 `
@@ -268,39 +249,80 @@ module.exports = {
   }
 
   private getGlobalsCssContent(): string {
-    const { colors, typography } = this.designSystem
+    const { colors, typography, borderRadius, spacing, shadows } = this.designSystem
 
-    return `@tailwind base;
-@tailwind components;
-@tailwind utilities;
+    return `@import "tailwindcss";
+
+@theme {
+  --color-background: ${colors.background};
+  --color-foreground: ${colors.foreground};
+  --color-primary: ${colors.primary};
+  --color-primary-foreground: ${colors.primaryForeground};
+  --color-secondary: ${colors.secondary};
+  --color-secondary-foreground: ${colors.secondaryForeground};
+  --color-muted: ${colors.muted};
+  --color-muted-foreground: ${colors.mutedForeground};
+  --color-accent: ${colors.accent};
+  --color-accent-foreground: ${colors.accentForeground};
+  --color-destructive: ${colors.destructive};
+  --color-border: ${colors.border};
+  --color-ring: ${colors.primary};
+
+  --radius-sm: ${borderRadius.sm};
+  --radius-md: ${borderRadius.md};
+  --radius-lg: ${borderRadius.lg};
+  --radius-xl: ${borderRadius.xl};
+
+  --font-family-heading: ${typography.fontFamily.heading}, system-ui, sans-serif;
+  --font-family-body: ${typography.fontFamily.body}, system-ui, sans-serif;
+  --font-family-mono: ${typography.fontFamily.mono}, ui-monospace, monospace;
+
+  --font-size-xs: ${typography.fontSize.xs};
+  --font-size-sm: ${typography.fontSize.sm};
+  --font-size-base: ${typography.fontSize.base};
+  --font-size-lg: ${typography.fontSize.lg};
+  --font-size-xl: ${typography.fontSize.xl};
+  --font-size-2xl: ${typography.fontSize['2xl']};
+  --font-size-3xl: ${typography.fontSize['3xl']};
+  --font-size-4xl: ${typography.fontSize['4xl']};
+  --font-size-5xl: ${typography.fontSize['5xl']};
+
+  --font-weight-normal: ${typography.fontWeight.normal};
+  --font-weight-medium: ${typography.fontWeight.medium};
+  --font-weight-semibold: ${typography.fontWeight.semibold};
+  --font-weight-bold: ${typography.fontWeight.bold};
+
+  --line-height-tight: ${typography.lineHeight.tight};
+  --line-height-normal: ${typography.lineHeight.normal};
+  --line-height-relaxed: ${typography.lineHeight.relaxed};
+
+${spacing.scale.map((val, i) => `  --spacing-${i}: ${val}px;`).join('\n')}
+
+${shadows ? `  --shadow-sm: ${shadows.sm};
+  --shadow-md: ${shadows.md};
+  --shadow-lg: ${shadows.lg};
+  --shadow-xl: ${shadows.xl};
+  --shadow-2xl: ${shadows['2xl']};
+  --shadow-inner: ${shadows.inner};` : ''}
+}
 
 @layer base {
-  :root {
-    --background: ${colors.background};
-    --foreground: ${colors.foreground};
-    --primary: ${colors.primary};
-    --primary-foreground: ${colors.primaryForeground};
-    --secondary: ${colors.secondary};
-    --secondary-foreground: ${colors.secondaryForeground};
-    --muted: ${colors.muted};
-    --muted-foreground: ${colors.mutedForeground};
-    --accent: ${colors.accent};
-    --accent-foreground: ${colors.accentForeground};
-    --destructive: ${colors.destructive};
-    --border: ${colors.border};
-  }
-
   * {
-    @apply border-border;
+    border-color: var(--color-border);
   }
 
   body {
-    @apply bg-background text-foreground;
-    font-family: ${typography.fontFamily.body}, system-ui, sans-serif;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-family-body);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: ${typography.fontFamily.heading}, system-ui, sans-serif;
+    font-family: var(--font-family-heading);
+  }
+
+  code, pre, kbd {
+    font-family: var(--font-family-mono);
   }
 }
 `
@@ -415,6 +437,99 @@ export function cn(...inputs: ClassValue[]) {
 `)
   }
 
+  private async generateCMSFiles(zip: JSZip): Promise<void> {
+    if (this.cmsCollections.length === 0) return
+
+    const cmsFolder = zip.folder('lib/cms')!
+
+    // Generate TypeScript types for each collection
+    const typeDefs = this.cmsCollections.map((col) => {
+      const fields = col.fields.map((f) => {
+        let tsType = 'string'
+        switch (f.type) {
+          case 'number': tsType = 'number'; break
+          case 'boolean': tsType = 'boolean'; break
+          case 'date': tsType = 'string'; break
+          case 'option': tsType = f.validation?.options
+            ? f.validation.options.map((o) => `'${o}'`).join(' | ')
+            : 'string'; break
+          default: tsType = 'string'
+        }
+        return `  ${f.slug}${f.required ? '' : '?'}: ${tsType}`
+      })
+      const typeName = this.toPascalCase(col.name)
+      return `export interface ${typeName} {\n  id: string\n${fields.join('\n')}\n  _status: 'draft' | 'published'\n}`
+    }).join('\n\n')
+
+    cmsFolder.file('types.ts', typeDefs + '\n')
+
+    // Generate static data
+    const dataExports = this.cmsCollections.map((col) => {
+      const typeName = this.toPascalCase(col.name)
+      const varName = col.slug.replace(/-/g, '_')
+      const items = this.cmsItems
+        .filter((i) => i.collectionId === col.id)
+        .map((item) => ({
+          id: item.id,
+          ...item.data,
+          _status: item.status,
+        }))
+      return `export const ${varName}: ${typeName}[] = ${JSON.stringify(items, null, 2)}`
+    }).join('\n\n')
+
+    cmsFolder.file('data.ts', `import type { ${this.cmsCollections.map((c) => this.toPascalCase(c.name)).join(', ')} } from './types'\n\n${dataExports}\n`)
+
+    // Generate helper functions
+    const helpers = `// CMS Helpers - Auto-generated
+${this.cmsCollections.map((col) => {
+  const typeName = this.toPascalCase(col.name)
+  const varName = col.slug.replace(/-/g, '_')
+  return `import { ${varName} } from './data'
+import type { ${typeName} } from './types'
+
+export function get${typeName}s(onlyPublished = true): ${typeName}[] {
+  return onlyPublished ? ${varName}.filter(i => i._status === 'published') : ${varName}
+}
+
+export function get${typeName}ById(id: string): ${typeName} | undefined {
+  return ${varName}.find(i => i.id === id)
+}`
+}).join('\n\n')}
+`
+    cmsFolder.file('helpers.ts', helpers)
+  }
+
+  private async generateCMSHelpers(zip: JSZip): Promise<void> {
+    if (this.cmsCollections.length > 0) return
+
+    const hasCMSBindings = Array.from(this.componentsByPage.values())
+      .flat()
+      .some(c => c.cmsBindings && c.cmsBindings.length > 0)
+
+    if (!hasCMSBindings) return
+
+    const libFolder = zip.folder('lib')
+    const cmsFolder = libFolder?.folder('cms')
+
+    cmsFolder?.file('helpers.ts', `// CMS data helpers - replace with your actual data source
+export interface CMSItem {
+  id: string
+  slug: string
+  data: Record<string, unknown>
+}
+
+export async function getCollectionItems(collectionSlug: string): Promise<CMSItem[]> {
+  // TODO: Connect to your CMS (Contentful, Sanity, Strapi, etc.)
+  return []
+}
+
+export async function getCollectionItem(collectionSlug: string, itemSlug: string): Promise<CMSItem | null> {
+  const items = await getCollectionItems(collectionSlug)
+  return items.find(item => item.slug === itemSlug) ?? null
+}
+`)
+  }
+
   private async generateReadme(zip: JSZip): Promise<void> {
     const readme = `# ${this.project.name}
 
@@ -438,7 +553,7 @@ ${this.getDevCommand()}
 
 ## Tech Stack
 
-- **Framework:** Next.js 14
+- **Framework:** Next.js 15
 - **Styling:** Tailwind CSS
 - **Language:** TypeScript
 
@@ -555,7 +670,12 @@ MIT
   }
 
   private generateImports(components: ComponentInstance[]): string {
-    const uniqueIds = new Set(components.map((c) => c.componentRegistryId))
+    // Only import non-builtin components (builtins emit raw HTML)
+    const uniqueIds = new Set(
+      components
+        .filter((c) => c.source !== 'builtin')
+        .map((c) => c.componentRegistryId)
+    )
     const imports: string[] = []
 
     for (const id of uniqueIds) {
@@ -563,27 +683,116 @@ MIT
       if (!registryItem) continue
 
       const componentName = this.toPascalCase(registryItem.name)
-      imports.push(`import { ${componentName} } from '@/components/${registryItem.source}/${registryItem.name.toLowerCase().replace(/\s+/g, '-')}'`)
+      imports.push(`import ${componentName} from '@/components/${registryItem.source}/${registryItem.name.toLowerCase().replace(/\s+/g, '-')}'`)
     }
 
     return imports.join('\n')
   }
 
-  private generateComponentsJsx(components: ComponentInstance[]): string {
+  /**
+   * Recursively generate JSX for nested component tree
+   */
+  private generateComponentsJsx(components: ComponentInstance[], indent = 6): string {
     if (components.length === 0) return ''
 
-    return components
+    // Build tree: only root-level components (no parentId) at top
+    const rootComponents = components
+      .filter((c) => !c.parentId)
       .sort((a, b) => a.order - b.order)
-      .map((comp) => {
-        const registryItem = componentRegistry.getById(comp.componentRegistryId)
-        if (!registryItem) return `      {/* Unknown component: ${comp.componentRegistryId} */}`
 
-        const componentName = this.toPascalCase(registryItem.name)
-        const propsString = this.generatePropsString(comp.props)
-
-        return `      <${componentName}${propsString} />`
-      })
+    return rootComponents
+      .map((comp) => this.renderComponentNode(comp, components, indent))
       .join('\n')
+  }
+
+  private renderComponentNode(
+    comp: ComponentInstance,
+    allComponents: ComponentInstance[],
+    indent: number,
+  ): string {
+    const pad = ' '.repeat(indent)
+    const registryItem = componentRegistry.getById(comp.componentRegistryId)
+    if (!registryItem) return `${pad}{/* Unknown: ${comp.componentRegistryId} */}`
+
+    // Build inline style string from structured styles
+    const styleStr = this.buildStyleAttribute(comp)
+
+    // Get children (nested components)
+    const children = allComponents
+      .filter((c) => c.parentId === comp.id)
+      .sort((a, b) => a.order - b.order)
+
+    // Builtin elements → emit semantic HTML
+    const builtinTag = BUILTIN_TAG_MAP[comp.componentRegistryId]
+    if (builtinTag) {
+      return this.renderBuiltinElement(comp, builtinTag, children, allComponents, indent, styleStr)
+    }
+
+    // Library components → emit <ComponentName />
+    const componentName = this.toPascalCase(registryItem.name)
+    const propsString = this.generatePropsString(comp.props)
+
+    if (children.length > 0) {
+      const childrenJsx = children
+        .map((child) => this.renderComponentNode(child, allComponents, indent + 2))
+        .join('\n')
+      return `${pad}<${componentName}${propsString}${styleStr}>\n${childrenJsx}\n${pad}</${componentName}>`
+    }
+
+    return `${pad}<${componentName}${propsString}${styleStr} />`
+  }
+
+  private renderBuiltinElement(
+    comp: ComponentInstance,
+    tag: string,
+    children: ComponentInstance[],
+    allComponents: ComponentInstance[],
+    indent: number,
+    styleStr: string,
+  ): string {
+    const pad = ' '.repeat(indent)
+
+    // Special self-closing tags
+    if (tag === 'img') {
+      const src = comp.props.src as string || '/placeholder.jpg'
+      const alt = comp.props.alt as string || ''
+      return `${pad}<img src="${src}" alt="${alt}"${styleStr} />`
+    }
+    if (tag === 'input') {
+      const type = comp.props.type as string || 'text'
+      const placeholder = comp.props.placeholder as string || ''
+      const name = comp.props.name as string || ''
+      return `${pad}<input type="${type}" name="${name}" placeholder="${placeholder}"${styleStr} />`
+    }
+
+    // Text content from props
+    const textContent = (comp.props.text || comp.props.content || comp.props.label || comp.props.children || '') as string
+
+    // Tags with children
+    if (children.length > 0) {
+      const childrenJsx = children
+        .map((child) => this.renderComponentNode(child, allComponents, indent + 2))
+        .join('\n')
+      return `${pad}<${tag}${styleStr}>\n${childrenJsx}\n${pad}</${tag}>`
+    }
+
+    if (textContent) {
+      return `${pad}<${tag}${styleStr}>${textContent}</${tag}>`
+    }
+
+    return `${pad}<${tag}${styleStr} />`
+  }
+
+  private buildStyleAttribute(comp: ComponentInstance): string {
+    const cssString = stylesToCSSString(comp.styles)
+    if (!cssString) return ''
+    // Convert CSS string to React style object entries
+    const entries = cssString.split(';').filter(Boolean).map((rule) => {
+      const [prop, val] = rule.split(':').map((s) => s.trim())
+      const camelProp = prop.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
+      return `${camelProp}: '${val}'`
+    })
+    return ` style={{ ${entries.join(', ')} }}`
   }
 
   private generatePropsString(props: Record<string, unknown>): string {
@@ -701,7 +910,30 @@ export async function exportProject(
     componentsByPage.set(page.id, components)
   }
 
+  // Load CMS data
+  const cmsCollections = await db.cmsCollections
+    .where('projectId')
+    .equals(projectId)
+    .toArray()
+
+  const cmsItems: CMSItem[] = []
+  for (const collection of cmsCollections) {
+    const items = await db.cmsItems
+      .where('collectionId')
+      .equals(collection.id)
+      .toArray()
+    cmsItems.push(...items)
+  }
+
   // Create exporter and generate ZIP
-  const exporter = new ExportEngine(project, designSystem, pages, componentsByPage, options)
+  const exporter = new ExportEngine(
+    project,
+    designSystem,
+    pages,
+    componentsByPage,
+    options,
+    cmsCollections,
+    cmsItems,
+  )
   await exporter.exportToZip()
 }

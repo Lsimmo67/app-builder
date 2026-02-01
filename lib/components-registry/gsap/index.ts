@@ -2,1222 +2,531 @@ import type { ComponentRegistryItem } from '../types'
 
 export const gsapEffects: ComponentRegistryItem[] = [
   {
-    id: 'gsap-scroll-reveal',
-    name: 'ScrollReveal',
-    displayName: 'Scroll Reveal',
+    id: 'gsap-drag-cards',
+    name: 'GsapDragCards',
+    displayName: 'Drag Cards',
     source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['scroll', 'reveal', 'fade', 'entrance'],
-    description: 'Reveal elements with animation when they enter the viewport',
-    previewImage: '/components/gsap/scroll-reveal.png',
+    categories: ['card', 'animation'],
+    tags: ['drag', 'cards', 'draggable', 'interactive', 'stack'],
+    description: 'A stack of draggable cards with inertia physics. Cards can be picked up, tossed, and rearranged with smooth elastic snap-back animations.',
+    previewImage: '',
     props: [
-      { name: 'children', type: 'children', required: true, description: 'Content to reveal' },
-      { name: 'animation', type: 'select', required: false, default: 'fadeUp', options: ['fadeUp', 'fadeDown', 'fadeLeft', 'fadeRight', 'scale', 'rotate'] },
-      { name: 'duration', type: 'number', required: false, default: 1, description: 'Animation duration in seconds' },
-      { name: 'delay', type: 'number', required: false, default: 0, description: 'Delay before animation starts' },
-      { name: 'stagger', type: 'number', required: false, default: 0.1, description: 'Stagger delay between children' },
+      {
+        name: 'cards',
+        type: 'array',
+        required: false,
+        description: 'Array of card objects with title, image, and rotation',
+        group: 'content',
+        itemSchema: [
+          { name: 'title', type: 'string', required: true, description: 'Card title' },
+          { name: 'image', type: 'image', required: true, description: 'Card image URL' },
+          { name: 'rotation', type: 'number', required: true, description: 'Initial rotation angle in degrees' },
+        ],
+      },
     ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-scroll-reveal',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function ScrollReveal({ children }) {
-  const containerRef = useRef(null)
-
-  useGSAP(() => {
-    gsap.from(containerRef.current.children, {
-      y: 50,
-      opacity: 0,
-      duration: 1,
-      stagger: 0.1,
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: 'top 80%',
-      }
-    })
-  }, [])
-
-  return <div ref={containerRef}>{children}</div>
-}`,
-    suggestedWith: ['osmo-features-grid'],
-    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollTrigger/',
+    dependencies: ['gsap'],
+    modulePath: 'gsap-drag-cards',
+    level: 'primitive',
+    code: '<GsapDragCards cards={[{ title: "Card One", image: "/img.jpg", rotation: -5 }]} />',
+    suggestedWith: ['gsap-mouse-tilt-card', 'gsap-drag-infinite-slider'],
     version: '1.0.0',
+    acceptsChildren: false,
   },
   {
-    id: 'gsap-fade-in',
-    name: 'FadeIn',
-    displayName: 'Fade In',
+    id: 'gsap-drag-infinite-slider',
+    name: 'GsapDragInfiniteSlider',
+    displayName: 'Drag Infinite Slider',
     source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['fade', 'entrance', 'opacity', 'smooth'],
-    description: 'A simple fade-in animation wrapper for any content',
-    previewImage: '/components/gsap/fade-in.png',
+    categories: ['animation', 'media'],
+    tags: ['drag', 'slider', 'infinite', 'carousel', 'loop', 'auto-scroll'],
+    description: 'An infinite looping slider that can be dragged and auto-scrolls. Supports horizontal and vertical directions with seamless wrapping.',
+    previewImage: '',
     props: [
-      { name: 'children', type: 'children', required: true, description: 'Content to fade in' },
-      { name: 'duration', type: 'number', required: false, default: 0.8, description: 'Animation duration in seconds' },
-      { name: 'delay', type: 'number', required: false, default: 0, description: 'Delay before animation' },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+      {
+        name: 'items',
+        type: 'array',
+        required: false,
+        description: 'Array of slider items with content and image',
+        group: 'content',
+        itemSchema: [
+          { name: 'content', type: 'string', required: true, description: 'Item title text' },
+          { name: 'image', type: 'image', required: true, description: 'Item image URL' },
+        ],
+      },
+      {
+        name: 'direction',
+        type: 'select',
+        default: 'horizontal',
+        required: false,
+        options: ['horizontal', 'vertical'],
+        description: 'Scroll direction of the slider',
+        group: 'behavior',
+      },
     ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-fade-in',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function FadeIn({ children, duration = 0.8, delay = 0 }) {
-  const ref = useRef(null)
-
-  useGSAP(() => {
-    gsap.from(ref.current, {
-      opacity: 0,
-      duration,
-      delay,
-      ease: 'power2.out'
-    })
-  }, [])
-
-  return <div ref={ref}>{children}</div>
-}`,
-    suggestedWith: ['gsap-slide-in', 'gsap-scale-in'],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-slide-in',
-    name: 'SlideIn',
-    displayName: 'Slide In',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['slide', 'entrance', 'direction', 'motion'],
-    description: 'Slide content in from a specified direction with smooth easing',
-    previewImage: '/components/gsap/slide-in.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Content to slide in' },
-      { name: 'direction', type: 'select', required: false, default: 'left', options: ['left', 'right', 'up', 'down'] },
-      { name: 'duration', type: 'number', required: false, default: 0.8, description: 'Animation duration in seconds' },
-      { name: 'delay', type: 'number', required: false, default: 0, description: 'Delay before animation' },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-slide-in',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function SlideIn({ children, direction = 'left', duration = 0.8 }) {
-  const ref = useRef(null)
-  const axes = { left: { x: -100 }, right: { x: 100 }, up: { y: -100 }, down: { y: 100 } }
-
-  useGSAP(() => {
-    gsap.from(ref.current, {
-      ...axes[direction],
-      opacity: 0,
-      duration,
-      ease: 'power3.out'
-    })
-  }, [])
-
-  return <div ref={ref}>{children}</div>
-}`,
-    suggestedWith: ['gsap-fade-in', 'gsap-scale-in'],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-scale-in',
-    name: 'ScaleIn',
-    displayName: 'Scale In',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['scale', 'zoom', 'entrance', 'grow'],
-    description: 'Scale content in from a smaller or larger size with smooth easing',
-    previewImage: '/components/gsap/scale-in.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Content to scale in' },
-      { name: 'from', type: 'number', required: false, default: 0.8, description: 'Initial scale value' },
-      { name: 'duration', type: 'number', required: false, default: 0.6, description: 'Animation duration in seconds' },
-      { name: 'delay', type: 'number', required: false, default: 0, description: 'Delay before animation' },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-scale-in',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function ScaleIn({ children, from = 0.8, duration = 0.6 }) {
-  const ref = useRef(null)
-
-  useGSAP(() => {
-    gsap.from(ref.current, {
-      scale: from,
-      opacity: 0,
-      duration,
-      ease: 'back.out(1.7)'
-    })
-  }, [])
-
-  return <div ref={ref}>{children}</div>
-}`,
-    suggestedWith: ['gsap-fade-in', 'gsap-slide-in'],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-text-split',
-    name: 'TextSplit',
-    displayName: 'Text Split Animation',
-    source: 'gsap',
-    categories: ['animation', 'text'],
-    tags: ['text', 'split', 'characters', 'words'],
-    description: 'Animate text by splitting it into characters or words',
-    previewImage: '/components/gsap/text-split.png',
-    props: [
-      { name: 'text', type: 'string', required: true, description: 'Text to animate' },
-      { name: 'splitBy', type: 'select', required: false, default: 'chars', options: ['chars', 'words', 'lines'] },
-      { name: 'animation', type: 'select', required: false, default: 'fadeUp', options: ['fadeUp', 'fadeDown', 'scale', 'rotate'] },
-    ],
-    dependencies: ['gsap', 'split-type'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: 'split-type', version: '^0.3.0' },
-    ],
-    modulePath: 'gsap-text-split',
-    level: 'effect',
-    code: `import gsap from 'gsap'
-import SplitType from 'split-type'
-
-function TextSplitAnimation({ text }) {
-  const textRef = useRef(null)
-
-  useEffect(() => {
-    const split = new SplitType(textRef.current, { types: 'chars' })
-
-    gsap.from(split.chars, {
-      y: 50,
-      opacity: 0,
-      duration: 0.5,
-      stagger: 0.02,
-      ease: 'power3.out'
-    })
-
-    return () => split.revert()
-  }, [])
-
-  return <h1 ref={textRef}>{text}</h1>
-}`,
-    suggestedWith: ['aceternity-text-generate'],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-parallax',
-    name: 'ParallaxEffect',
-    displayName: 'Parallax Scroll',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['parallax', 'scroll', 'depth', 'layers'],
-    description: 'Create depth with parallax scrolling effect',
-    previewImage: '/components/gsap/parallax.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Content with parallax' },
-      { name: 'speed', type: 'number', required: false, default: 0.5, description: 'Parallax speed multiplier' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-parallax',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function ParallaxEffect({ children, speed = 0.5 }) {
-  const ref = useRef(null)
-
-  useGSAP(() => {
-    gsap.to(ref.current, {
-      y: () => window.innerHeight * speed,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: ref.current,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: true
-      }
-    })
-  }, [])
-
-  return <div ref={ref}>{children}</div>
-}`,
-    suggestedWith: ['osmo-hero-split'],
-    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollTrigger/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-horizontal-scroll',
-    name: 'HorizontalScroll',
-    displayName: 'Horizontal Scroll',
-    source: 'gsap',
-    categories: ['animation', 'layout'],
-    tags: ['horizontal', 'scroll', 'gallery', 'showcase'],
-    description: 'Transform vertical scroll into horizontal movement',
-    previewImage: '/components/gsap/horizontal-scroll.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Horizontal panels' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-horizontal-scroll',
-    level: 'layout',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function HorizontalScroll({ children }) {
-  const containerRef = useRef(null)
-  const panelsRef = useRef(null)
-
-  useGSAP(() => {
-    const panels = gsap.utils.toArray(panelsRef.current.children)
-
-    gsap.to(panels, {
-      xPercent: -100 * (panels.length - 1),
-      ease: 'none',
-      scrollTrigger: {
-        trigger: containerRef.current,
-        pin: true,
-        scrub: 1,
-        end: () => '+=' + panelsRef.current.offsetWidth
-      }
-    })
-  }, [])
-
-  return (
-    <div ref={containerRef} className="overflow-hidden">
-      <div ref={panelsRef} className="flex">
-        {children}
-      </div>
-    </div>
-  )
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollTrigger/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-marquee',
-    name: 'Marquee',
-    displayName: 'Marquee',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['marquee', 'scroll', 'ticker', 'infinite', 'logos'],
-    description: 'An infinite horizontal scrolling marquee for logos, text, or any content',
-    previewImage: '/components/gsap/marquee.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Content to scroll' },
-      { name: 'speed', type: 'number', required: false, default: 50, description: 'Scroll speed in pixels per second' },
-      { name: 'direction', type: 'select', required: false, default: 'left', options: ['left', 'right'] },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-marquee',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function Marquee({ children, speed = 50, direction = 'left' }) {
-  const trackRef = useRef(null)
-
-  useGSAP(() => {
-    const track = trackRef.current
-    const width = track.scrollWidth / 2
-
-    gsap.to(track, {
-      x: direction === 'left' ? -width : width,
-      duration: width / speed,
-      ease: 'none',
-      repeat: -1,
-    })
-  }, [])
-
-  return (
-    <div className="overflow-hidden">
-      <div ref={trackRef} className="flex gap-8 w-max">
-        {children}
-        {children}
-      </div>
-    </div>
-  )
-}`,
-    suggestedWith: ['osmo-testimonials'],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-stagger-cards',
-    name: 'StaggerCards',
-    displayName: 'Stagger Cards',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['stagger', 'cards', 'entrance', 'cascade'],
-    description: 'Animate a group of cards with staggered entrance timing',
-    previewImage: '/components/gsap/stagger-cards.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Card elements to stagger' },
-      { name: 'stagger', type: 'number', required: false, default: 0.1, description: 'Delay between each card in seconds' },
-      { name: 'animation', type: 'select', required: false, default: 'fadeUp', options: ['fadeUp', 'fadeDown', 'scale', 'slideLeft', 'slideRight'] },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-stagger-cards',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function StaggerCards({ children, stagger = 0.1 }) {
-  const containerRef = useRef(null)
-
-  useGSAP(() => {
-    gsap.from(containerRef.current.children, {
-      y: 60,
-      opacity: 0,
-      duration: 0.8,
-      stagger,
-      ease: 'power3.out',
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: 'top 85%',
-      }
-    })
-  }, [])
-
-  return <div ref={containerRef} className="grid md:grid-cols-3 gap-6">{children}</div>
-}`,
-    suggestedWith: ['osmo-features-grid', 'gsap-scroll-reveal'],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-counter-section',
-    name: 'CounterSection',
-    displayName: 'Counter Section',
-    source: 'gsap',
-    categories: ['animation', 'section'],
-    tags: ['counter', 'numbers', 'stats', 'increment'],
-    description: 'An animated counter section that counts up numbers when scrolled into view',
-    previewImage: '/components/gsap/counter-section.png',
-    props: [
-      { name: 'stats', type: 'array', required: true, description: 'Array of stat items with value and label' },
-      { name: 'duration', type: 'number', required: false, default: 2, description: 'Count animation duration in seconds' },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-counter-section',
+    dependencies: ['gsap'],
+    modulePath: 'gsap-drag-infinite-slider',
     level: 'section',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function CounterSection({ stats }) {
-  const sectionRef = useRef(null)
-
-  useGSAP(() => {
-    const counters = sectionRef.current.querySelectorAll('[data-count]')
-    counters.forEach((counter) => {
-      const target = parseInt(counter.dataset.count)
-      gsap.to(counter, {
-        textContent: target,
-        duration: 2,
-        snap: { textContent: 1 },
-        scrollTrigger: { trigger: counter, start: 'top 80%' }
-      })
-    })
-  }, [])
-
-  return (
-    <section ref={sectionRef} className="py-24 px-6">
-      <div className="max-w-5xl mx-auto grid md:grid-cols-4 gap-8 text-center">
-        {stats.map((stat) => (
-          <div key={stat.label}>
-            <p className="text-4xl font-bold" data-count={stat.value}>0</p>
-            <p className="text-muted-foreground mt-2">{stat.label}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}`,
-    suggestedWith: ['osmo-features-grid'],
-    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollTrigger/',
+    code: '<GsapDragInfiniteSlider direction="horizontal" />',
+    suggestedWith: ['gsap-drag-cards', 'gsap-scroll-infinite-marquee'],
     version: '1.0.0',
+    acceptsChildren: false,
   },
   {
-    id: 'gsap-magnetic-element',
-    name: 'MagneticElement',
+    id: 'gsap-mouse-cursor-follower',
+    name: 'GsapMouseCursorFollower',
+    displayName: 'Cursor Follower',
+    source: 'gsap',
+    categories: ['effect', 'animation'],
+    tags: ['cursor', 'follower', 'mouse', 'interactive', 'custom-cursor'],
+    description: 'A custom cursor follower with a smooth trailing circle and dot that tracks mouse movement with configurable size, color, and blend mode.',
+    previewImage: '',
+    props: [
+      { name: 'size', type: 'number', default: 40, required: false, description: 'Diameter of the follower circle in pixels', group: 'style' },
+      { name: 'color', type: 'color', default: 'rgba(102, 126, 234, 0.6)', required: false, description: 'Color of the follower circle', group: 'style' },
+      { name: 'mixBlendMode', type: 'select', default: 'difference', required: false, options: ['difference', 'multiply', 'screen', 'overlay', 'normal'], description: 'CSS mix-blend-mode for the cursor circle', group: 'style' },
+      { name: 'children', type: 'children', required: false, description: 'Content to display inside the cursor area', group: 'content' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-mouse-cursor-follower',
+    level: 'effect',
+    code: '<GsapMouseCursorFollower size={40} color="rgba(102,126,234,0.6)">Content here</GsapMouseCursorFollower>',
+    suggestedWith: ['gsap-mouse-spotlight-effect', 'gsap-mouse-magnetic-element'],
+    version: '1.0.0',
+    acceptsChildren: true,
+  },
+  {
+    id: 'gsap-mouse-inertia-gallery',
+    name: 'GsapMouseInertiaGallery',
+    displayName: 'Inertia Gallery',
+    source: 'gsap',
+    categories: ['media', 'animation'],
+    tags: ['gallery', 'inertia', 'mouse', 'parallax', 'images', 'interactive'],
+    description: 'An image grid that reacts to mouse movement with inertia-based parallax. Each image moves at a different depth for a layered 3D feel.',
+    previewImage: '',
+    props: [
+      {
+        name: 'images',
+        type: 'array',
+        required: false,
+        description: 'Array of images with src and alt text',
+        group: 'content',
+        itemSchema: [
+          { name: 'src', type: 'image', required: true, description: 'Image source URL' },
+          { name: 'alt', type: 'string', required: true, description: 'Alt text for the image' },
+        ],
+      },
+      { name: 'columns', type: 'number', default: 3, required: false, description: 'Number of grid columns', group: 'style' },
+      { name: 'imageSize', type: 'number', default: 200, required: false, description: 'Size of each image in pixels', group: 'style' },
+      { name: 'velocity', type: 'number', default: 0.15, required: false, description: 'Movement velocity multiplier', group: 'behavior' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-mouse-inertia-gallery',
+    level: 'section',
+    code: '<GsapMouseInertiaGallery columns={3} imageSize={200} velocity={0.15} />',
+    suggestedWith: ['gsap-scroll-parallax-images', 'gsap-mouse-tilt-card'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-mouse-magnetic-element',
+    name: 'GsapMouseMagneticElement',
     displayName: 'Magnetic Element',
     source: 'gsap',
     categories: ['effect', 'animation'],
-    tags: ['magnetic', 'cursor', 'hover', 'interactive', 'attraction'],
-    description: 'Wraps any element to add a magnetic cursor-attraction effect on hover',
-    previewImage: '/components/gsap/magnetic-element.png',
+    tags: ['magnetic', 'hover', 'mouse', 'interactive', 'button', 'attraction'],
+    description: 'An element that magnetically attracts toward the cursor when nearby, with elastic snap-back. Perfect for buttons and CTAs.',
+    previewImage: '',
     props: [
-      { name: 'children', type: 'children', required: true, description: 'Element to make magnetic' },
-      { name: 'strength', type: 'number', required: false, default: 0.3, description: 'Magnetic pull strength (0-1)' },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+      { name: 'children', type: 'children', required: false, description: 'Content to make magnetic', group: 'content' },
+      { name: 'strength', type: 'number', default: 0.4, required: false, description: 'Magnetic attraction strength (0-1)', group: 'behavior' },
+      { name: 'radius', type: 'number', default: 200, required: false, description: 'Magnetic effect radius in pixels', group: 'behavior' },
     ],
     dependencies: ['gsap'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-    ],
-    modulePath: 'gsap-magnetic-element',
+    modulePath: 'gsap-mouse-magnetic-element',
     level: 'effect',
-    code: `import gsap from 'gsap'
-
-function MagneticElement({ children, strength = 0.3 }) {
-  const ref = useRef(null)
-
-  const handleMouseMove = (e) => {
-    const rect = ref.current.getBoundingClientRect()
-    const x = e.clientX - rect.left - rect.width / 2
-    const y = e.clientY - rect.top - rect.height / 2
-
-    gsap.to(ref.current, {
-      x: x * strength,
-      y: y * strength,
-      duration: 0.3,
-      ease: 'power2.out'
-    })
-  }
-
-  const handleMouseLeave = () => {
-    gsap.to(ref.current, { x: 0, y: 0, duration: 0.3, ease: 'power2.out' })
-  }
-
-  return (
-    <div ref={ref} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-      {children}
-    </div>
-  )
-}`,
-    suggestedWith: ['shadcn-button'],
-    docsUrl: 'https://gsap.com/docs/v3/',
+    code: '<GsapMouseMagneticElement strength={0.4} radius={200}><button>Hover me</button></GsapMouseMagneticElement>',
+    suggestedWith: ['gsap-mouse-cursor-follower', 'gsap-mouse-tilt-card'],
     version: '1.0.0',
+    acceptsChildren: true,
   },
   {
-    id: 'gsap-magnetic-button',
-    name: 'MagneticButton',
-    displayName: 'Magnetic Button',
+    id: 'gsap-mouse-spotlight-effect',
+    name: 'GsapMouseSpotlightEffect',
+    displayName: 'Spotlight Effect',
     source: 'gsap',
-    categories: ['button', 'effect'],
-    tags: ['magnetic', 'hover', 'cursor', 'interactive'],
-    description: 'A button that magnetically follows the cursor on hover',
-    previewImage: '/components/gsap/magnetic-button.png',
+    categories: ['effect', 'background'],
+    tags: ['spotlight', 'mouse', 'glow', 'radial', 'light', 'reveal'],
+    description: 'A radial spotlight that follows the cursor, creating a dramatic reveal effect over dark backgrounds. Configurable radius, color, and intensity.',
+    previewImage: '',
     props: [
-      { name: 'children', type: 'string', required: true, description: 'Button text' },
-      { name: 'strength', type: 'number', required: false, default: 50, description: 'Magnetic strength' },
+      { name: 'radius', type: 'number', default: 200, required: false, description: 'Spotlight radius in pixels', group: 'style' },
+      { name: 'color', type: 'color', default: 'rgba(102, 126, 234, 0.3)', required: false, description: 'Spotlight color', group: 'style' },
+      { name: 'intensity', type: 'number', default: 1, required: false, description: 'Spotlight opacity intensity (0-1)', group: 'style' },
+      { name: 'children', type: 'children', required: false, description: 'Content to display under the spotlight', group: 'content' },
     ],
     dependencies: ['gsap'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-    ],
-    modulePath: 'gsap-magnetic-button',
+    modulePath: 'gsap-mouse-spotlight-effect',
     level: 'effect',
-    code: `import gsap from 'gsap'
-
-function MagneticButton({ children, strength = 50 }) {
-  const buttonRef = useRef(null)
-
-  const handleMouseMove = (e) => {
-    const rect = buttonRef.current.getBoundingClientRect()
-    const x = e.clientX - rect.left - rect.width / 2
-    const y = e.clientY - rect.top - rect.height / 2
-
-    gsap.to(buttonRef.current, {
-      x: x * 0.3,
-      y: y * 0.3,
-      duration: 0.3,
-      ease: 'power2.out'
-    })
-  }
-
-  const handleMouseLeave = () => {
-    gsap.to(buttonRef.current, {
-      x: 0,
-      y: 0,
-      duration: 0.3,
-      ease: 'power2.out'
-    })
-  }
-
-  return (
-    <button
-      ref={buttonRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      {children}
-    </button>
-  )
-}`,
-    suggestedWith: ['shadcn-button'],
-    docsUrl: 'https://gsap.com/docs/v3/',
+    code: '<GsapMouseSpotlightEffect radius={200} color="rgba(102,126,234,0.3)"><h2>Spotlight</h2></GsapMouseSpotlightEffect>',
+    suggestedWith: ['gsap-mouse-cursor-follower', 'gsap-mouse-magnetic-element'],
     version: '1.0.0',
+    acceptsChildren: true,
   },
   {
-    id: 'gsap-morph-svg',
-    name: 'MorphSVG',
-    displayName: 'SVG Morph',
+    id: 'gsap-mouse-tilt-card',
+    name: 'GsapMouseTiltCard',
+    displayName: 'Tilt Card',
     source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['svg', 'morph', 'shape', 'transform'],
-    description: 'Morph between different SVG shapes',
-    previewImage: '/components/gsap/morph-svg.png',
+    categories: ['card', 'effect'],
+    tags: ['tilt', '3d', 'perspective', 'card', 'hover', 'glare'],
+    description: 'A 3D tilt card that responds to cursor position with perspective rotation and a dynamic glare overlay effect.',
+    previewImage: '',
     props: [
-      { name: 'fromPath', type: 'string', required: true, description: 'Initial SVG path' },
-      { name: 'toPath', type: 'string', required: true, description: 'Target SVG path' },
-      { name: 'duration', type: 'number', required: false, default: 1, description: 'Animation duration' },
+      { name: 'title', type: 'string', default: 'Tilt Card', required: false, description: 'Card title text', group: 'content' },
+      { name: 'description', type: 'string', default: 'Move your mouse over this card to see the 3D tilt effect.', required: false, description: 'Card description text', group: 'content' },
+      { name: 'image', type: 'image', default: 'https://picsum.photos/seed/tilt/400/250', required: false, description: 'Card cover image URL', group: 'content' },
+      { name: 'maxTilt', type: 'number', default: 15, required: false, description: 'Maximum tilt angle in degrees', group: 'behavior' },
+      { name: 'perspective', type: 'number', default: 1000, required: false, description: 'CSS perspective value in pixels', group: 'behavior' },
     ],
-    dependencies: ['gsap', 'gsap/MorphSVGPlugin'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-    ],
-    modulePath: 'gsap-morph-svg',
-    level: 'effect',
-    code: `import gsap from 'gsap'
-import { MorphSVGPlugin } from 'gsap/MorphSVGPlugin'
-
-gsap.registerPlugin(MorphSVGPlugin)
-
-function MorphSVG({ fromPath, toPath }) {
-  const pathRef = useRef(null)
-
-  useEffect(() => {
-    gsap.to(pathRef.current, {
-      morphSVG: toPath,
-      duration: 1,
-      repeat: -1,
-      yoyo: true,
-      ease: 'power2.inOut'
-    })
-  }, [])
-
-  return (
-    <svg viewBox="0 0 100 100">
-      <path ref={pathRef} d={fromPath} fill="currentColor" />
-    </svg>
-  )
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/Plugins/MorphSVGPlugin/',
+    dependencies: ['gsap'],
+    modulePath: 'gsap-mouse-tilt-card',
+    level: 'primitive',
+    code: '<GsapMouseTiltCard title="My Card" image="/card.jpg" maxTilt={15} />',
+    suggestedWith: ['gsap-drag-cards', 'gsap-mouse-magnetic-element'],
     version: '1.0.0',
+    acceptsChildren: false,
   },
   {
-    id: 'gsap-pin-section',
-    name: 'PinSection',
+    id: 'gsap-scroll-counter',
+    name: 'GsapScrollCounter',
+    displayName: 'Scroll Counter',
+    source: 'gsap',
+    categories: ['animation', 'text'],
+    tags: ['counter', 'number', 'scroll', 'count-up', 'statistics', 'animate'],
+    description: 'An animated number counter that counts up when scrolled into view. Supports prefix, suffix, and decimal formatting.',
+    previewImage: '',
+    props: [
+      { name: 'endValue', type: 'number', default: 1234, required: false, description: 'Target number to count to', group: 'content' },
+      { name: 'duration', type: 'number', default: 2, required: false, description: 'Animation duration in seconds', group: 'behavior' },
+      { name: 'prefix', type: 'string', default: '', required: false, description: 'Text before the number (e.g. "$")', group: 'content' },
+      { name: 'suffix', type: 'string', default: '', required: false, description: 'Text after the number (e.g. "+")', group: 'content' },
+      { name: 'decimals', type: 'number', default: 0, required: false, description: 'Number of decimal places', group: 'content' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-scroll-counter',
+    level: 'primitive',
+    code: '<GsapScrollCounter endValue={1234} prefix="$" suffix="+" />',
+    suggestedWith: ['gsap-scroll-stagger-reveal', 'gsap-scroll-text-reveal'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-scroll-horizontal-section',
+    name: 'GsapScrollHorizontalSection',
+    displayName: 'Horizontal Scroll Section',
+    source: 'gsap',
+    categories: ['section', 'layout', 'animation'],
+    tags: ['horizontal', 'scroll', 'section', 'pin', 'scrub', 'fullscreen'],
+    description: 'Full-viewport horizontal scrolling sections pinned to the screen. Vertical scroll is translated into horizontal movement.',
+    previewImage: '',
+    props: [
+      {
+        name: 'sections',
+        type: 'array',
+        required: false,
+        description: 'Array of section objects with title, content, and background color',
+        group: 'content',
+        itemSchema: [
+          { name: 'title', type: 'string', required: true, description: 'Section heading' },
+          { name: 'content', type: 'string', required: true, description: 'Section body text' },
+          { name: 'bgColor', type: 'color', required: true, description: 'Section background color' },
+        ],
+      },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-scroll-horizontal-section',
+    level: 'section',
+    code: '<GsapScrollHorizontalSection sections={[{ title: "One", content: "...", bgColor: "#1a1a2e" }]} />',
+    suggestedWith: ['gsap-scroll-snap-sections', 'gsap-scroll-pin-section'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-scroll-infinite-marquee',
+    name: 'GsapScrollInfiniteMarquee',
+    displayName: 'Infinite Marquee',
+    source: 'gsap',
+    categories: ['animation', 'text'],
+    tags: ['marquee', 'infinite', 'scroll', 'ticker', 'loop', 'speed-boost'],
+    description: 'An infinite scrolling text marquee that speeds up when the page is scrolled. Supports left/right direction and pause on hover.',
+    previewImage: '',
+    props: [
+      { name: 'items', type: 'array', required: false, description: 'Array of text strings to display', group: 'content' },
+      { name: 'speed', type: 'number', default: 50, required: false, description: 'Base scroll speed in pixels per second', group: 'behavior' },
+      { name: 'direction', type: 'select', default: 'left', required: false, options: ['left', 'right'], description: 'Marquee scroll direction', group: 'behavior' },
+      { name: 'pauseOnHover', type: 'boolean', default: true, required: false, description: 'Pause marquee on mouse hover', group: 'behavior' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-scroll-infinite-marquee',
+    level: 'primitive',
+    code: '<GsapScrollInfiniteMarquee items={["Design", "Develop", "Deploy"]} speed={50} />',
+    suggestedWith: ['gsap-drag-infinite-slider', 'gsap-scroll-text-reveal'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-scroll-parallax-images',
+    name: 'GsapScrollParallaxImages',
+    displayName: 'Parallax Images',
+    source: 'gsap',
+    categories: ['media', 'animation'],
+    tags: ['parallax', 'images', 'scroll', 'depth', 'gallery'],
+    description: 'A responsive image grid where each image moves at a different parallax speed on scroll, creating a layered depth effect.',
+    previewImage: '',
+    props: [
+      {
+        name: 'images',
+        type: 'array',
+        required: false,
+        description: 'Array of images with source, alt text, and parallax speed',
+        group: 'content',
+        itemSchema: [
+          { name: 'src', type: 'image', required: true, description: 'Image source URL' },
+          { name: 'alt', type: 'string', required: true, description: 'Alt text' },
+          { name: 'speed', type: 'number', required: true, description: 'Parallax speed multiplier' },
+        ],
+      },
+      { name: 'gap', type: 'number', default: 24, required: false, description: 'Gap between images in pixels', group: 'style' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-scroll-parallax-images',
+    level: 'section',
+    code: '<GsapScrollParallaxImages gap={24} />',
+    suggestedWith: ['gsap-mouse-inertia-gallery', 'gsap-scroll-scale-on-scroll'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-scroll-pin-section',
+    name: 'GsapScrollPinSection',
     displayName: 'Pin Section',
     source: 'gsap',
-    categories: ['animation', 'layout'],
-    tags: ['pin', 'sticky', 'scroll', 'fixed'],
-    description: 'Pin a section while scrolling through content',
-    previewImage: '/components/gsap/pin-section.png',
+    categories: ['section', 'animation'],
+    tags: ['pin', 'sticky', 'scroll', 'section', 'fixed', 'reveal'],
+    description: 'A section that pins in place while content animates in and out on scroll. Title and content fade in, hold, then fade away.',
+    previewImage: '',
     props: [
-      { name: 'children', type: 'children', required: true, description: 'Content to pin' },
-      { name: 'pinDuration', type: 'number', required: false, default: 1000, description: 'Pin duration in pixels' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-pin-section',
-    level: 'layout',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function PinSection({ children }) {
-  const sectionRef = useRef(null)
-
-  useGSAP(() => {
-    ScrollTrigger.create({
-      trigger: sectionRef.current,
-      pin: true,
-      start: 'top top',
-      end: '+=1000',
-      scrub: true
-    })
-  }, [])
-
-  return <section ref={sectionRef}>{children}</section>
-}`,
-    suggestedWith: ['gsap-scroll-reveal'],
-    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollTrigger/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-flip-animation',
-    name: 'FlipAnimation',
-    displayName: 'FLIP Animation',
-    source: 'gsap',
-    categories: ['animation'],
-    tags: ['flip', 'layout', 'transition', 'reorder'],
-    description: 'Smooth layout animations using FLIP technique',
-    previewImage: '/components/gsap/flip.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Items to animate' },
-    ],
-    dependencies: ['gsap', 'gsap/Flip'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-    ],
-    modulePath: 'gsap-flip-animation',
-    level: 'effect',
-    code: `import gsap from 'gsap'
-import { Flip } from 'gsap/Flip'
-
-gsap.registerPlugin(Flip)
-
-function FlipAnimation({ items, onReorder }) {
-  const containerRef = useRef(null)
-
-  const handleReorder = () => {
-    const state = Flip.getState(containerRef.current.children)
-    onReorder()
-    Flip.from(state, {
-      duration: 0.5,
-      ease: 'power2.inOut',
-      stagger: 0.05
-    })
-  }
-
-  return (
-    <div ref={containerRef}>
-      {items.map(item => (
-        <div key={item.id}>{item.content}</div>
-      ))}
-    </div>
-  )
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/Plugins/Flip/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-bounce-in',
-    name: 'BounceIn',
-    displayName: 'Bounce In',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['bounce', 'entrance', 'elastic', 'spring'],
-    description: 'Bounce entrance animation',
-    previewImage: '/components/gsap/bounce-in.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Content to animate' },
-      { name: 'duration', type: 'number', required: false, default: 0.8, description: 'Animation duration in seconds' },
-      { name: 'delay', type: 'number', required: false, default: 0, description: 'Delay before animation' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-bounce-in',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function BounceIn({ children, duration = 0.8, delay = 0 }) {
-  const ref = useRef(null)
-
-  useGSAP(() => {
-    gsap.from(ref.current, {
-      y: -50,
-      opacity: 0,
-      duration,
-      delay,
-      ease: 'bounce.out'
-    })
-  }, [])
-
-  return <div ref={ref}>{children}</div>
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-flip-card',
-    name: 'FlipCard',
-    displayName: 'Flip Card',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['flip', 'card', '3d', 'rotate', 'hover'],
-    description: '3D flip card animation',
-    previewImage: '/components/gsap/flip-card.png',
-    props: [
-      { name: 'front', type: 'children', required: true, description: 'Front face content' },
-      { name: 'back', type: 'children', required: true, description: 'Back face content' },
-      { name: 'duration', type: 'number', required: false, default: 0.6, description: 'Flip duration in seconds' },
+      { name: 'title', type: 'string', default: 'Pinned Section', required: false, description: 'Section heading', group: 'content' },
+      { name: 'content', type: 'string', default: 'This section stays fixed while you scroll.', required: false, description: 'Section body text', group: 'content' },
+      { name: 'bgColor', type: 'color', default: '#0f172a', required: false, description: 'Background color', group: 'style' },
+      { name: 'duration', type: 'number', default: 300, required: false, description: 'Scroll distance as percentage of viewport', group: 'behavior' },
     ],
     dependencies: ['gsap'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-    ],
-    modulePath: 'gsap-flip-card',
-    level: 'effect',
-    code: `import gsap from 'gsap'
-
-function FlipCard({ front, back, duration = 0.6 }) {
-  const cardRef = useRef(null)
-
-  const handleFlip = () => {
-    gsap.to(cardRef.current, {
-      rotateY: 180,
-      duration,
-      ease: 'power2.inOut'
-    })
-  }
-
-  return (
-    <div ref={cardRef} onClick={handleFlip} style={{ perspective: 1000 }}>
-      <div>{front}</div>
-      <div>{back}</div>
-    </div>
-  )
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
+    modulePath: 'gsap-scroll-pin-section',
+    level: 'section',
+    code: '<GsapScrollPinSection title="Pinned" content="This stays fixed while you scroll." />',
+    suggestedWith: ['gsap-scroll-horizontal-section', 'gsap-scroll-snap-sections'],
     version: '1.0.0',
+    acceptsChildren: false,
   },
   {
-    id: 'gsap-morphing-shapes',
-    name: 'MorphingShapes',
-    displayName: 'Morphing Shapes',
+    id: 'gsap-scroll-progress-bar',
+    name: 'GsapScrollProgressBar',
+    displayName: 'Scroll Progress Bar',
     source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['svg', 'morph', 'shape', 'transform', 'organic'],
-    description: 'SVG shape morphing',
-    previewImage: '/components/gsap/morphing-shapes.png',
+    categories: ['effect', 'navigation'],
+    tags: ['progress', 'scroll', 'bar', 'indicator', 'fixed', 'reading'],
+    description: 'A fixed progress bar that scales horizontally to indicate overall page scroll progress. Can be positioned at top or bottom.',
+    previewImage: '',
     props: [
-      { name: 'shapes', type: 'array', required: true, description: 'Array of SVG path data to morph between' },
-      { name: 'duration', type: 'number', required: false, default: 1, description: 'Morph duration in seconds' },
+      { name: 'color', type: 'color', default: '#667eea', required: false, description: 'Progress bar color', group: 'style' },
+      { name: 'height', type: 'number', default: 4, required: false, description: 'Bar height in pixels', group: 'style' },
+      { name: 'position', type: 'select', default: 'top', required: false, options: ['top', 'bottom'], description: 'Fixed position on the viewport', group: 'style' },
     ],
     dependencies: ['gsap'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-    ],
-    modulePath: 'gsap-morphing-shapes',
+    modulePath: 'gsap-scroll-progress-bar',
     level: 'effect',
-    code: `import gsap from 'gsap'
-
-function MorphingShapes({ shapes, duration = 1 }) {
-  const pathRef = useRef(null)
-
-  useEffect(() => {
-    const tl = gsap.timeline({ repeat: -1, yoyo: true })
-    shapes.forEach((shape) => {
-      tl.to(pathRef.current, { attr: { d: shape }, duration, ease: 'power2.inOut' })
-    })
-  }, [])
-
-  return (
-    <svg viewBox="0 0 200 200">
-      <path ref={pathRef} d={shapes[0]} fill="currentColor" />
-    </svg>
-  )
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
+    code: '<GsapScrollProgressBar color="#667eea" height={4} position="top" />',
+    suggestedWith: ['gsap-scroll-snap-sections', 'gsap-scroll-pin-section'],
     version: '1.0.0',
+    acceptsChildren: false,
   },
   {
-    id: 'gsap-reveal-text',
-    name: 'RevealText',
-    displayName: 'Reveal Text',
-    source: 'gsap',
-    categories: ['animation', 'text'],
-    tags: ['text', 'reveal', 'scroll', 'clip', 'mask'],
-    description: 'Text reveal on scroll',
-    previewImage: '/components/gsap/reveal-text.png',
-    props: [
-      { name: 'text', type: 'string', required: true, description: 'Text to reveal' },
-      { name: 'duration', type: 'number', required: false, default: 1, description: 'Reveal duration in seconds' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-reveal-text',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function RevealText({ text, duration = 1 }) {
-  const ref = useRef(null)
-
-  useGSAP(() => {
-    gsap.from(ref.current, {
-      clipPath: 'inset(0 100% 0 0)',
-      duration,
-      ease: 'power3.out',
-      scrollTrigger: {
-        trigger: ref.current,
-        start: 'top 80%',
-      }
-    })
-  }, [])
-
-  return <p ref={ref}>{text}</p>
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-progress-scroll',
-    name: 'ProgressScroll',
-    displayName: 'Scroll Progress',
+    id: 'gsap-scroll-scale-on-scroll',
+    name: 'GsapScrollScale',
+    displayName: 'Scale on Scroll',
     source: 'gsap',
     categories: ['animation', 'effect'],
-    tags: ['scroll', 'progress', 'indicator', 'bar'],
-    description: 'Scroll progress indicator',
-    previewImage: '/components/gsap/progress-scroll.png',
+    tags: ['scale', 'scroll', 'zoom', 'grow', 'reveal', 'scrub'],
+    description: 'An element that scales up from small to full size as the user scrolls, with optional scrub for direct scroll-linked motion.',
+    previewImage: '',
     props: [
-      { name: 'color', type: 'string', required: false, default: '#3b82f6', description: 'Progress bar color' },
-      { name: 'height', type: 'number', required: false, default: 4, description: 'Bar height in pixels' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-progress-scroll',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function ProgressScroll({ color = '#3b82f6', height = 4 }) {
-  const barRef = useRef(null)
-
-  useGSAP(() => {
-    gsap.to(barRef.current, {
-      scaleX: 1,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: document.body,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: true
-      }
-    })
-  }, [])
-
-  return (
-    <div
-      ref={barRef}
-      style={{
-        position: 'fixed', top: 0, left: 0, width: '100%',
-        height, backgroundColor: color, transformOrigin: 'left',
-        transform: 'scaleX(0)', zIndex: 9999
-      }}
-    />
-  )
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-rotating-text',
-    name: 'RotatingText',
-    displayName: 'Rotating Text',
-    source: 'gsap',
-    categories: ['animation', 'text'],
-    tags: ['text', 'rotate', 'carousel', 'cycle', 'loop'],
-    description: 'Rotating text carousel',
-    previewImage: '/components/gsap/rotating-text.png',
-    props: [
-      { name: 'words', type: 'array', required: true, description: 'Array of words to rotate through' },
-      { name: 'duration', type: 'number', required: false, default: 0.5, description: 'Transition duration in seconds' },
-      { name: 'interval', type: 'number', required: false, default: 2, description: 'Time between rotations in seconds' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-rotating-text',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function RotatingText({ words, duration = 0.5, interval = 2 }) {
-  const textRef = useRef(null)
-  const indexRef = useRef(0)
-
-  useGSAP(() => {
-    const tl = gsap.timeline({ repeat: -1, repeatDelay: interval })
-    words.forEach((word, i) => {
-      tl.to(textRef.current, { y: -20, opacity: 0, duration })
-        .call(() => { textRef.current.textContent = words[(i + 1) % words.length] })
-        .fromTo(textRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration })
-    })
-  }, [])
-
-  return <span ref={textRef}>{words[0]}</span>
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-typewriter',
-    name: 'GsapTypewriter',
-    displayName: 'GSAP Typewriter',
-    source: 'gsap',
-    categories: ['animation', 'text'],
-    tags: ['typewriter', 'text', 'typing', 'cursor', 'sequential'],
-    description: 'Typewriter text effect',
-    previewImage: '/components/gsap/typewriter.png',
-    props: [
-      { name: 'text', type: 'string', required: true, description: 'Text to type out' },
-      { name: 'speed', type: 'number', required: false, default: 0.05, description: 'Typing speed per character in seconds' },
-      { name: 'delay', type: 'number', required: false, default: 0, description: 'Delay before typing starts' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-typewriter',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function GsapTypewriter({ text, speed = 0.05, delay = 0 }) {
-  const ref = useRef(null)
-
-  useGSAP(() => {
-    const chars = text.split('')
-    ref.current.textContent = ''
-    const tl = gsap.timeline({ delay })
-    chars.forEach((char) => {
-      tl.call(() => { ref.current.textContent += char }, null, '+=' + speed)
-    })
-  }, [])
-
-  return <span ref={ref} />
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-wave-text',
-    name: 'WaveText',
-    displayName: 'Wave Text',
-    source: 'gsap',
-    categories: ['animation', 'text'],
-    tags: ['wave', 'text', 'oscillation', 'ripple', 'characters'],
-    description: 'Wave text animation',
-    previewImage: '/components/gsap/wave-text.png',
-    props: [
-      { name: 'text', type: 'string', required: true, description: 'Text to animate' },
-      { name: 'amplitude', type: 'number', required: false, default: 20, description: 'Wave height in pixels' },
-      { name: 'duration', type: 'number', required: false, default: 1, description: 'Wave cycle duration in seconds' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-wave-text',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-
-function WaveText({ text, amplitude = 20, duration = 1 }) {
-  const containerRef = useRef(null)
-
-  useGSAP(() => {
-    const chars = containerRef.current.querySelectorAll('span')
-    gsap.to(chars, {
-      y: -amplitude,
-      duration,
-      stagger: 0.05,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut'
-    })
-  }, [])
-
-  return (
-    <div ref={containerRef} style={{ display: 'inline-flex' }}>
-      {text.split('').map((char, i) => (
-        <span key={i}>{char === ' ' ? '\\u00A0' : char}</span>
-      ))}
-    </div>
-  )
-}`,
-    suggestedWith: [],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-parallax-section',
-    name: 'ParallaxSection',
-    displayName: 'Parallax Section',
-    source: 'gsap',
-    categories: ['animation', 'effect'],
-    tags: ['parallax', 'scroll', 'depth', 'layers', 'section'],
-    description: 'Create depth with parallax scrolling effect on a full section',
-    previewImage: '/components/gsap/parallax-section.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Content with parallax' },
-      { name: 'speed', type: 'number', required: false, default: 0.5, description: 'Parallax speed multiplier' },
-    ],
-    dependencies: ['gsap', '@gsap/react'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-      { package: '@gsap/react', version: '^2.1.0' },
-    ],
-    modulePath: 'gsap-parallax-section',
-    level: 'effect',
-    code: `import { useGSAP } from '@gsap/react'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-
-gsap.registerPlugin(ScrollTrigger)
-
-function ParallaxSection({ children, speed = 0.5 }) {
-  const ref = useRef(null)
-
-  useGSAP(() => {
-    gsap.to(ref.current, {
-      y: () => window.innerHeight * speed,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: ref.current,
-        start: 'top bottom',
-        end: 'bottom top',
-        scrub: true
-      }
-    })
-  }, [])
-
-  return <section ref={ref}>{children}</section>
-}`,
-    suggestedWith: ['osmo-hero-split'],
-    docsUrl: 'https://gsap.com/docs/v3/',
-    version: '1.0.0',
-  },
-  {
-    id: 'gsap-magnetic',
-    name: 'Magnetic',
-    displayName: 'Magnetic',
-    source: 'gsap',
-    categories: ['effect', 'animation'],
-    tags: ['magnetic', 'cursor', 'hover', 'interactive', 'attraction'],
-    description: 'Adds a magnetic cursor-attraction effect on hover',
-    previewImage: '/components/gsap/magnetic.png',
-    props: [
-      { name: 'children', type: 'children', required: true, description: 'Element to make magnetic' },
-      { name: 'strength', type: 'number', required: false, default: 0.3, description: 'Magnetic pull strength (0-1)' },
-      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+      { name: 'children', type: 'children', required: false, description: 'Content to scale on scroll', group: 'content' },
+      { name: 'scaleFrom', type: 'number', default: 0.6, required: false, description: 'Starting scale value', group: 'behavior' },
+      { name: 'scaleTo', type: 'number', default: 1, required: false, description: 'Ending scale value', group: 'behavior' },
+      { name: 'scrub', type: 'boolean', default: true, required: false, description: 'Link animation directly to scroll position', group: 'behavior' },
     ],
     dependencies: ['gsap'],
-    dependencyManifest: [
-      { package: 'gsap', version: '^3.12.0' },
-    ],
-    modulePath: 'gsap-magnetic',
+    modulePath: 'gsap-scroll-scale-on-scroll',
     level: 'effect',
-    code: `import gsap from 'gsap'
-
-function Magnetic({ children, strength = 0.3 }) {
-  const ref = useRef(null)
-
-  const handleMouseMove = (e) => {
-    const rect = ref.current.getBoundingClientRect()
-    const x = e.clientX - rect.left - rect.width / 2
-    const y = e.clientY - rect.top - rect.height / 2
-
-    gsap.to(ref.current, {
-      x: x * strength,
-      y: y * strength,
-      duration: 0.3,
-      ease: 'power2.out'
-    })
-  }
-
-  const handleMouseLeave = () => {
-    gsap.to(ref.current, { x: 0, y: 0, duration: 0.3, ease: 'power2.out' })
-  }
-
-  return (
-    <div ref={ref} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
-      {children}
-    </div>
-  )
-}`,
-    suggestedWith: ['shadcn-button'],
-    docsUrl: 'https://gsap.com/docs/v3/',
+    code: '<GsapScrollScale scaleFrom={0.6} scaleTo={1}><div>Scale me</div></GsapScrollScale>',
+    suggestedWith: ['gsap-scroll-stagger-reveal', 'gsap-scroll-text-reveal'],
     version: '1.0.0',
+    acceptsChildren: true,
+  },
+  {
+    id: 'gsap-scroll-snap-sections',
+    name: 'GsapScrollSnapSections',
+    displayName: 'Snap Sections',
+    source: 'gsap',
+    categories: ['section', 'layout', 'animation'],
+    tags: ['snap', 'scroll', 'sections', 'fullscreen', 'paging'],
+    description: 'Full-height sections with scroll snapping that locks each section into view. Content animates in with staggered reveal.',
+    previewImage: '',
+    props: [
+      {
+        name: 'sections',
+        type: 'array',
+        required: false,
+        description: 'Array of section objects with title, content, and background color',
+        group: 'content',
+        itemSchema: [
+          { name: 'title', type: 'string', required: true, description: 'Section heading' },
+          { name: 'content', type: 'string', required: true, description: 'Section body text' },
+          { name: 'bgColor', type: 'color', required: true, description: 'Section background color' },
+        ],
+      },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-scroll-snap-sections',
+    level: 'section',
+    code: '<GsapScrollSnapSections sections={[{ title: "Welcome", content: "...", bgColor: "#0f172a" }]} />',
+    suggestedWith: ['gsap-scroll-horizontal-section', 'gsap-scroll-pin-section'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-scroll-stagger-reveal',
+    name: 'GsapScrollStaggerReveal',
+    displayName: 'Stagger Reveal',
+    source: 'gsap',
+    categories: ['animation', 'card'],
+    tags: ['stagger', 'reveal', 'scroll', 'cards', 'grid', 'entrance'],
+    description: 'A grid of cards that reveal with a staggered animation on scroll. Supports directional entrance from up, down, left, or right.',
+    previewImage: '',
+    props: [
+      {
+        name: 'items',
+        type: 'array',
+        required: false,
+        description: 'Array of items with title and description',
+        group: 'content',
+        itemSchema: [
+          { name: 'title', type: 'string', required: true, description: 'Item title' },
+          { name: 'description', type: 'string', required: true, description: 'Item description' },
+        ],
+      },
+      { name: 'stagger', type: 'number', default: 0.15, required: false, description: 'Delay between each item animation in seconds', group: 'behavior' },
+      { name: 'direction', type: 'select', default: 'up', required: false, options: ['up', 'down', 'left', 'right'], description: 'Direction items animate from', group: 'behavior' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-scroll-stagger-reveal',
+    level: 'section',
+    code: '<GsapScrollStaggerReveal direction="up" stagger={0.15} />',
+    suggestedWith: ['gsap-scroll-text-reveal', 'gsap-scroll-scale-on-scroll'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-scroll-text-reveal',
+    name: 'GsapScrollTextReveal',
+    displayName: 'Scroll Text Reveal',
+    source: 'gsap',
+    categories: ['text', 'animation'],
+    tags: ['text', 'reveal', 'scroll', 'split', 'word', 'character', 'scrub'],
+    description: 'Text that reveals word-by-word or character-by-character as the user scrolls. Scrub mode ties the animation directly to scroll position.',
+    previewImage: '',
+    props: [
+      { name: 'text', type: 'string', default: 'Scroll to reveal this amazing text animation that brings words to life as you navigate down the page.', required: false, description: 'Text content to reveal', group: 'content' },
+      { name: 'splitBy', type: 'select', default: 'word', required: false, options: ['word', 'char', 'line'], description: 'How to split the text for animation', group: 'behavior' },
+      { name: 'stagger', type: 'number', default: 0.05, required: false, description: 'Delay between each unit reveal', group: 'behavior' },
+      { name: 'scrub', type: 'boolean', default: true, required: false, description: 'Link animation to scroll position', group: 'behavior' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-scroll-text-reveal',
+    level: 'primitive',
+    code: '<GsapScrollTextReveal text="Reveal this text on scroll" splitBy="word" />',
+    suggestedWith: ['gsap-text-split-animation', 'gsap-text-kinetic-typography'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-text-kinetic-typography',
+    name: 'GsapKineticTypography',
+    displayName: 'Kinetic Typography',
+    source: 'gsap',
+    categories: ['text', 'animation'],
+    tags: ['kinetic', 'typography', 'wave', 'bounce', 'elastic', 'rotate', 'characters'],
+    description: 'Animated kinetic typography with multiple animation modes including wave, bounce, elastic, and stagger-rotate effects on individual characters.',
+    previewImage: '',
+    props: [
+      { name: 'text', type: 'string', default: 'KINETIC', required: false, description: 'Text to animate', group: 'content' },
+      { name: 'animation', type: 'select', default: 'wave', required: false, options: ['wave', 'bounce', 'elastic', 'stagger-rotate'], description: 'Animation style', group: 'behavior' },
+      { name: 'speed', type: 'number', default: 1, required: false, description: 'Animation speed multiplier', group: 'behavior' },
+      { name: 'loop', type: 'boolean', default: true, required: false, description: 'Whether the animation loops continuously', group: 'behavior' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-text-kinetic-typography',
+    level: 'primitive',
+    code: '<GsapKineticTypography text="KINETIC" animation="wave" loop />',
+    suggestedWith: ['gsap-text-scramble', 'gsap-text-split-animation'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-text-scramble',
+    name: 'GsapTextScramble',
+    displayName: 'Text Scramble',
+    source: 'gsap',
+    categories: ['text', 'effect'],
+    tags: ['scramble', 'text', 'decode', 'cipher', 'reveal', 'hover', 'glitch'],
+    description: 'A text scramble effect that decodes characters one by one, triggered on hover, scroll, or page load.',
+    previewImage: '',
+    props: [
+      { name: 'text', type: 'string', default: 'SCRAMBLE EFFECT', required: false, description: 'Text to display and scramble', group: 'content' },
+      { name: 'speed', type: 'number', default: 50, required: false, description: 'Scramble interval in milliseconds', group: 'behavior' },
+      { name: 'characters', type: 'string', default: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*', required: false, description: 'Character set used for scrambling', group: 'advanced' },
+      { name: 'trigger', type: 'select', default: 'hover', required: false, options: ['hover', 'scroll', 'load'], description: 'What triggers the scramble animation', group: 'behavior' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-text-scramble',
+    level: 'primitive',
+    code: '<GsapTextScramble text="SCRAMBLE" trigger="hover" />',
+    suggestedWith: ['gsap-text-kinetic-typography', 'gsap-text-split-animation'],
+    version: '1.0.0',
+    acceptsChildren: false,
+  },
+  {
+    id: 'gsap-text-split-animation',
+    name: 'GsapTextSplitAnimation',
+    displayName: 'Text Split Animation',
+    source: 'gsap',
+    categories: ['text', 'animation'],
+    tags: ['split', 'text', 'animation', 'fadeUp', 'slideIn', 'rotateIn', 'entrance'],
+    description: 'Text split animation that breaks text into characters, words, or lines and animates them in with fadeUp, slideIn, or rotateIn effects.',
+    previewImage: '',
+    props: [
+      { name: 'text', type: 'string', default: 'Beautiful text split animation with GSAP', required: false, description: 'Text to animate', group: 'content' },
+      { name: 'splitBy', type: 'select', default: 'char', required: false, options: ['word', 'char', 'line'], description: 'How to split the text', group: 'behavior' },
+      { name: 'animation', type: 'select', default: 'fadeUp', required: false, options: ['fadeUp', 'slideIn', 'rotateIn'], description: 'Animation entrance style', group: 'behavior' },
+      { name: 'stagger', type: 'number', default: 0.03, required: false, description: 'Delay between each animated unit in seconds', group: 'behavior' },
+    ],
+    dependencies: ['gsap'],
+    modulePath: 'gsap-text-split-animation',
+    level: 'primitive',
+    code: '<GsapTextSplitAnimation text="Hello World" splitBy="char" animation="fadeUp" />',
+    suggestedWith: ['gsap-scroll-text-reveal', 'gsap-text-kinetic-typography'],
+    version: '1.0.0',
+    acceptsChildren: false,
   },
 ]

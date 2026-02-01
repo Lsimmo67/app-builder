@@ -1,127 +1,152 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils/cn'
+import React, { useEffect, useRef, useState } from "react"
 import {
   motion,
+  useTransform,
   useScroll,
   useSpring,
-  useTransform,
-} from 'framer-motion'
-import { useRef } from 'react'
+} from "motion/react"
+import { cn } from "@/lib/utils"
 
-interface TracingBeamProps {
-  className?: string
-  children?: React.ReactNode
-  beamColor?: string
-}
-
-const defaultContent = [
-  {
-    title: 'Getting Started',
-    description:
-      'Begin your journey with our comprehensive onboarding process. Set up your environment, configure your tools, and start building in minutes.',
-  },
-  {
-    title: 'Build Your First Project',
-    description:
-      'Follow our step-by-step guide to create your first project. Learn the fundamentals of component architecture, state management, and styling.',
-  },
-  {
-    title: 'Deploy to Production',
-    description:
-      'Ship your project with confidence. Our deployment pipeline handles optimization, CDN distribution, and monitoring out of the box.',
-  },
-  {
-    title: 'Scale and Iterate',
-    description:
-      'Monitor performance, gather user feedback, and iterate on your product. Our analytics and A/B testing tools make data-driven decisions easy.',
-  },
-]
-
-export default function TracingBeam({
-  className,
+export const TracingBeam = ({
   children,
-  beamColor = '#06b6d4',
-}: TracingBeamProps) {
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) => {
   const ref = useRef<HTMLDivElement>(null)
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ['start center', 'end center'],
+    offset: ["start start", "end start"],
   })
 
-  const scaleY = useSpring(scrollYProgress, {
-    stiffness: 500,
-    damping: 90,
-  })
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [svgHeight, setSvgHeight] = useState(0)
 
-  const dotY = useTransform(scaleY, [0, 1], ['0%', '100%'])
+  useEffect(() => {
+    if (contentRef.current) {
+      setSvgHeight(contentRef.current.offsetHeight)
+    }
+  }, [])
+
+  const y1 = useSpring(
+    useTransform(scrollYProgress, [0, 0.8], [50, svgHeight]),
+    { stiffness: 500, damping: 90 }
+  )
+  const y2 = useSpring(
+    useTransform(scrollYProgress, [0, 1], [50, svgHeight - 200]),
+    { stiffness: 500, damping: 90 }
+  )
 
   return (
-    <div
+    <motion.div
       ref={ref}
-      className={cn('relative mx-auto max-w-4xl px-4 py-20', className)}
+      className={cn("relative mx-auto h-full w-full max-w-4xl", className)}
     >
-      {/* Beam track */}
-      <div className="absolute left-8 top-20 bottom-0 w-[2px] bg-neutral-800 md:left-12">
-        {/* Filled beam */}
+      <div className="absolute top-3 -left-4 md:-left-20">
         <motion.div
-          className="absolute left-0 top-0 w-full origin-top"
-          style={{
-            scaleY,
-            background: `linear-gradient(to bottom, ${beamColor}, transparent)`,
-            height: '100%',
+          transition={{ duration: 0.2, delay: 0.5 }}
+          animate={{
+            boxShadow: scrollYProgress.get() > 0 ? "none" : "rgba(0, 0, 0, 0.24) 0px 3px 8px",
           }}
-        />
-
-        {/* Moving dot */}
-        <motion.div
-          className="absolute -left-[5px] h-3 w-3 rounded-full border-2 shadow-lg"
-          style={{
-            top: dotY,
-            borderColor: beamColor,
-            backgroundColor: beamColor,
-            boxShadow: `0 0 12px ${beamColor}`,
-          }}
-        />
+          className="border-netural-200 ml-[27px] flex h-4 w-4 items-center justify-center rounded-full border shadow-sm"
+        >
+          <motion.div
+            transition={{ duration: 0.2, delay: 0.5 }}
+            animate={{
+              backgroundColor: scrollYProgress.get() > 0 ? "white" : "#10b981",
+              borderColor: scrollYProgress.get() > 0 ? "white" : "#059669",
+            }}
+            className="h-2 w-2 rounded-full border border-neutral-300 bg-white"
+          />
+        </motion.div>
+        <svg
+          viewBox={`0 0 20 ${svgHeight}`}
+          width="20"
+          height={svgHeight}
+          className="ml-4 block"
+          aria-hidden="true"
+        >
+          <motion.path
+            d={`M 1 0V -36 l 18 24 V ${svgHeight * 0.8} l -18 24V ${svgHeight}`}
+            fill="none"
+            stroke="#9091A0"
+            strokeOpacity="0.16"
+            transition={{ duration: 10 }}
+          ></motion.path>
+          <motion.path
+            d={`M 1 0V -36 l 18 24 V ${svgHeight * 0.8} l -18 24V ${svgHeight}`}
+            fill="none"
+            stroke="url(#gradient)"
+            strokeWidth="1.25"
+            className="motion-reduce:hidden"
+            transition={{ duration: 10 }}
+          ></motion.path>
+          <defs>
+            <motion.linearGradient
+              id="gradient"
+              gradientUnits="userSpaceOnUse"
+              x1="0"
+              x2="0"
+              y1={y1}
+              y2={y2}
+            >
+              <stop stopColor="#18CCFC" stopOpacity="0"></stop>
+              <stop stopColor="#18CCFC"></stop>
+              <stop offset="0.325" stopColor="#6344F5"></stop>
+              <stop offset="1" stopColor="#AE48FF" stopOpacity="0"></stop>
+            </motion.linearGradient>
+          </defs>
+        </svg>
       </div>
+      <div ref={contentRef}>{children}</div>
+    </motion.div>
+  )
+}
 
-      {/* Content */}
-      <div className="ml-16 md:ml-24">
-        {children || (
-          <div className="space-y-20">
-            {defaultContent.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                viewport={{ once: true }}
-              >
-                <div className="mb-2 flex items-center gap-3">
-                  <span
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-                    style={{ backgroundColor: beamColor }}
-                  >
-                    {i + 1}
-                  </span>
-                  <h3 className="text-xl font-bold text-white md:text-2xl">
-                    {item.title}
-                  </h3>
-                </div>
-                <p className="mt-2 text-sm leading-relaxed text-neutral-400 md:text-base">
-                  {item.description}
-                </p>
-                {/* Decorative card */}
-                <div className="mt-6 rounded-xl border border-white/[0.1] bg-neutral-900/50 p-6">
-                  <div className="h-2 w-3/4 rounded bg-neutral-800" />
-                  <div className="mt-3 h-2 w-1/2 rounded bg-neutral-800" />
-                  <div className="mt-3 h-2 w-2/3 rounded bg-neutral-800" />
-                </div>
-              </motion.div>
-            ))}
+export interface AceternityTracingBeamProps {
+  content?: { title: string; description: string; badge?: string; image?: string }[]
+  className?: string
+}
+
+const defaultContent = [
+  { title: "Getting Started", description: "Learn the basics of building with our platform. Setup your environment and create your first project.", badge: "01" },
+  { title: "Build Features", description: "Add interactive components and animations to your application with our component library.", badge: "02" },
+  { title: "Deploy & Scale", description: "Ship your application to production and scale it to millions of users.", badge: "03" },
+]
+
+export default function AceternityTracingBeamWrapper({
+  content = defaultContent,
+  className,
+}: AceternityTracingBeamProps) {
+  return (
+    <TracingBeam className={className}>
+      <div className="max-w-2xl mx-auto antialiased pt-4 relative">
+        {content.map((item, index) => (
+          <div key={`content-${index}`} className="mb-10">
+            {item.badge && (
+              <h2 className="bg-black text-white rounded-full text-sm w-fit px-4 py-1 mb-4">
+                {item.badge}
+              </h2>
+            )}
+            <p className="text-xl mb-4 font-bold text-black dark:text-white">
+              {item.title}
+            </p>
+            <div className="text-sm prose prose-sm dark:prose-invert">
+              {item.image && (
+                <img
+                  src={item.image}
+                  alt="blog thumbnail"
+                  className="rounded-lg mb-10 object-cover"
+                />
+              )}
+              <p>{item.description}</p>
+            </div>
           </div>
-        )}
+        ))}
       </div>
-    </div>
+    </TracingBeam>
   )
 }

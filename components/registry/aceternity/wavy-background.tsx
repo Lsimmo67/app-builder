@@ -1,119 +1,176 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils/cn'
-import { motion } from 'framer-motion'
+import { cn } from "@/lib/utils"
+import React, { useEffect, useRef, useState } from "react"
+import { createNoise3D } from "simplex-noise"
 
-interface WavyBackgroundProps {
-  className?: string
-  children?: React.ReactNode
-  waveCount?: number
-  waveOpacity?: number
-  colors?: string[]
-}
-
-export default function WavyBackground({
-  className,
+export const WavyBackground = ({
   children,
-  waveCount = 5,
+  className,
+  containerClassName,
+  colors,
+  waveWidth,
+  backgroundFill,
+  blur = 10,
+  speed = "fast",
   waveOpacity = 0.5,
-  colors = [
-    'rgba(59, 130, 246, 0.3)',
-    'rgba(139, 92, 246, 0.3)',
-    'rgba(236, 72, 153, 0.3)',
-    'rgba(34, 197, 94, 0.3)',
-    'rgba(234, 179, 8, 0.3)',
-  ],
-}: WavyBackgroundProps) {
-  const generateWavePath = (index: number, total: number) => {
-    const amplitude = 30 + index * 15
-    const frequency = 0.005 + index * 0.002
-    const yOffset = 300 + (index / total) * 200
-    const phase = index * 60
+  ...props
+}: {
+  children?: React.ReactNode
+  className?: string
+  containerClassName?: string
+  colors?: string[]
+  waveWidth?: number
+  backgroundFill?: string
+  blur?: number
+  speed?: "slow" | "fast"
+  waveOpacity?: number
+  [key: string]: unknown
+}) => {
+  const noise = createNoise3D()
+  let w: number,
+    h: number,
+    nt: number,
+    i: number,
+    x: number,
+    ctx: CanvasRenderingContext2D | null,
+    canvas: HTMLCanvasElement | null
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
-    let d = `M 0 ${yOffset}`
-    for (let x = 0; x <= 1200; x += 10) {
-      const y =
-        yOffset +
-        Math.sin((x + phase) * frequency * Math.PI * 2) * amplitude +
-        Math.sin((x + phase * 2) * frequency * 1.5 * Math.PI * 2) *
-          (amplitude * 0.5)
-      d += ` L ${x} ${y}`
+  const getSpeed = () => {
+    switch (speed) {
+      case "slow":
+        return 0.001
+      case "fast":
+        return 0.002
+      default:
+        return 0.001
     }
-    d += ` L 1200 800 L 0 800 Z`
-    return d
   }
 
-  const waves = Array.from({ length: waveCount }, (_, i) => ({
-    path: generateWavePath(i, waveCount),
-    color: colors[i % colors.length],
-    duration: 8 + i * 2,
-    delay: i * 0.5,
-  }))
+  const init = () => {
+    canvas = canvasRef.current
+    if (!canvas) return
+    ctx = canvas.getContext("2d")
+    w = ctx!.canvas.width = window.innerWidth
+    h = ctx!.canvas.height = window.innerHeight
+    ctx!.filter = `blur(${blur}px)`
+    nt = 0
+    window.onresize = function () {
+      w = ctx!.canvas.width = window.innerWidth
+      h = ctx!.canvas.height = window.innerHeight
+      ctx!.filter = `blur(${blur}px)`
+    }
+    render()
+  }
+
+  const waveColors = colors ?? [
+    "#38bdf8",
+    "#818cf8",
+    "#c084fc",
+    "#e879f9",
+    "#22d3ee",
+  ]
+
+  const drawWave = (n: number) => {
+    nt += getSpeed()
+    for (i = 0; i < n; i++) {
+      ctx!.beginPath()
+      ctx!.lineWidth = waveWidth || 50
+      ctx!.strokeStyle = waveColors[i % waveColors.length]
+      for (x = 0; x < w; x += 5) {
+        const y = noise(x / 800, 0.3 * i, nt) * 100
+        ctx!.lineTo(x, y + h * 0.5)
+      }
+      ctx!.stroke()
+      ctx!.closePath()
+    }
+  }
+
+  let animationId: number
+  const render = () => {
+    if (!ctx) return
+    ctx.fillStyle = backgroundFill || "black"
+    ctx.globalAlpha = waveOpacity || 0.5
+    ctx.fillRect(0, 0, w, h)
+    drawWave(5)
+    animationId = requestAnimationFrame(render)
+  }
+
+  useEffect(() => {
+    init()
+    return () => {
+      cancelAnimationFrame(animationId)
+    }
+  }, [])
+
+  const [isSafari, setIsSafari] = useState(false)
+  useEffect(() => {
+    setIsSafari(
+      typeof window !== "undefined" &&
+        navigator.userAgent.includes("Safari") &&
+        !navigator.userAgent.includes("Chrome")
+    )
+  }, [])
 
   return (
     <div
       className={cn(
-        'relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-slate-950',
-        className
+        "h-screen flex flex-col items-center justify-center",
+        containerClassName
       )}
     >
-      {/* Animated waves */}
-      <div className="absolute inset-0 z-0">
-        <svg
-          className="h-full w-full"
-          viewBox="0 0 1200 800"
-          preserveAspectRatio="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {waves.map((wave, i) => (
-            <motion.path
-              key={i}
-              d={wave.path}
-              fill={wave.color}
-              opacity={waveOpacity}
-              initial={{ translateX: 0 }}
-              animate={{
-                translateX: [0, -50, 0, 50, 0],
-                translateY: [0, 15, 0, -15, 0],
-              }}
-              transition={{
-                duration: wave.duration,
-                repeat: Infinity,
-                ease: 'easeInOut',
-                delay: wave.delay,
-              }}
-            />
-          ))}
-        </svg>
-      </div>
-
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 z-[1] bg-gradient-to-t from-slate-950 via-transparent to-slate-950" />
-
-      {/* Content */}
-      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
-        {children || (
-          <>
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-4xl font-bold text-white md:text-7xl"
-            >
-              Ride the Wave of Innovation
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-              className="mt-6 text-base text-neutral-300 md:text-lg"
-            >
-              Smooth, fluid animations that bring your content to life. Built
-              with performance and aesthetics in mind.
-            </motion.p>
-          </>
-        )}
+      <canvas
+        className="absolute inset-0 z-0"
+        ref={canvasRef}
+        id="canvas"
+        style={{
+          ...(isSafari ? { filter: `blur(${blur}px)` } : {}),
+        }}
+      ></canvas>
+      <div className={cn("relative z-10", className)} {...props}>
+        {children}
       </div>
     </div>
+  )
+}
+
+export interface AceternityWavyBackgroundProps {
+  title?: string
+  subtitle?: string
+  blur?: number
+  speed?: "slow" | "fast"
+  waveWidth?: number
+  waveOpacity?: number
+  colors?: string[]
+  className?: string
+}
+
+export default function AceternityWavyBackgroundWrapper({
+  title = "Wavy Background Effect",
+  subtitle = "A beautiful canvas-based wave animation for your hero sections.",
+  blur = 10,
+  speed = "slow",
+  waveWidth = 50,
+  waveOpacity = 0.5,
+  colors,
+  className,
+}: AceternityWavyBackgroundProps) {
+  return (
+    <WavyBackground
+      blur={blur}
+      speed={speed}
+      waveWidth={waveWidth}
+      waveOpacity={waveOpacity}
+      colors={colors}
+      className={className}
+    >
+      <p className="text-2xl md:text-4xl lg:text-7xl text-white font-bold inter-var text-center">
+        {title}
+      </p>
+      <p className="text-base md:text-lg mt-4 text-white font-normal inter-var text-center">
+        {subtitle}
+      </p>
+    </WavyBackground>
   )
 }

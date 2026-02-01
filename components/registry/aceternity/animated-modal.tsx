@@ -1,148 +1,269 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils/cn'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { cn } from "@/lib/utils"
+import { AnimatePresence, motion } from "motion/react"
+import React, {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 
-interface AnimatedModalProps {
-  className?: string
-  triggerText?: string
-  title?: string
-  description?: string
-  children?: React.ReactNode
+interface ModalContextType {
+  open: boolean
+  setOpen: (open: boolean) => void
 }
 
-export default function AnimatedModal({
-  className,
-  triggerText = 'Open Modal',
-  title = 'Welcome to the Future',
-  description = 'This is a beautifully animated modal with scale and opacity transitions powered by Framer Motion. Perfect for announcements, confirmations, and interactive content.',
+const ModalContext = createContext<ModalContextType | undefined>(undefined)
+
+export const ModalProvider = ({ children }: { children: ReactNode }) => {
+  const [open, setOpen] = useState(false)
+  return (
+    <ModalContext.Provider value={{ open, setOpen }}>
+      {children}
+    </ModalContext.Provider>
+  )
+}
+
+export const useModal = () => {
+  const context = useContext(ModalContext)
+  if (!context) {
+    throw new Error("useModal must be used within a ModalProvider")
+  }
+  return context
+}
+
+export function Modal({ children }: { children: ReactNode }) {
+  return <ModalProvider>{children}</ModalProvider>
+}
+
+export const ModalTrigger = ({
   children,
-}: AnimatedModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) => {
+  const { setOpen } = useModal()
+  return (
+    <button className={cn("px-4 py-2 rounded-md text-black dark:text-white text-center relative overflow-hidden", className)} onClick={() => setOpen(true)}>
+      {children}
+    </button>
+  )
+}
+
+export const ModalBody = ({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) => {
+  const { open } = useModal()
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = "auto"
+    }
+  }, [open])
+
+  const modalRef = useRef(null)
+  const { setOpen } = useModal()
+
+  useOutsideClick(modalRef, () => setOpen(false))
 
   return (
-    <div className={cn('flex items-center justify-center py-10', className)}>
-      {/* Trigger button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 transition-all hover:shadow-xl hover:shadow-violet-500/30"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, backdropFilter: "blur(10px)" }}
+          exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+          className="fixed [perspective:800px] [transform-style:preserve-3d] inset-0 h-full w-full flex items-center justify-center z-50"
+        >
+          <Overlay />
+          <motion.div
+            ref={modalRef}
+            className={cn(
+              "min-h-[50%] max-h-[90%] md:max-w-[40%] bg-white dark:bg-neutral-950 border border-transparent dark:border-neutral-800 md:rounded-2xl relative z-50 flex flex-col flex-1 overflow-hidden",
+              className
+            )}
+            initial={{
+              opacity: 0,
+              scale: 0.5,
+              rotateX: 40,
+              y: 40,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              rotateX: 0,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.8,
+              rotateX: 10,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 15,
+            }}
+          >
+            <CloseIcon />
+            {children}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+export const ModalContent = ({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) => {
+  return (
+    <div className={cn("flex flex-col flex-1 p-8 md:p-10", className)}>
+      {children}
+    </div>
+  )
+}
+
+export const ModalFooter = ({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) => {
+  return (
+    <div
+      className={cn(
+        "flex justify-end p-4 bg-gray-100 dark:bg-neutral-900",
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+const Overlay = ({ className }: { className?: string }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, backdropFilter: "blur(10px)" }}
+      exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+      className={`fixed inset-0 h-full w-full bg-black bg-opacity-50 z-50 ${className}`}
+    ></motion.div>
+  )
+}
+
+const CloseIcon = () => {
+  const { setOpen } = useModal()
+  return (
+    <button onClick={() => setOpen(false)} className="absolute top-4 right-4 group">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-black dark:text-white h-4 w-4 group-hover:scale-125 group-hover:rotate-3 transition duration-200"
       >
-        <span className="relative z-10">{triggerText}</span>
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 transition-opacity group-hover:opacity-100" />
-      </button>
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M18 6l-12 12" />
+        <path d="M6 6l12 12" />
+      </svg>
+    </button>
+  )
+}
 
-      {/* Modal */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setIsOpen(false)}
-            />
+function useOutsideClick(
+  ref: React.RefObject<HTMLDivElement | null>,
+  callback: Function
+) {
+  useEffect(() => {
+    const listener = (event: MouseEvent | TouchEvent) => {
+      if (!ref.current || ref.current.contains(event.target as Node)) {
+        return
+      }
+      callback(event)
+    }
 
-            {/* Modal content */}
-            <motion.div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div
-                className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/10 bg-neutral-950 shadow-2xl"
-                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 300,
-                  damping: 25,
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Gradient accent top bar */}
-                <div className="h-1 w-full bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500" />
+    document.addEventListener("mousedown", listener)
+    document.addEventListener("touchstart", listener)
 
-                {/* Close button */}
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="absolute right-4 top-5 rounded-lg p-1 text-neutral-500 transition-colors hover:bg-white/5 hover:text-white"
-                >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+    return () => {
+      document.removeEventListener("mousedown", listener)
+      document.removeEventListener("touchstart", listener)
+    }
+  }, [ref, callback])
+}
 
-                <div className="p-8">
-                  {children || (
-                    <>
-                      {/* Icon */}
-                      <motion.div
-                        initial={{ scale: 0, rotate: -180 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 200,
-                          damping: 15,
-                          delay: 0.1,
-                        }}
-                        className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-indigo-500/20"
-                      >
-                        <svg className="h-8 w-8 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                        </svg>
-                      </motion.div>
+export interface AceternityAnimatedModalProps {
+  trigger?: string
+  title?: string
+  content?: string
+  image?: string
+  className?: string
+}
 
-                      <motion.h2
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                        className="mb-3 text-center text-2xl font-bold text-white"
-                      >
-                        {title}
-                      </motion.h2>
-
-                      <motion.p
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        className="mb-8 text-center text-sm leading-relaxed text-neutral-400"
-                      >
-                        {description}
-                      </motion.p>
-
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.25 }}
-                        className="flex gap-3"
-                      >
-                        <button
-                          onClick={() => setIsOpen(false)}
-                          className="flex-1 rounded-xl border border-neutral-800 py-2.5 text-sm font-medium text-neutral-400 transition-colors hover:border-neutral-700 hover:text-white"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => setIsOpen(false)}
-                          className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 py-2.5 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-violet-500/25"
-                        >
-                          Continue
-                        </button>
-                      </motion.div>
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+export default function AceternityAnimatedModalWrapper({
+  trigger = "Open Modal",
+  title = "Book your flight today!",
+  content = "Experience the best of air travel with our premium service.",
+  image,
+  className,
+}: AceternityAnimatedModalProps) {
+  return (
+    <div className={cn("flex items-center justify-center p-8", className)}>
+      <Modal>
+        <ModalTrigger className="bg-black dark:bg-white dark:text-black text-white flex justify-center group/modal-btn">
+          <span className="group-hover/modal-btn:translate-x-40 text-center transition duration-500">
+            {trigger}
+          </span>
+          <div className="-translate-x-40 group-hover/modal-btn:translate-x-0 flex items-center justify-center absolute inset-0 transition duration-500 text-white z-20">
+            ✈️
+          </div>
+        </ModalTrigger>
+        <ModalBody>
+          <ModalContent>
+            <h4 className="text-lg md:text-2xl text-neutral-600 dark:text-neutral-100 font-bold text-center mb-8">
+              {title}
+            </h4>
+            {image && (
+              <div className="flex justify-center mb-8">
+                <img src={image} alt="modal" className="rounded-lg max-h-60 object-cover" />
+              </div>
+            )}
+            <p className="text-neutral-600 dark:text-neutral-400 text-center">
+              {content}
+            </p>
+          </ModalContent>
+          <ModalFooter className="gap-4">
+            <button className="px-2 py-1 bg-gray-200 text-black dark:bg-black dark:border-black dark:text-white border border-gray-300 rounded-md text-sm w-28">
+              Cancel
+            </button>
+            <button className="bg-black text-white dark:bg-white dark:text-black text-sm px-2 py-1 rounded-md border border-black w-28">
+              Book Now
+            </button>
+          </ModalFooter>
+        </ModalBody>
+      </Modal>
     </div>
   )
 }

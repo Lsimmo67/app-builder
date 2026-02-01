@@ -1,156 +1,136 @@
-'use client'
+"use client"
 
-import { cn } from '@/lib/utils/cn'
-import { motion } from 'framer-motion'
-import { useEffect, useState } from 'react'
+import { cn } from "@/lib/utils"
+import React, { useEffect, useState, useRef } from "react"
 
-interface Star {
+interface ShootingStar {
   id: number
-  startX: number
-  startY: number
+  x: number
+  y: number
   angle: number
-  length: number
-  duration: number
-  delay: number
+  scale: number
+  speed: number
+  distance: number
 }
 
 interface ShootingStarsProps {
-  className?: string
-  children?: React.ReactNode
-  starCount?: number
+  minSpeed?: number
+  maxSpeed?: number
+  minDelay?: number
+  maxDelay?: number
   starColor?: string
-  interval?: number
+  trailColor?: string
+  starWidth?: number
+  starHeight?: number
+  className?: string
 }
 
-function generateStar(id: number): Star {
-  return {
-    id,
-    startX: Math.random() * 100,
-    startY: Math.random() * 50,
-    angle: 30 + Math.random() * 30,
-    length: 80 + Math.random() * 150,
-    duration: 0.8 + Math.random() * 1.2,
-    delay: Math.random() * 6,
+const getRandomStartPoint = () => {
+  const side = Math.floor(Math.random() * 4)
+  const offset = Math.random() * (typeof window !== "undefined" ? window.innerWidth : 1000)
+  switch (side) {
+    case 0: return { x: offset, y: 0, angle: 45 }
+    case 1: return { x: (typeof window !== "undefined" ? window.innerWidth : 1000), y: offset, angle: 135 }
+    case 2: return { x: offset, y: (typeof window !== "undefined" ? window.innerHeight : 800), angle: 225 }
+    case 3: return { x: 0, y: offset, angle: 315 }
+    default: return { x: 0, y: 0, angle: 45 }
   }
 }
 
-export default function ShootingStars({
+export const ShootingStars: React.FC<ShootingStarsProps> = ({
+  minSpeed = 10,
+  maxSpeed = 30,
+  minDelay = 1200,
+  maxDelay = 4200,
+  starColor = "#9E00FF",
+  trailColor = "#2EB9DF",
+  starWidth = 10,
+  starHeight = 1,
   className,
-  children,
-  starCount = 8,
-  starColor = 'white',
-  interval = 6,
-}: ShootingStarsProps) {
-  const [stars, setStars] = useState<Star[]>(() =>
-    Array.from({ length: starCount }, (_, i) => generateStar(i))
-  )
+}) => {
+  const [star, setStar] = useState<ShootingStar | null>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setStars((prev) =>
-        prev.map((star) => generateStar(star.id))
-      )
-    }, interval * 1000)
-    return () => clearInterval(timer)
-  }, [interval])
+    const createStar = () => {
+      const { x, y, angle } = getRandomStartPoint()
+      const newStar: ShootingStar = {
+        id: Date.now(),
+        x, y, angle,
+        scale: 1,
+        speed: Math.random() * (maxSpeed - minSpeed) + minSpeed,
+        distance: 0,
+      }
+      setStar(newStar)
+      const randomDelay = Math.random() * (maxDelay - minDelay) + minDelay
+      setTimeout(createStar, randomDelay)
+    }
+    createStar()
+    return () => {}
+  }, [minSpeed, maxSpeed, minDelay, maxDelay])
+
+  useEffect(() => {
+    const moveStar = () => {
+      if (star) {
+        setStar((prevStar) => {
+          if (!prevStar) return null
+          const newX = prevStar.x + prevStar.speed * Math.cos((prevStar.angle * Math.PI) / 180)
+          const newY = prevStar.y + prevStar.speed * Math.sin((prevStar.angle * Math.PI) / 180)
+          const newDistance = prevStar.distance + prevStar.speed
+          const newScale = 1 + newDistance / 100
+          if (newX < -20 || newX > (typeof window !== "undefined" ? window.innerWidth : 1000) + 20 || newY < -20 || newY > (typeof window !== "undefined" ? window.innerHeight : 800) + 20) {
+            return null
+          }
+          return { ...prevStar, x: newX, y: newY, distance: newDistance, scale: newScale }
+        })
+      }
+    }
+    const animationFrame = requestAnimationFrame(moveStar)
+    return () => cancelAnimationFrame(animationFrame)
+  }, [star])
 
   return (
-    <div
-      className={cn(
-        'relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-black',
-        className
+    <svg ref={svgRef} className={cn("w-full h-full absolute inset-0", className)}>
+      {star && (
+        <rect
+          key={star.id}
+          x={star.x}
+          y={star.y}
+          width={starWidth * star.scale}
+          height={starHeight}
+          fill="url(#gradient)"
+          transform={`rotate(${star.angle}, ${star.x + (starWidth * star.scale) / 2}, ${star.y + starHeight / 2})`}
+        />
       )}
-    >
-      {/* Static background stars */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 80 }, (_, i) => (
-          <div
-            key={`bg-star-${i}`}
-            className="absolute rounded-full bg-white"
-            style={{
-              width: `${0.5 + Math.random() * 1.5}px`,
-              height: `${0.5 + Math.random() * 1.5}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              opacity: 0.2 + Math.random() * 0.6,
-              animation: `twinkle ${2 + Math.random() * 3}s ease-in-out ${Math.random() * 2}s infinite`,
-            }}
-          />
-        ))}
-      </div>
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style={{ stopColor: trailColor, stopOpacity: 0 }} />
+          <stop offset="100%" style={{ stopColor: starColor, stopOpacity: 1 }} />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+}
 
-      {/* Shooting stars */}
-      {stars.map((star) => {
-        const rad = (star.angle * Math.PI) / 180
-        const endX = star.startX + Math.cos(rad) * (star.length / 10)
-        const endY = star.startY + Math.sin(rad) * (star.length / 10)
-        return (
-          <motion.div
-            key={`${star.id}-${star.startX}`}
-            className="pointer-events-none absolute"
-            style={{
-              top: `${star.startY}%`,
-              left: `${star.startX}%`,
-              width: `${star.length}px`,
-              height: '1px',
-              background: `linear-gradient(90deg, ${starColor}, transparent)`,
-              transformOrigin: '0 0',
-              transform: `rotate(${star.angle}deg)`,
-            }}
-            initial={{ opacity: 0, scaleX: 0 }}
-            animate={{
-              opacity: [0, 1, 1, 0],
-              scaleX: [0, 1, 1, 1],
-              x: [`0%`, `${(endX - star.startX) * 10}px`],
-              y: [`0%`, `${(endY - star.startY) * 10}px`],
-            }}
-            transition={{
-              duration: star.duration,
-              delay: star.delay,
-              repeat: Infinity,
-              repeatDelay: interval,
-              ease: 'easeOut',
-              times: [0, 0.1, 0.7, 1],
-            }}
-          />
-        )
-      })}
+export interface AceternityShootingStarsProps {
+  title?: string
+  subtitle?: string
+  minDelay?: number
+  maxDelay?: number
+  starCount?: number
+  className?: string
+}
 
-      {/* Subtle nebula glow */}
-      <div className="absolute left-1/4 top-1/4 h-96 w-96 rounded-full bg-indigo-900/10 blur-[120px]" />
-      <div className="absolute bottom-1/3 right-1/4 h-64 w-64 rounded-full bg-purple-900/10 blur-[100px]" />
-
-      {/* Content */}
-      <div className="relative z-10 mx-auto max-w-4xl px-4 text-center">
-        {children || (
-          <>
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="bg-gradient-to-b from-white to-neutral-500 bg-clip-text text-4xl font-bold text-transparent md:text-6xl"
-            >
-              Under the Stars
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              className="mx-auto mt-6 max-w-lg text-base text-neutral-500 md:text-lg"
-            >
-              Watch shooting stars streak across a dark sky. A captivating
-              animated background for hero sections and landing pages.
-            </motion.p>
-          </>
-        )}
-      </div>
-
-      <style jsx>{`
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.2; }
-          50% { opacity: 0.8; }
-        }
-      `}</style>
+export default function AceternityShootingStarsWrapper({
+  title = "Shooting Stars",
+  subtitle = "Watch the stars streak across the night sky.",
+  className,
+}: AceternityShootingStarsProps) {
+  return (
+    <div className={cn("relative h-[40rem] w-full flex flex-col items-center justify-center rounded-md bg-neutral-900", className)}>
+      <h2 className="relative z-10 text-3xl md:text-5xl font-bold text-white text-center mb-4">{title}</h2>
+      <p className="relative z-10 text-neutral-400 text-center max-w-lg">{subtitle}</p>
+      <ShootingStars />
     </div>
   )
 }

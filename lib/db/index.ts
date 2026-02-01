@@ -5,6 +5,8 @@ import type {
   Page,
   ComponentInstance,
   HistoryEntry,
+  CMSCollection,
+  CMSItem,
 } from '@/types'
 
 export interface RelumeImport {
@@ -23,6 +25,8 @@ export class AppBuilderDB extends Dexie {
   componentInstances!: Table<ComponentInstance>
   relumeImports!: Table<RelumeImport>
   history!: Table<HistoryEntry>
+  cmsCollections!: Table<CMSCollection>
+  cmsItems!: Table<CMSItem>
 
   constructor() {
     super('AppBuilderDB')
@@ -34,6 +38,17 @@ export class AppBuilderDB extends Dexie {
       componentInstances: 'id, pageId, parentId, order',
       relumeImports: 'id, pageId',
       history: 'id, pageId, timestamp',
+    })
+
+    this.version(2).stores({
+      projects: 'id, name, createdAt, updatedAt',
+      designSystems: 'id, projectId',
+      pages: 'id, projectId, order',
+      componentInstances: 'id, pageId, parentId, order, componentRegistryId',
+      relumeImports: 'id, pageId',
+      history: 'id, pageId, timestamp',
+      cmsCollections: 'id, projectId',
+      cmsItems: 'id, collectionId',
     })
   }
 }
@@ -77,25 +92,3 @@ export async function getPageWithComponents(pageId: string) {
   }
 }
 
-export async function deleteProject(projectId: string) {
-  await db.transaction('rw', [
-    db.projects,
-    db.designSystems,
-    db.pages,
-    db.componentInstances,
-    db.relumeImports,
-    db.history,
-  ], async () => {
-    // Get all pages for the project
-    const pages = await db.pages.where('projectId').equals(projectId).toArray()
-    const pageIds = pages.map(p => p.id)
-
-    // Delete all related data
-    await db.componentInstances.where('pageId').anyOf(pageIds).delete()
-    await db.relumeImports.where('pageId').anyOf(pageIds).delete()
-    await db.history.where('pageId').anyOf(pageIds).delete()
-    await db.pages.where('projectId').equals(projectId).delete()
-    await db.designSystems.where('projectId').equals(projectId).delete()
-    await db.projects.delete(projectId)
-  })
-}
