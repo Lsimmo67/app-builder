@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useEffect, useRef } from "react"
-import { motion, useAnimationControls } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { motion, useAnimationControls } from "motion/react"
+import { cn } from "@/lib/utils"
 
 export interface SkiperRollingTextProps {
   text?: string

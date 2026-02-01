@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState, useEffect, useMemo } from "react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { motion } from "motion/react"
+import { cn } from "@/lib/utils"
 
 export interface SkiperPixelPreloaderProps {
   gridSize?: number
