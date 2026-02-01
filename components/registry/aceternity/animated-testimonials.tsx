@@ -1,63 +1,24 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react"
+import { motion, AnimatePresence } from "motion/react"
+import React, { useEffect, useState } from "react"
 
-export interface AceternityAnimatedTestimonialsProps {
-  testimonials?: {
-    quote: string
-    name: string
-    designation: string
-    src: string
-  }[]
-  autoplay?: boolean
-  className?: string
+type Testimonial = {
+  quote: string
+  name: string
+  designation: string
+  src: string
 }
 
-export default function AceternityAnimatedTestimonials({
-  testimonials = [
-    {
-      quote:
-        "The attention to detail and innovative features have completely transformed our workflow. This is exactly what we've been looking for.",
-      name: "Sarah Chen",
-      designation: "Product Manager at TechFlow",
-      src: "https://placehold.co/200x200/3b82f6/ffffff?text=SC",
-    },
-    {
-      quote:
-        "Implementation was seamless and the results exceeded our expectations. The platform's flexibility is remarkable.",
-      name: "Michael Rodriguez",
-      designation: "CTO at InnovateSphere",
-      src: "https://placehold.co/200x200/8b5cf6/ffffff?text=MR",
-    },
-    {
-      quote:
-        "This solution has significantly improved our team's productivity. The intuitive interface makes complex tasks simple.",
-      name: "Emily Watson",
-      designation: "Operations Director at CloudScale",
-      src: "https://placehold.co/200x200/ec4899/ffffff?text=EW",
-    },
-    {
-      quote:
-        "Outstanding support and continuous innovation. It's rare to find a platform that truly listens to its users.",
-      name: "James Kim",
-      designation: "Engineering Lead at DataPro",
-      src: "https://placehold.co/200x200/f59e0b/ffffff?text=JK",
-    },
-  ],
-  autoplay = true,
-  className,
-}: AceternityAnimatedTestimonialsProps) {
+export const AnimatedTestimonials = ({
+  testimonials,
+  autoplay = false,
+}: {
+  testimonials: Testimonial[]
+  autoplay?: boolean
+}) => {
   const [active, setActive] = useState(0)
-
-  useEffect(() => {
-    if (!autoplay) return
-    const interval = setInterval(() => {
-      setActive((prev) => (prev + 1) % testimonials.length)
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [autoplay, testimonials.length])
 
   const handleNext = () => {
     setActive((prev) => (prev + 1) % testimonials.length)
@@ -67,53 +28,71 @@ export default function AceternityAnimatedTestimonials({
     setActive((prev) => (prev - 1 + testimonials.length) % testimonials.length)
   }
 
-  const isActive = (index: number) => index === active
+  const isActive = (index: number) => {
+    return index === active
+  }
 
-  const randomRotateY = () => Math.floor(Math.random() * 21) - 10
+  useEffect(() => {
+    if (autoplay) {
+      const interval = setInterval(handleNext, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [autoplay])
+
+  const randomRotateY = () => {
+    return Math.floor(Math.random() * 21) - 10
+  }
 
   return (
-    <div className={cn("max-w-sm md:max-w-4xl mx-auto antialiased font-sans px-4 md:px-8 lg:px-12 py-20", className)}>
+    <div className="max-w-sm md:max-w-4xl mx-auto antialiased font-sans px-4 md:px-8 lg:px-12 py-20">
       <div className="relative grid grid-cols-1 md:grid-cols-2 gap-20">
-        {/* Image section */}
-        <div className="relative h-80 w-full">
-          <AnimatePresence>
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.src}
-                initial={{
-                  opacity: 0,
-                  scale: 0.9,
-                  z: -100,
-                  rotate: randomRotateY(),
-                }}
-                animate={{
-                  opacity: isActive(i) ? 1 : 0.7,
-                  scale: isActive(i) ? 1 : 0.95,
-                  z: isActive(i) ? 0 : -100,
-                  rotate: isActive(i) ? 0 : randomRotateY(),
-                  zIndex: isActive(i) ? 999 : testimonials.length - i,
-                  y: isActive(i) ? [0, -80, 0] : 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  scale: 0.9,
-                  z: 100,
-                  rotate: randomRotateY(),
-                }}
-                transition={{ duration: 0.4, ease: "easeInOut" }}
-                className="absolute inset-0 origin-bottom"
-              >
-                <img
-                  src={t.src}
-                  alt={t.name}
-                  className="h-full w-full rounded-3xl object-cover object-center"
-                  draggable={false}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+        <div>
+          <div className="relative h-80 w-full">
+            <AnimatePresence>
+              {testimonials.map((testimonial, index) => (
+                <motion.div
+                  key={testimonial.src}
+                  initial={{
+                    opacity: 0,
+                    scale: 0.9,
+                    z: -100,
+                    rotate: randomRotateY(),
+                  }}
+                  animate={{
+                    opacity: isActive(index) ? 1 : 0.7,
+                    scale: isActive(index) ? 1 : 0.95,
+                    z: isActive(index) ? 0 : -100,
+                    rotate: isActive(index) ? 0 : randomRotateY(),
+                    zIndex: isActive(index)
+                      ? 999
+                      : testimonials.length + 2 - index,
+                    y: isActive(index) ? [0, -80, 0] : 0,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.9,
+                    z: 100,
+                    rotate: randomRotateY(),
+                  }}
+                  transition={{
+                    duration: 0.4,
+                    ease: "easeInOut",
+                  }}
+                  className="absolute inset-0 origin-bottom"
+                >
+                  <img
+                    src={testimonial.src}
+                    alt={testimonial.name}
+                    width={500}
+                    height={500}
+                    draggable={false}
+                    className="h-full w-full rounded-3xl object-cover object-center"
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
-        {/* Text section */}
         <div className="flex justify-between flex-col py-4">
           <motion.div
             key={active}
@@ -122,22 +101,22 @@ export default function AceternityAnimatedTestimonials({
             exit={{ y: -20, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
-            <h3 className="text-2xl font-bold text-neutral-800 dark:text-white">
+            <h3 className="text-2xl font-bold dark:text-white text-black">
               {testimonials[active].name}
             </h3>
-            <p className="text-sm text-gray-500 dark:text-neutral-500 mt-1">
+            <p className="text-sm text-gray-500 dark:text-neutral-500">
               {testimonials[active].designation}
             </p>
-            <motion.p className="text-lg text-gray-500 dark:text-neutral-300 mt-8">
-              {testimonials[active].quote.split(" ").map((word, i) => (
+            <motion.p className="text-lg text-gray-500 mt-8 dark:text-neutral-300">
+              {testimonials[active].quote.split(" ").map((word, index) => (
                 <motion.span
-                  key={i}
+                  key={index}
                   initial={{ filter: "blur(10px)", opacity: 0, y: 5 }}
                   animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut", delay: 0.02 * i }}
-                  className="inline-block mr-1"
+                  transition={{ duration: 0.2, ease: "easeInOut", delay: 0.02 * index }}
+                  className="inline-block"
                 >
-                  {word}
+                  {word}&nbsp;
                 </motion.span>
               ))}
             </motion.p>
@@ -145,43 +124,53 @@ export default function AceternityAnimatedTestimonials({
           <div className="flex gap-4 pt-12 md:pt-0">
             <button
               onClick={handlePrev}
-              className="h-8 w-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group/button hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
+              className="h-7 w-7 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group/button"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-black dark:text-neutral-400 group-hover/button:rotate-12 transition-transform"
-              >
-                <path d="m15 18-6-6 6-6" />
-              </svg>
+              <IconArrowLeft className="h-5 w-5 text-black dark:text-neutral-400 group-hover/button:rotate-12 transition-transform duration-300" />
             </button>
             <button
               onClick={handleNext}
-              className="h-8 w-8 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group/button hover:bg-gray-200 dark:hover:bg-neutral-700 transition-colors"
+              className="h-7 w-7 rounded-full bg-gray-100 dark:bg-neutral-800 flex items-center justify-center group/button"
             >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-black dark:text-neutral-400 group-hover/button:-rotate-12 transition-transform"
-              >
-                <path d="m9 18 6-6-6-6" />
-              </svg>
+              <IconArrowRight className="h-5 w-5 text-black dark:text-neutral-400 group-hover/button:-rotate-12 transition-transform duration-300" />
             </button>
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+export interface AceternityAnimatedTestimonialsProps {
+  testimonials?: Testimonial[]
+  autoplay?: boolean
+  className?: string
+}
+
+const defaultTestimonials: Testimonial[] = [
+  {
+    quote: "The attention to detail and innovative features have completely transformed our workflow.",
+    name: "Sarah Chen",
+    designation: "Product Manager at TechFlow",
+    src: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=3560&auto=format&fit=crop",
+  },
+  {
+    quote: "Implementation was seamless and the results exceeded our expectations.",
+    name: "Michael Rodriguez",
+    designation: "CTO at InnovateSphere",
+    src: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=3540&auto=format&fit=crop",
+  },
+  {
+    quote: "This solution has significantly improved our team's productivity and collaboration.",
+    name: "Emily Watson",
+    designation: "Operations Director at CloudScale",
+    src: "https://images.unsplash.com/photo-1623582854588-d60de57fa33f?q=80&w=3540&auto=format&fit=crop",
+  },
+]
+
+export default function AceternityAnimatedTestimonialsWrapper({
+  testimonials = defaultTestimonials,
+  autoplay = true,
+}: AceternityAnimatedTestimonialsProps) {
+  return <AnimatedTestimonials testimonials={testimonials} autoplay={autoplay} />
 }

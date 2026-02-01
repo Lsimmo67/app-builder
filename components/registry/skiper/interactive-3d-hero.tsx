@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useRef, useState } from "react"
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { motion, useMotionValue, useSpring, useTransform } from "motion/react"
+import { cn } from "@/lib/utils"
 
 export interface SkiperInteractive3DHeroProps {
   title?: string

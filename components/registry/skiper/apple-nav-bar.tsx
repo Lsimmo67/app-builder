@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { motion, AnimatePresence } from "motion/react"
+import { cn } from "@/lib/utils"
 
 export interface AppleNavChild {
   label: string

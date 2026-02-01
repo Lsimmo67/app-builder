@@ -1,8 +1,122 @@
 "use client"
 
-import React, { useRef, useEffect, useState } from "react"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { cn } from "@/lib/utils"
+import React, { useEffect, useRef, useState } from "react"
+
+export const BackgroundGradientAnimation = ({
+  gradientBackgroundStart = "rgb(108, 0, 162)",
+  gradientBackgroundEnd = "rgb(0, 17, 82)",
+  firstColor = "18, 113, 255",
+  secondColor = "221, 74, 255",
+  thirdColor = "100, 220, 255",
+  fourthColor = "200, 50, 50",
+  fifthColor = "180, 180, 50",
+  pointerColor = "140, 100, 255",
+  size = "80%",
+  blendingValue = "hard-light",
+  children,
+  className,
+  interactive = true,
+  containerClassName,
+}: {
+  gradientBackgroundStart?: string
+  gradientBackgroundEnd?: string
+  firstColor?: string
+  secondColor?: string
+  thirdColor?: string
+  fourthColor?: string
+  fifthColor?: string
+  pointerColor?: string
+  size?: string
+  blendingValue?: string
+  children?: React.ReactNode
+  className?: string
+  interactive?: boolean
+  containerClassName?: string
+}) => {
+  const interactiveRef = useRef<HTMLDivElement>(null)
+
+  const [curX, setCurX] = useState(0)
+  const [curY, setCurY] = useState(0)
+  const [tgX, setTgX] = useState(0)
+  const [tgY, setTgY] = useState(0)
+
+  useEffect(() => {
+    document.body.style.setProperty("--gradient-background-start", gradientBackgroundStart)
+    document.body.style.setProperty("--gradient-background-end", gradientBackgroundEnd)
+    document.body.style.setProperty("--first-color", firstColor)
+    document.body.style.setProperty("--second-color", secondColor)
+    document.body.style.setProperty("--third-color", thirdColor)
+    document.body.style.setProperty("--fourth-color", fourthColor)
+    document.body.style.setProperty("--fifth-color", fifthColor)
+    document.body.style.setProperty("--pointer-color", pointerColor)
+    document.body.style.setProperty("--size", size)
+    document.body.style.setProperty("--blending-value", blendingValue)
+  }, [])
+
+  useEffect(() => {
+    function move() {
+      if (!interactiveRef.current) return
+      setCurX((prev) => prev + (tgX - prev) / 20)
+      setCurY((prev) => prev + (tgY - prev) / 20)
+      interactiveRef.current.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`
+    }
+    move()
+  }, [tgX, tgY])
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (interactiveRef.current) {
+      const rect = interactiveRef.current.getBoundingClientRect()
+      setTgX(event.clientX - rect.left)
+      setTgY(event.clientY - rect.top)
+    }
+  }
+
+  const [isSafari, setIsSafari] = useState(false)
+  useEffect(() => {
+    setIsSafari(/^((?!chrome|android).)*safari/i.test(navigator.userAgent))
+  }, [])
+
+  return (
+    <div
+      className={cn(
+        "h-screen w-screen relative overflow-hidden top-0 left-0 bg-[linear-gradient(40deg,var(--gradient-background-start),var(--gradient-background-end))]",
+        containerClassName
+      )}
+    >
+      <svg className="hidden">
+        <defs>
+          <filter id="blurMe">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+            <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -8" result="goo" />
+            <feBlend in="SourceGraphic" in2="goo" />
+          </filter>
+        </defs>
+      </svg>
+      <div className={cn("", className)}>{children}</div>
+      <div
+        className={cn(
+          "gradients-container h-full w-full blur-lg",
+          isSafari ? "blur-2xl" : "[filter:url(#blurMe)_blur(40px)]"
+        )}
+      >
+        <div className={cn(`absolute [background:radial-gradient(circle_at_center,_rgba(var(--first-color),_0.8)_0,_rgba(var(--first-color),_0)_50%)_no-repeat]`, `[mix-blend-mode:var(--blending-value)] w-[var(--size)] h-[var(--size)] top-[calc(50%-var(--size)/2)] left-[calc(50%-var(--size)/2)]`, `[transform-origin:center_center]`, `animate-first`, `opacity-100`)} />
+        <div className={cn(`absolute [background:radial-gradient(circle_at_center,_rgba(var(--second-color),_0.8)_0,_rgba(var(--second-color),_0)_50%)_no-repeat]`, `[mix-blend-mode:var(--blending-value)] w-[var(--size)] h-[var(--size)] top-[calc(50%-var(--size)/2)] left-[calc(50%-var(--size)/2)]`, `[transform-origin:calc(50%-400px)]`, `animate-second`, `opacity-100`)} />
+        <div className={cn(`absolute [background:radial-gradient(circle_at_center,_rgba(var(--third-color),_0.8)_0,_rgba(var(--third-color),_0)_50%)_no-repeat]`, `[mix-blend-mode:var(--blending-value)] w-[var(--size)] h-[var(--size)] top-[calc(50%-var(--size)/2)] left-[calc(50%-var(--size)/2)]`, `[transform-origin:calc(50%+400px)]`, `animate-third`, `opacity-100`)} />
+        <div className={cn(`absolute [background:radial-gradient(circle_at_center,_rgba(var(--fourth-color),_0.8)_0,_rgba(var(--fourth-color),_0)_50%)_no-repeat]`, `[mix-blend-mode:var(--blending-value)] w-[var(--size)] h-[var(--size)] top-[calc(50%-var(--size)/2)] left-[calc(50%-var(--size)/2)]`, `[transform-origin:calc(50%-200px)]`, `animate-fourth`, `opacity-70`)} />
+        <div className={cn(`absolute [background:radial-gradient(circle_at_center,_rgba(var(--fifth-color),_0.8)_0,_rgba(var(--fifth-color),_0)_50%)_no-repeat]`, `[mix-blend-mode:var(--blending-value)] w-[var(--size)] h-[var(--size)] top-[calc(50%-var(--size)/2)] left-[calc(50%-var(--size)/2)]`, `[transform-origin:calc(50%-800px)_calc(50%+800px)]`, `animate-fifth`, `opacity-100`)} />
+
+        {interactive && (
+          <div
+            ref={interactiveRef}
+            onMouseMove={handleMouseMove}
+            className={cn(`absolute [background:radial-gradient(circle_at_center,_rgba(var(--pointer-color),_0.8)_0,_rgba(var(--pointer-color),_0)_50%)_no-repeat]`, `[mix-blend-mode:var(--blending-value)] w-full h-full -top-1/2 -left-1/2`, `opacity-70`)}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
 
 export interface AceternityBackgroundGradientProps {
   title?: string
@@ -11,129 +125,19 @@ export interface AceternityBackgroundGradientProps {
   className?: string
 }
 
-export default function AceternityBackgroundGradient({
+export default function AceternityBackgroundGradientWrapper({
   title = "Gradients X Animations",
-  subtitle = "A mesmerizing gradient animation background that shifts and morphs colors, creating a living canvas effect.",
+  subtitle = "A mesmerizing gradient animation for hero backgrounds.",
   interactive = true,
   className,
 }: AceternityBackgroundGradientProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [cursorPos, setCursorPos] = useState({ x: 50, y: 50 })
-
-  useEffect(() => {
-    if (!interactive) return
-    const handleMove = (e: MouseEvent) => {
-      if (!containerRef.current) return
-      const rect = containerRef.current.getBoundingClientRect()
-      setCursorPos({
-        x: ((e.clientX - rect.left) / rect.width) * 100,
-        y: ((e.clientY - rect.top) / rect.height) * 100,
-      })
-    }
-    const el = containerRef.current
-    el?.addEventListener("mousemove", handleMove)
-    return () => el?.removeEventListener("mousemove", handleMove)
-  }, [interactive])
-
   return (
-    <div
-      ref={containerRef}
-      className={cn(
-        "relative flex min-h-[500px] items-center justify-center overflow-hidden bg-[#0a0a0a] rounded-lg",
-        className
-      )}
-    >
-      {/* Animated gradient blobs */}
-      <motion.div
-        className="absolute w-[80%] h-[80%] rounded-full opacity-30 blur-[120px]"
-        style={{
-          background:
-            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        }}
-        animate={{
-          x: interactive ? `${cursorPos.x - 50}%` : ["0%", "10%", "-10%", "0%"],
-          y: interactive ? `${cursorPos.y - 50}%` : ["0%", "-10%", "10%", "0%"],
-          scale: [1, 1.1, 0.9, 1],
-        }}
-        transition={{
-          x: { duration: interactive ? 0.3 : 8, repeat: interactive ? 0 : Infinity, ease: interactive ? "easeOut" : "easeInOut" },
-          y: { duration: interactive ? 0.3 : 10, repeat: interactive ? 0 : Infinity, ease: interactive ? "easeOut" : "easeInOut" },
-          scale: { duration: 8, repeat: Infinity, ease: "easeInOut" },
-        }}
-      />
-      <motion.div
-        className="absolute w-[60%] h-[60%] rounded-full opacity-30 blur-[120px]"
-        style={{
-          background:
-            "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-        }}
-        animate={{
-          x: ["10%", "-10%", "10%"],
-          y: ["-10%", "10%", "-10%"],
-          scale: [1.1, 0.9, 1.1],
-        }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      <motion.div
-        className="absolute w-[50%] h-[50%] rounded-full opacity-20 blur-[100px]"
-        style={{
-          background:
-            "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-        }}
-        animate={{
-          x: ["-15%", "15%", "-15%"],
-          y: ["5%", "-5%", "5%"],
-          scale: [0.9, 1.2, 0.9],
-        }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      <motion.div
-        className="absolute w-[40%] h-[40%] rounded-full opacity-20 blur-[80px]"
-        style={{
-          background:
-            "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-        }}
-        animate={{
-          x: ["5%", "-15%", "5%"],
-          y: ["-15%", "5%", "-15%"],
-          rotate: [0, 180, 360],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      {/* Noise overlay */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIiB4PSIwIiB5PSIwIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PGZlQ29sb3JNYXRyaXggdHlwZT0ic2F0dXJhdGUiIHZhbHVlcz0iMCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNhKSIgb3BhY2l0eT0iLjA1Ii8+PC9zdmc+')] opacity-50" />
-      <div className="relative z-10 text-center px-4">
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-4xl md:text-7xl font-bold text-white bg-clip-text"
-        >
+    <BackgroundGradientAnimation interactive={interactive}>
+      <div className={cn("absolute z-50 inset-0 flex items-center justify-center text-white font-bold px-4 pointer-events-none text-3xl text-center md:text-4xl lg:text-7xl", className)}>
+        <p className="bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20">
           {title}
-        </motion.h1>
-        {subtitle && (
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="mt-4 text-base md:text-lg text-white/60 max-w-xl mx-auto"
-          >
-            {subtitle}
-          </motion.p>
-        )}
+        </p>
       </div>
-    </div>
+    </BackgroundGradientAnimation>
   )
 }

@@ -1,8 +1,86 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import React, { useCallback, useEffect, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
+import { cn } from "@/lib/utils"
+
+export const FlipWords = ({
+  words,
+  duration = 3000,
+  className,
+}: {
+  words: string[]
+  duration?: number
+  className?: string
+}) => {
+  const [currentWord, setCurrentWord] = useState(words[0])
+  const [isAnimating, setIsAnimating] = useState<boolean>(false)
+
+  const startAnimation = useCallback(() => {
+    const word = words[words.indexOf(currentWord) + 1] || words[0]
+    setCurrentWord(word)
+    setIsAnimating(true)
+  }, [currentWord, words])
+
+  useEffect(() => {
+    if (!isAnimating)
+      setTimeout(() => {
+        startAnimation()
+      }, duration)
+  }, [isAnimating, duration, startAnimation])
+
+  return (
+    <AnimatePresence
+      onExitComplete={() => {
+        setIsAnimating(false)
+      }}
+    >
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: 10,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 100,
+          damping: 10,
+        }}
+        exit={{
+          opacity: 0,
+          y: -40,
+          x: 40,
+          filter: "blur(8px)",
+          scale: 2,
+          position: "absolute",
+        }}
+        className={cn(
+          "z-10 inline-block relative text-left text-neutral-900 dark:text-neutral-100 px-2",
+          className
+        )}
+        key={currentWord}
+      >
+        {currentWord.split("").map((letter, index) => (
+          <motion.span
+            key={currentWord + index}
+            initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{
+              delay: index * 0.08,
+              duration: 0.4,
+            }}
+            className="inline-block"
+          >
+            {letter}
+          </motion.span>
+        ))}
+      </motion.div>
+    </AnimatePresence>
+  )
+}
 
 export interface AceternityFlipWordsProps {
   words?: string[]
@@ -10,41 +88,19 @@ export interface AceternityFlipWordsProps {
   className?: string
 }
 
-export default function AceternityFlipWords({
+export default function AceternityFlipWordsWrapper({
   words = ["better", "modern", "beautiful", "awesome"],
   duration = 3000,
   className,
 }: AceternityFlipWordsProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isAnimating, setIsAnimating] = useState(false)
-
-  const startAnimation = useCallback(() => {
-    setIsAnimating(true)
-    setCurrentIndex((prev) => (prev + 1) % words.length)
-    setTimeout(() => setIsAnimating(false), 600)
-  }, [words.length])
-
-  useEffect(() => {
-    if (!isAnimating) {
-      const timer = setTimeout(startAnimation, duration)
-      return () => clearTimeout(timer)
-    }
-  }, [isAnimating, duration, startAnimation])
-
   return (
-    <div className={cn("inline-block relative", className)}>
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={currentIndex}
-          initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={{ opacity: 0, y: -10, filter: "blur(8px)" }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="inline-block font-bold text-neutral-900 dark:text-neutral-100"
-        >
-          {words[currentIndex]}
-        </motion.span>
-      </AnimatePresence>
+    <div className="flex items-center justify-center p-8">
+      <div className="text-4xl font-bold text-neutral-600 dark:text-neutral-400">
+        Build{" "}
+        <FlipWords words={words} duration={duration} className={className} />
+        <br />
+        websites with Aceternity UI
+      </div>
     </div>
   )
 }

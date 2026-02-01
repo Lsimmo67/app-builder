@@ -1,8 +1,115 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { cn } from "@/lib/utils"
+import { motion, AnimatePresence } from "motion/react"
+import React, { useEffect, useState } from "react"
+
+export const ImagesSlider = ({
+  images,
+  children,
+  overlay = true,
+  overlayClassName,
+  className,
+  autoplay = true,
+  direction = "up",
+}: {
+  images: string[]
+  children: React.ReactNode
+  overlay?: React.ReactNode
+  overlayClassName?: string
+  className?: string
+  autoplay?: boolean
+  direction?: "up" | "down"
+}) => {
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [loadedImages, setLoadedImages] = useState<string[]>([])
+
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) => prevIndex + 1 === images.length ? 0 : prevIndex + 1)
+  }
+
+  const handlePrevious = () => {
+    setCurrentIndex((prevIndex) => prevIndex - 1 < 0 ? images.length - 1 : prevIndex - 1)
+  }
+
+  useEffect(() => {
+    loadImages()
+  }, [])
+
+  const loadImages = () => {
+    setLoading(true)
+    const loadPromises = images.map((image) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image()
+        img.src = image
+        img.onload = () => resolve(image)
+        img.onerror = reject
+      })
+    })
+    Promise.all(loadPromises)
+      .then((loadedImages) => {
+        setLoadedImages(loadedImages as string[])
+        setLoading(false)
+      })
+      .catch((error) => console.error("Failed to load images", error))
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowRight") handleNext()
+      else if (event.key === "ArrowLeft") handlePrevious()
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    let interval: ReturnType<typeof setInterval> | undefined
+    if (autoplay) {
+      interval = setInterval(() => { handleNext() }, 5000)
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown)
+      if (interval) clearInterval(interval)
+    }
+  }, [])
+
+  const slideVariants = {
+    initial: { scale: 0, opacity: 0, rotateX: 45 },
+    visible: {
+      scale: 1,
+      rotateX: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: [0.645, 0.045, 0.355, 1.0] as const },
+    },
+    upExit: { opacity: 1, y: "-150%", transition: { duration: 1 } },
+    downExit: { opacity: 1, y: "150%", transition: { duration: 1 } },
+  }
+
+  const areImagesLoaded = loadedImages.length > 0
+
+  return (
+    <div
+      className={cn("overflow-hidden h-full w-full relative flex items-center justify-center", className)}
+      style={{ perspective: "1000px" }}
+    >
+      {areImagesLoaded && children}
+      {areImagesLoaded && overlay && (
+        <div className={cn("absolute inset-0 bg-black/60 z-40", overlayClassName)} />
+      )}
+      {areImagesLoaded && (
+        <AnimatePresence>
+          <motion.img
+            key={currentIndex}
+            src={loadedImages[currentIndex]}
+            initial="initial"
+            animate="visible"
+            exit={direction === "up" ? "upExit" : "downExit"}
+            variants={slideVariants}
+            className="image h-full w-full absolute inset-0 object-cover object-center"
+          />
+        </AnimatePresence>
+      )}
+    </div>
+  )
+}
 
 export interface AceternityImagesSliderProps {
   images?: string[]
@@ -11,180 +118,36 @@ export interface AceternityImagesSliderProps {
   overlay?: boolean
   overlayClassName?: string
   className?: string
-  children?: React.ReactNode
 }
 
-export default function AceternityImagesSlider({
-  images = [
-    "https://placehold.co/1200x600/1a1a2e/ffffff?text=Slide+1",
-    "https://placehold.co/1200x600/16213e/ffffff?text=Slide+2",
-    "https://placehold.co/1200x600/0f3460/ffffff?text=Slide+3",
-    "https://placehold.co/1200x600/533483/ffffff?text=Slide+4",
-  ],
+const defaultImages = [
+  "https://images.unsplash.com/photo-1485433592409-9018e83a1f0d?q=80&w=1814&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1483982258113-b72862e6cff6?q=80&w=3456&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1482189349482-3defd834d5e5?q=80&w=2848&auto=format&fit=crop",
+]
+
+export default function AceternityImagesSliderWrapper({
+  images = defaultImages,
   autoplay = true,
   direction = "up",
-  overlay = true,
-  overlayClassName,
   className,
-  children,
 }: AceternityImagesSliderProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isLoaded, setIsLoaded] = useState(false)
-
-  useEffect(() => {
-    setIsLoaded(true)
-  }, [])
-
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % images.length)
-  }, [images.length])
-
-  const handlePrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
-  }, [images.length])
-
-  useEffect(() => {
-    if (!autoplay) return
-    const interval = setInterval(handleNext, 5000)
-    return () => clearInterval(interval)
-  }, [autoplay, handleNext])
-
-  const slideVariants = {
-    initial: {
-      scale: 0,
-      opacity: 0,
-      rotateX: 45,
-    },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      rotateX: 0,
-      transition: {
-        duration: 0.5,
-        ease: [0.645, 0.045, 0.355, 1.0] as [number, number, number, number],
-      },
-    },
-    upExit: {
-      opacity: 1,
-      y: "-150%",
-      transition: { duration: 1 },
-    },
-    downExit: {
-      opacity: 1,
-      y: "150%",
-      transition: { duration: 1 },
-    },
-  }
-
-  if (!isLoaded) return null
-
   return (
-    <div
-      className={cn(
-        "relative flex items-center justify-center overflow-hidden h-[500px] w-full",
-        className
-      )}
-      style={{ perspective: "1000px" }}
-    >
-      {/* Images */}
-      <AnimatePresence>
-        <motion.img
-          key={currentIndex}
-          src={images[currentIndex]}
-          alt={`Slide ${currentIndex + 1}`}
-          initial="initial"
-          animate="visible"
-          exit={direction === "up" ? "upExit" : "downExit"}
-          variants={slideVariants}
-          className="absolute inset-0 h-full w-full object-cover object-center"
-        />
-      </AnimatePresence>
-
-      {/* Overlay */}
-      {overlay && (
-        <div
-          className={cn(
-            "absolute inset-0 bg-black/60 z-10",
-            overlayClassName
-          )}
-        />
-      )}
-
-      {/* Default content if no children */}
-      {children ? (
-        <div className="relative z-20">{children}</div>
-      ) : (
-        <div className="relative z-20 text-center px-4">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-3xl md:text-5xl font-bold text-white mb-4"
-          >
-            Beautiful Image Slider
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="text-white/70 max-w-lg mx-auto"
-          >
-            Navigate through stunning visuals with smooth animations
-          </motion.p>
-        </div>
-      )}
-
-      {/* Navigation buttons */}
-      <button
-        onClick={handlePrevious}
-        className="absolute left-4 z-30 h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+    <ImagesSlider className={cn("h-[40rem]", className)} images={images} autoplay={autoplay} direction={direction}>
+      <motion.div
+        initial={{ opacity: 0, y: -80 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="z-50 flex flex-col justify-center items-center"
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m15 18-6-6 6-6" />
-        </svg>
-      </button>
-      <button
-        onClick={handleNext}
-        className="absolute right-4 z-30 h-10 w-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m9 18 6-6-6-6" />
-        </svg>
-      </button>
-
-      {/* Dots indicator */}
-      <div className="absolute bottom-4 z-30 flex gap-2">
-        {images.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentIndex(i)}
-            className={cn(
-              "h-2 rounded-full transition-all duration-300",
-              i === currentIndex
-                ? "w-8 bg-white"
-                : "w-2 bg-white/50 hover:bg-white/70"
-            )}
-          />
-        ))}
-      </div>
-    </div>
+        <motion.p className="font-bold text-xl md:text-6xl text-center bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400 py-4">
+          The hero section slideshow <br /> you always wanted
+        </motion.p>
+        <button className="px-4 py-2 backdrop-blur-sm border bg-emerald-300/10 border-emerald-500/20 text-white mx-auto text-center rounded-full relative mt-4">
+          <span>Join now →</span>
+          <div className="absolute inset-x-0 h-px -bottom-px bg-gradient-to-r w-3/4 mx-auto from-transparent via-emerald-500 to-transparent" />
+        </button>
+      </motion.div>
+    </ImagesSlider>
   )
 }

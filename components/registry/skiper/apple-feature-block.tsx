@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useRef } from "react"
-import { motion, useScroll, useTransform, useInView } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { motion, useScroll, useTransform, useInView } from "motion/react"
+import { cn } from "@/lib/utils"
 
 export interface AppleFeature {
   title: string

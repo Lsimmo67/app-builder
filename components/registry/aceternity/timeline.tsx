@@ -1,111 +1,111 @@
 "use client"
 
-import React, { useRef } from "react"
-import { motion, useScroll, useTransform } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import {
+  useMotionValueEvent,
+  useScroll,
+  useTransform,
+  motion,
+} from "motion/react"
+import React, { useEffect, useRef, useState } from "react"
+
+interface TimelineEntry {
+  title: string
+  content: React.ReactNode
+}
+
+export const Timeline = ({ data }: { data: TimelineEntry[] }) => {
+  const ref = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [height, setHeight] = useState(0)
+
+  useEffect(() => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setHeight(rect.height)
+    }
+  }, [ref])
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start 10%", "end 50%"],
+  })
+
+  const heightTransform = useTransform(scrollYProgress, [0, 1], [0, height])
+  const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1])
+
+  return (
+    <div className="w-full bg-white dark:bg-neutral-950 font-sans md:px-10" ref={containerRef}>
+      <div className="max-w-7xl mx-auto py-20 px-4 md:px-8 lg:px-10">
+        <h2 className="text-lg md:text-4xl mb-4 text-black dark:text-white max-w-4xl">
+          Changelog from my journey
+        </h2>
+        <p className="text-neutral-700 dark:text-neutral-300 text-sm md:text-base max-w-sm">
+          I&apos;ve been working on Aceternity for the past 2 years. Here&apos;s a timeline of my journey.
+        </p>
+      </div>
+
+      <div ref={ref} className="relative max-w-7xl mx-auto pb-20">
+        {data.map((item, index) => (
+          <div key={index} className="flex justify-start pt-10 md:pt-40 md:gap-10">
+            <div className="sticky flex flex-col md:flex-row z-40 items-center top-40 self-start max-w-xs lg:max-w-sm md:w-full">
+              <div className="h-10 absolute left-3 md:left-3 w-10 rounded-full bg-white dark:bg-black flex items-center justify-center">
+                <div className="h-4 w-4 rounded-full bg-neutral-200 dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 p-2" />
+              </div>
+              <h3 className="hidden md:block text-xl md:pl-20 md:text-5xl font-bold text-neutral-500 dark:text-neutral-500">
+                {item.title}
+              </h3>
+            </div>
+            <div className="relative pl-20 pr-4 md:pl-4 w-full">
+              <h3 className="md:hidden block text-2xl mb-4 text-left font-bold text-neutral-500 dark:text-neutral-500">
+                {item.title}
+              </h3>
+              {item.content}
+            </div>
+          </div>
+        ))}
+        <div
+          style={{ height: height + "px" }}
+          className="absolute md:left-8 left-8 top-0 overflow-hidden w-[2px] bg-[linear-gradient(to_bottom,var(--tw-gradient-stops))] from-transparent from-[0%] via-neutral-200 dark:via-neutral-700 to-transparent to-[99%] [mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_90%,transparent_100%)]"
+        >
+          <motion.div
+            style={{ height: heightTransform, opacity: opacityTransform }}
+            className="absolute inset-x-0 top-0 w-[2px] bg-gradient-to-t from-purple-500 via-blue-500 to-transparent from-[0%] via-[10%] rounded-full"
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export interface AceternityTimelineProps {
   items?: { title: string; content: string }[]
   className?: string
 }
 
-function TimelineItem({
-  item,
-  index,
-}: {
-  item: { title: string; content: string }
-  index: number
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "center center"],
-  })
-  const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.3, 0.8, 1])
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.8, 0.95, 1])
+const defaultItems = [
+  { title: "2024", content: "Started building amazing products with modern technologies." },
+  { title: "2023", content: "Launched the first version of our platform to great success." },
+  { title: "2022", content: "Founded the company with a vision to transform web development." },
+]
 
-  return (
-    <motion.div
-      ref={ref}
-      style={{ opacity, scale }}
-      className="flex gap-8 md:gap-12 relative pb-16 last:pb-0"
-    >
-      {/* Timeline dot and line */}
-      <div className="flex flex-col items-center flex-shrink-0">
-        <motion.div
-          initial={{ scale: 0 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
-          className="h-10 w-10 rounded-full bg-white dark:bg-black flex items-center justify-center border-4 border-neutral-200 dark:border-neutral-800 z-10"
-        >
-          <div className="h-3 w-3 rounded-full bg-neutral-400 dark:bg-neutral-600" />
-        </motion.div>
-        {/* Connector line */}
-        <div className="flex-1 w-px bg-neutral-200 dark:bg-neutral-800" />
-      </div>
-      {/* Content */}
-      <div className="pt-1 flex-1">
-        <motion.h3
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: index * 0.1 }}
-          className="text-lg md:text-2xl font-bold text-neutral-800 dark:text-neutral-200 mb-3"
-        >
-          {item.title}
-        </motion.h3>
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.4, delay: index * 0.1 + 0.15 }}
-          className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed prose dark:prose-invert max-w-none"
-        >
-          {item.content}
-        </motion.div>
-      </div>
-    </motion.div>
-  )
-}
-
-export default function AceternityTimeline({
-  items = [
-    {
-      title: "2024 - The Beginning",
-      content:
-        "We started our journey with a simple idea: make web development more accessible and enjoyable for everyone. Our first product launched to an overwhelmingly positive response.",
-    },
-    {
-      title: "Early 2025 - Growth Phase",
-      content:
-        "Our user base grew by 10x as developers discovered the power of our component library. We expanded our team and introduced premium features that changed how people build websites.",
-    },
-    {
-      title: "Mid 2025 - Platform Launch",
-      content:
-        "We launched our full platform with integrated design tools, component marketplace, and deployment pipelines. This marked a turning point in our company's evolution.",
-    },
-    {
-      title: "Late 2025 - Community",
-      content:
-        "Our community reached 100,000 developers. Open-source contributions doubled, and we hosted our first developer conference with speakers from around the world.",
-    },
-    {
-      title: "2026 - The Future",
-      content:
-        "Looking ahead, we're focused on AI-powered development tools, real-time collaboration features, and expanding our ecosystem to support more frameworks and platforms.",
-    },
-  ],
+export default function AceternityTimelineWrapper({
+  items = defaultItems,
   className,
 }: AceternityTimelineProps) {
   return (
-    <div className={cn("max-w-4xl mx-auto px-4 py-20", className)}>
-      <div className="relative">
-        {items.map((item, i) => (
-          <TimelineItem key={i} item={item} index={i} />
-        ))}
-      </div>
+    <div className={className}>
+      <Timeline
+        data={items.map((item) => ({
+          title: item.title,
+          content: (
+            <div>
+              <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-8">
+                {item.content}
+              </p>
+            </div>
+          ),
+        }))}
+      />
     </div>
   )
 }

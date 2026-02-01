@@ -1,8 +1,105 @@
 "use client"
 
-import React, { useRef, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { useRef, useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
+import { cn } from "@/lib/utils"
+
+export const DirectionAwareHover = ({
+  imageUrl,
+  children,
+  childrenClassName,
+  imageClassName,
+  className,
+}: {
+  imageUrl: string
+  children: React.ReactNode | string
+  childrenClassName?: string
+  imageClassName?: string
+  className?: string
+}) => {
+  const ref = useRef<HTMLDivElement>(null)
+  const [direction, setDirection] = useState<"top" | "bottom" | "left" | "right" | string>("left")
+
+  const handleMouseEnter = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    if (!ref.current) return
+    const direction = getDirection(event, ref.current)
+    switch (direction) {
+      case 0: setDirection("top"); break
+      case 1: setDirection("right"); break
+      case 2: setDirection("bottom"); break
+      case 3: setDirection("left"); break
+      default: setDirection("left"); break
+    }
+  }
+
+  const getDirection = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>, obj: HTMLElement) => {
+    const { width: w, height: h, left, top } = obj.getBoundingClientRect()
+    const x = ev.clientX - left - (w / 2) * (w > h ? h / w : 1)
+    const y = ev.clientY - top - (h / 2) * (h > w ? w / h : 1)
+    const d = Math.round(Math.atan2(y, x) / 1.57079633 + 5) % 4
+    return d
+  }
+
+  return (
+    <motion.div
+      onMouseEnter={handleMouseEnter}
+      ref={ref}
+      className={cn(
+        "md:h-96 w-60 h-60 md:w-96 bg-transparent rounded-lg overflow-hidden group/card relative",
+        className
+      )}
+    >
+      <AnimatePresence mode="wait">
+        <motion.div
+          className="relative h-full w-full"
+          initial="initial"
+          whileHover={direction}
+          exit="exit"
+        >
+          <motion.div className="group-hover/card:block hidden absolute inset-0 w-full h-full bg-black/40 z-10 transition duration-500" />
+          <motion.div
+            variants={variants}
+            className="h-full w-full relative bg-gray-50 dark:bg-black"
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <img
+              alt="image"
+              className={cn("h-full w-full object-cover scale-[1.15]", imageClassName)}
+              width="1000"
+              height="1000"
+              src={imageUrl}
+            />
+          </motion.div>
+          <motion.div
+            variants={textVariants}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className={cn("text-white absolute bottom-4 left-4 z-40", childrenClassName)}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
+const variants = {
+  initial: { x: 0 },
+  exit: { x: 0, y: 0 },
+  top: { y: 20 },
+  bottom: { y: -20 },
+  left: { x: 20 },
+  right: { x: -20 },
+}
+
+const textVariants = {
+  initial: { y: 0, x: 0, opacity: 0 },
+  exit: { y: 0, x: 0, opacity: 0 },
+  top: { y: -20, opacity: 1 },
+  bottom: { y: 2, opacity: 1 },
+  left: { x: -2, opacity: 1 },
+  right: { x: 20, opacity: 1 },
+}
 
 export interface AceternityDirectionAwareHoverProps {
   image?: string
@@ -12,98 +109,19 @@ export interface AceternityDirectionAwareHoverProps {
   className?: string
 }
 
-function getDirection(
-  ev: React.MouseEvent<HTMLDivElement>,
-  ref: React.RefObject<HTMLDivElement>
-): "top" | "bottom" | "left" | "right" {
-  if (!ref.current) return "left"
-  const rect = ref.current.getBoundingClientRect()
-  const w = rect.width
-  const h = rect.height
-  const x = ev.clientX - rect.left - w / 2
-  const y = ev.clientY - rect.top - h / 2
-  const d = Math.round(Math.atan2(y, x) / 1.57079633 + 5) % 4
-  const directions: ("top" | "right" | "bottom" | "left")[] = [
-    "top",
-    "right",
-    "bottom",
-    "left",
-  ]
-  return directions[d]
-}
-
-function getAnimationValues(direction: string) {
-  switch (direction) {
-    case "top":
-      return { initial: { y: -30, opacity: 0 }, target: { y: 0, opacity: 1 } }
-    case "bottom":
-      return { initial: { y: 30, opacity: 0 }, target: { y: 0, opacity: 1 } }
-    case "left":
-      return { initial: { x: -30, opacity: 0 }, target: { x: 0, opacity: 1 } }
-    case "right":
-      return { initial: { x: 30, opacity: 0 }, target: { x: 0, opacity: 1 } }
-    default:
-      return { initial: { y: -30, opacity: 0 }, target: { y: 0, opacity: 1 } }
-  }
-}
-
-export default function AceternityDirectionAwareHover({
-  image = "https://placehold.co/600x600/1a1a2e/ffffff?text=Hover+Me",
+export default function AceternityDirectionAwareHoverWrapper({
+  image = "https://images.unsplash.com/photo-1663765970236-f2acfde22237?q=80&w=3542&auto=format&fit=crop",
   title = "Beautiful Product",
-  description = "An amazing product crafted with care and attention to detail.",
+  description = "An amazing product that you will love.",
   price = "$129.99",
   className,
 }: AceternityDirectionAwareHoverProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [direction, setDirection] = useState<string>("left")
-  const [isHovered, setIsHovered] = useState(false)
-
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    const dir = getDirection(e, ref as React.RefObject<HTMLDivElement>)
-    setDirection(dir)
-    setIsHovered(true)
-  }
-
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    const dir = getDirection(e, ref as React.RefObject<HTMLDivElement>)
-    setDirection(dir)
-    setIsHovered(false)
-  }
-
-  const { initial, target } = getAnimationValues(direction)
-
   return (
-    <div
-      ref={ref}
-      className={cn(
-        "relative w-72 h-96 rounded-lg overflow-hidden bg-transparent cursor-pointer group",
-        className
-      )}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <img
-        src={image}
-        alt={title}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-      <AnimatePresence>
-        {isHovered && (
-          <motion.div
-            initial={initial}
-            animate={target}
-            exit={initial}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col justify-end p-6"
-          >
-            <h3 className="text-xl font-bold text-white">{title}</h3>
-            <p className="text-sm text-neutral-300 mt-1">{description}</p>
-            {price && (
-              <p className="text-lg font-semibold text-white mt-2">{price}</p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className={cn("flex items-center justify-center p-8", className)}>
+      <DirectionAwareHover imageUrl={image}>
+        <p className="font-bold text-xl">{title}</p>
+        <p className="font-normal text-sm">{price}</p>
+      </DirectionAwareHover>
     </div>
   )
 }

@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useEffect, useRef, useState } from "react"
-import { motion, useInView, useSpring, useTransform } from "framer-motion"
-import { cn } from "@/lib/utils/cn"
+import { motion, useInView, useSpring, useTransform } from "motion/react"
+import { cn } from "@/lib/utils"
 
 export interface SkiperAnimatedNumberProps {
   value?: number
