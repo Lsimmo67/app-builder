@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PropField } from './prop-editors'
-import { StyleEditor } from './style-editor'
+import { StylePanel } from '@/components/editor/styles'
+import { BindingEditor } from '@/components/editor/cms'
 import { CodeEditorDialog } from './code-editor'
 import {
   Copy,
@@ -22,6 +23,7 @@ import {
   Paintbrush,
   Type,
   ExternalLink,
+  Database,
 } from 'lucide-react'
 import { SOURCE_COLORS, SOURCE_LABELS, ComponentProp } from '@/types/component'
 import { cn } from '@/lib/utils'
@@ -87,17 +89,6 @@ export function PropertiesPanel() {
           ...selectedComponent.props,
           [propName]: value,
         },
-      })
-    },
-    [selectedComponent, updateComponent]
-  )
-
-  // Handle custom styles change
-  const handleStylesChange = useCallback(
-    (styles: string) => {
-      if (!selectedComponent) return
-      updateComponent(selectedComponent.id, {
-        customStyles: styles || undefined,
       })
     },
     [selectedComponent, updateComponent]
@@ -299,11 +290,11 @@ export function PropertiesPanel() {
             )}
           </TabsContent>
 
-          {/* Style Tab - Enhanced with visual CSS editor */}
-          <TabsContent value="style" className="p-4 space-y-4 m-0">
+          {/* Style Tab - Webflow-style CSS panel */}
+          <TabsContent value="style" className="m-0">
             {/* Component prop-based styles first */}
             {groupedProps?.style && groupedProps.style.length > 0 && (
-              <>
+              <div className="p-4 space-y-3 border-b">
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Component Properties
                 </h4>
@@ -316,22 +307,11 @@ export function PropertiesPanel() {
                     disabled={selectedComponent.isLocked}
                   />
                 ))}
-                <div className="h-px bg-border my-4" />
-              </>
+              </div>
             )}
 
-            {/* Visual CSS style editor */}
-            <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Custom Styles
-            </h4>
-            <p className="text-xs text-muted-foreground">
-              Override component appearance with custom CSS styles
-            </p>
-            <StyleEditor
-              customStyles={selectedComponent.customStyles}
-              onChange={handleStylesChange}
-              disabled={selectedComponent.isLocked}
-            />
+            {/* Full Webflow-style CSS panel */}
+            <StylePanel disabled={selectedComponent.isLocked} />
           </TabsContent>
 
           {/* Advanced Tab */}
@@ -350,6 +330,20 @@ export function PropertiesPanel() {
                 <div className="h-px bg-border my-4" />
               </>
             )}
+
+            {/* CMS Bindings */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <Database className="h-3 w-3" />
+                CMS Bindings
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Bind CMS collection fields to this component
+              </p>
+              <BindingEditor />
+            </div>
+
+            <div className="h-px bg-border my-4" />
 
             {/* Custom Code Section - Now functional */}
             <div className="space-y-2">

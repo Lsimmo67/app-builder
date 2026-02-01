@@ -4,12 +4,14 @@ import { aceternityComponents } from './aceternity'
 import { osmoComponents } from './osmo'
 import { skiperComponents } from './skiper'
 import { gsapEffects } from './gsap'
+import { builtinComponents } from './builtin'
 
 // Re-export types
 export type { ComponentRegistryItem, ComponentSource, ComponentCategory }
 
 // All components combined
 const allComponents: ComponentRegistryItem[] = [
+  ...builtinComponents,
   ...shadcnComponents,
   ...aceternityComponents,
   ...osmoComponents,
@@ -117,6 +119,7 @@ class ComponentRegistry {
 
   getSourceCounts(): Record<ComponentSource, number> {
     const counts: Record<ComponentSource, number> = {
+      builtin: 0,
       shadcn: 0,
       aceternity: 0,
       osmo: 0,
@@ -165,6 +168,7 @@ export const componentRegistry = new ComponentRegistry()
 
 // Export individual registries for direct access if needed
 export {
+  builtinComponents,
   shadcnComponents,
   aceternityComponents,
   osmoComponents,

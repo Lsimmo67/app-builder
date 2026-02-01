@@ -33,10 +33,13 @@ import {
   Eye,
   PanelLeft,
   PanelRight,
+  Database,
 } from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { useEditorStore, useProjectStore } from '@/lib/store'
 import { exportProject } from '@/lib/export'
 import { RelumeImportDialog } from '@/components/relume'
+import { CMSPanel } from '@/components/editor/cms'
 import { PageSelector } from './page-selector'
 import { DesignSystemPanel } from './design-system-panel'
 import { ComponentImportDialog } from './component-import-dialog'
@@ -179,6 +182,23 @@ export function EditorToolbar() {
 
           {/* Design System */}
           <DesignSystemPanel />
+
+          {/* CMS */}
+          <Sheet>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Database className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+              </TooltipTrigger>
+              <TooltipContent>CMS Collections</TooltipContent>
+            </Tooltip>
+            <SheetContent side="left" className="w-[400px] p-0">
+              <CMSPanel />
+            </SheetContent>
+          </Sheet>
         </div>
 
         {/* Center section - Device toggles */}

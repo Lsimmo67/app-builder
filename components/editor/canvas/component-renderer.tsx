@@ -9,6 +9,7 @@ interface ComponentRendererProps {
   registryId: string
   props: Record<string, unknown>
   componentName?: string
+  children?: React.ReactNode
 }
 
 function ComponentSkeleton() {
@@ -28,7 +29,7 @@ function ComponentPlaceholder({ registryId, componentName }: { registryId: strin
   )
 }
 
-export function ComponentRenderer({ registryId, props, componentName }: ComponentRendererProps) {
+export function ComponentRenderer({ registryId, props, componentName, children }: ComponentRendererProps) {
   const LazyComponent = useMemo(() => getComponent(registryId), [registryId])
 
   if (!LazyComponent || !isComponentAvailable(registryId)) {
@@ -38,7 +39,7 @@ export function ComponentRenderer({ registryId, props, componentName }: Componen
   return (
     <ComponentErrorBoundary componentName={componentName || registryId}>
       <Suspense fallback={<ComponentSkeleton />}>
-        <LazyComponent {...props} />
+        <LazyComponent {...props}>{children}</LazyComponent>
       </Suspense>
     </ComponentErrorBoundary>
   )

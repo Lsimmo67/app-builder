@@ -26,6 +26,7 @@ import { ComponentBrowser } from "@/components/editor/sidebar/component-browser"
 import { Canvas } from "@/components/editor/canvas/canvas-container";
 import { PropertiesPanel } from "@/components/editor/properties/properties-panel";
 import { LayerTree } from "@/components/editor/layers";
+import { ElementBreadcrumb } from "@/components/editor/canvas/element-breadcrumb";
 import {
   useProjectStore,
   useCanvasStore,
@@ -88,7 +89,7 @@ export default function EditorPage() {
     isLoading: projectLoading,
     error: projectError,
   } = useProjectStore();
-  const { components, loadComponents, addComponent, reorderComponents } =
+  const { components, loadComponents, addComponent, reorderComponents, moveComponent } =
     useCanvasStore();
   const { loadDesignSystem } = useDesignSystemStore();
   const { viewMode, sidebarOpen, propertiesOpen, layerTreeOpen } =
@@ -207,24 +208,48 @@ export default function EditorPage() {
       if (!over) return;
       if (!currentPage) return;
 
-      const activeData = active.data.current as {
+      const activeDataCurrent = active.data.current as {
         type: string;
         registryId?: string;
         instanceId?: string;
+        parentId?: string;
       };
 
+      const overData = over.data.current as {
+        type?: string;
+        parentId?: string;
+        accepts?: string[];
+      } | undefined;
+
+      // Determine target parentId based on drop target
+      let targetParentId: string | undefined;
+      if (overData?.type === "container") {
+        // Dropping INTO a container element
+        targetParentId = overData.parentId;
+      } else if (overData?.type === "canvas") {
+        // Dropping at root level or between siblings
+        targetParentId = overData.parentId;
+      } else {
+        // Dropping on canvas root or between existing components
+        targetParentId = undefined;
+      }
+
       // Dragging from registry to canvas
-      if (activeData?.type === "registry" && activeData.registryId) {
-        const registryItem = componentRegistry.getById(activeData.registryId);
+      if (activeDataCurrent?.type === "registry" && activeDataCurrent.registryId) {
+        const registryItem = componentRegistry.getById(activeDataCurrent.registryId);
         if (!registryItem) return;
+
+        // Calculate order within target siblings
+        const siblings = components.filter((c) => c.parentId === targetParentId);
+        const maxOrder = Math.max(...siblings.map((c) => c.order), -1);
 
         const newInstance: ComponentInstance = {
           id: nanoid(),
           pageId: currentPage.id,
-          parentId: undefined,
+          parentId: targetParentId,
           componentRegistryId: registryItem.id,
           source: registryItem.source,
-          order: components.length,
+          order: maxOrder + 1,
           props: registryItem.props.reduce(
             (acc, prop) => {
               if (prop.default !== undefined) {
@@ -242,17 +267,32 @@ export default function EditorPage() {
 
         await addComponent(newInstance);
       }
-      // Reordering within canvas
-      else if (activeData?.type === "canvas" && active.id !== over.id) {
-        const oldIndex = components.findIndex((c) => c.id === active.id);
-        const newIndex = components.findIndex((c) => c.id === over.id);
+      // Reordering or reparenting within canvas
+      else if (activeDataCurrent?.type === "canvas" && active.id !== over.id) {
+        const movedComponent = components.find((c) => c.id === active.id);
+        if (!movedComponent) return;
 
-        if (oldIndex !== -1 && newIndex !== -1) {
-          await reorderComponents(oldIndex, newIndex);
+        // If target is a container and active is not already its child, reparent
+        if (overData?.type === "container" && targetParentId !== movedComponent.parentId) {
+          const siblings = components.filter((c) => c.parentId === targetParentId);
+          const maxOrder = Math.max(...siblings.map((c) => c.order), -1);
+          await moveComponent(String(active.id), maxOrder + 1, targetParentId);
+        } else {
+          // Reordering among siblings
+          const siblingParent = movedComponent.parentId;
+          const siblings = components
+            .filter((c) => c.parentId === siblingParent)
+            .sort((a, b) => a.order - b.order);
+          const oldIndex = siblings.findIndex((c) => c.id === active.id);
+          const newIndex = siblings.findIndex((c) => c.id === over.id);
+
+          if (oldIndex !== -1 && newIndex !== -1) {
+            await reorderComponents(oldIndex, newIndex);
+          }
         }
       }
     },
-    [currentPage, components, addComponent, reorderComponents],
+    [currentPage, components, addComponent, reorderComponents, moveComponent],
   );
 
   if (projectLoading) {
@@ -289,8 +329,9 @@ export default function EditorPage() {
                 <LayerTree />
               </div>
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 flex flex-col">
               <Canvas />
+              <ElementBreadcrumb />
             </div>
             {propertiesOpen && <PropertiesPanel />}
           </div>

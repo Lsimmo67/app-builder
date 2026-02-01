@@ -1251,4 +1251,457 @@ function Magnetic({ children, strength = 0.3 }) {
     docsUrl: 'https://gsap.com/docs/v3/',
     version: '1.0.0',
   },
+  {
+    id: 'gsap-circular-text',
+    name: 'CircularText',
+    displayName: 'Circular Text',
+    source: 'gsap',
+    categories: ['animation', 'text'],
+    tags: ['circular', 'text', 'rotate', 'arc', 'spin'],
+    description: 'Animated text arranged in a circle that rotates continuously',
+    previewImage: '/components/gsap/circular-text.png',
+    props: [
+      { name: 'text', type: 'string', required: true, description: 'Text to display in a circle' },
+      { name: 'radius', type: 'number', required: false, default: 100, description: 'Circle radius in pixels' },
+      { name: 'speed', type: 'number', required: false, default: 10, description: 'Rotation speed in seconds per revolution' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-circular-text',
+    level: 'effect',
+    code: `import CircularText from '@/components/registry/gsap/circular-text'
+
+<CircularText text="YOUR TEXT HERE • " radius={100} speed={10} />`,
+    suggestedWith: ['gsap-magnetic-element'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-cursor-follower',
+    name: 'CursorFollower',
+    displayName: 'Cursor Follower',
+    source: 'gsap',
+    categories: ['effect', 'animation'],
+    tags: ['cursor', 'follower', 'mouse', 'interactive', 'pointer'],
+    description: 'A custom cursor that follows mouse movement with smooth GSAP animation',
+    previewImage: '/components/gsap/cursor-follower.png',
+    props: [
+      { name: 'size', type: 'number', required: false, default: 20, description: 'Cursor size in pixels' },
+      { name: 'color', type: 'string', required: false, default: '#3b82f6', description: 'Cursor color' },
+      { name: 'delay', type: 'number', required: false, default: 0.1, description: 'Follow delay for smooth trailing' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+    ],
+    modulePath: 'gsap-cursor-follower',
+    level: 'effect',
+    code: `import CursorFollower from '@/components/registry/gsap/cursor-follower'
+
+<CursorFollower size={20} color="#3b82f6" />`,
+    suggestedWith: ['gsap-magnetic-element'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-draw-svg',
+    name: 'DrawSVG',
+    displayName: 'SVG Draw',
+    source: 'gsap',
+    categories: ['animation', 'effect'],
+    tags: ['svg', 'draw', 'stroke', 'path', 'line-art'],
+    description: 'Animate SVG path drawing with stroke animation on scroll or load',
+    previewImage: '/components/gsap/draw-svg.png',
+    props: [
+      { name: 'svgPath', type: 'string', required: true, description: 'SVG path data (d attribute)' },
+      { name: 'duration', type: 'number', required: false, default: 2, description: 'Draw duration in seconds' },
+      { name: 'strokeColor', type: 'string', required: false, default: 'currentColor', description: 'Stroke color' },
+      { name: 'strokeWidth', type: 'number', required: false, default: 2, description: 'Stroke width' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-draw-svg',
+    level: 'effect',
+    code: `import DrawSVG from '@/components/registry/gsap/draw-svg'
+
+<DrawSVG svgPath="M10 80 C 40 10, 65 10, 95 80 S 150 150, 180 80" duration={2} />`,
+    suggestedWith: ['gsap-scroll-reveal'],
+    docsUrl: 'https://gsap.com/docs/v3/Plugins/DrawSVGPlugin/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-elastic-slider',
+    name: 'ElasticSlider',
+    displayName: 'Elastic Slider',
+    source: 'gsap',
+    categories: ['animation', 'effect'],
+    tags: ['slider', 'elastic', 'draggable', 'range', 'interactive'],
+    description: 'A slider with elastic snap-back animation powered by GSAP',
+    previewImage: '/components/gsap/elastic-slider.png',
+    props: [
+      { name: 'min', type: 'number', required: false, default: 0, description: 'Minimum value' },
+      { name: 'max', type: 'number', required: false, default: 100, description: 'Maximum value' },
+      { name: 'defaultValue', type: 'number', required: false, default: 50, description: 'Default value' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+    ],
+    modulePath: 'gsap-elastic-slider',
+    level: 'effect',
+    code: `import ElasticSlider from '@/components/registry/gsap/elastic-slider'
+
+<ElasticSlider min={0} max={100} defaultValue={50} />`,
+    suggestedWith: [],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-infinite-scroll',
+    name: 'InfiniteScroll',
+    displayName: 'Infinite Scroll',
+    source: 'gsap',
+    categories: ['animation', 'layout'],
+    tags: ['infinite', 'scroll', 'loop', 'seamless', 'continuous'],
+    description: 'Seamless infinite scroll animation for content lists',
+    previewImage: '/components/gsap/infinite-scroll.png',
+    props: [
+      { name: 'children', type: 'children', required: true, description: 'Content to infinitely scroll' },
+      { name: 'speed', type: 'number', required: false, default: 1, description: 'Scroll speed multiplier' },
+      { name: 'direction', type: 'select', required: false, default: 'up', options: ['up', 'down'] },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-infinite-scroll',
+    level: 'effect',
+    code: `import InfiniteScroll from '@/components/registry/gsap/infinite-scroll'
+
+<InfiniteScroll speed={1} direction="up">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</InfiniteScroll>`,
+    suggestedWith: ['gsap-marquee'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-kinetic-typography',
+    name: 'KineticTypography',
+    displayName: 'Kinetic Typography',
+    source: 'gsap',
+    categories: ['animation', 'text'],
+    tags: ['kinetic', 'typography', 'motion', 'text', 'dynamic'],
+    description: 'Dynamic kinetic typography with GSAP-powered motion animations',
+    previewImage: '/components/gsap/kinetic-typography.png',
+    props: [
+      { name: 'text', type: 'string', required: true, description: 'Text to animate' },
+      { name: 'animation', type: 'select', required: false, default: 'wave', options: ['wave', 'bounce', 'scatter', 'spiral'] },
+      { name: 'duration', type: 'number', required: false, default: 1, description: 'Animation duration' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-kinetic-typography',
+    level: 'effect',
+    code: `import KineticTypography from '@/components/registry/gsap/kinetic-typography'
+
+<KineticTypography text="Hello World" animation="wave" />`,
+    suggestedWith: ['gsap-text-split', 'gsap-wave-text'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-morph-text',
+    name: 'MorphText',
+    displayName: 'Morph Text',
+    source: 'gsap',
+    categories: ['animation', 'text'],
+    tags: ['morph', 'text', 'transition', 'transform', 'swap'],
+    description: 'Text morphing animation that transitions between different words',
+    previewImage: '/components/gsap/morph-text.png',
+    props: [
+      { name: 'words', type: 'array', required: true, description: 'Array of words to morph between' },
+      { name: 'duration', type: 'number', required: false, default: 1, description: 'Morph duration' },
+      { name: 'interval', type: 'number', required: false, default: 3, description: 'Interval between morphs' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-morph-text',
+    level: 'effect',
+    code: `import MorphText from '@/components/registry/gsap/morph-text'
+
+<MorphText words={["Innovation", "Design", "Excellence"]} />`,
+    suggestedWith: ['gsap-rotating-text', 'gsap-text-split'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-page-transition',
+    name: 'PageTransition',
+    displayName: 'Page Transition',
+    source: 'gsap',
+    categories: ['animation', 'layout'],
+    tags: ['page', 'transition', 'route', 'navigation', 'entrance'],
+    description: 'Smooth page transition animation wrapper for route changes',
+    previewImage: '/components/gsap/page-transition.png',
+    props: [
+      { name: 'children', type: 'children', required: true, description: 'Page content to transition' },
+      { name: 'type', type: 'select', required: false, default: 'fade', options: ['fade', 'slide', 'scale', 'wipe'] },
+      { name: 'duration', type: 'number', required: false, default: 0.6, description: 'Transition duration' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-page-transition',
+    level: 'layout',
+    code: `import PageTransition from '@/components/registry/gsap/page-transition'
+
+<PageTransition type="fade" duration={0.6}>
+  {children}
+</PageTransition>`,
+    suggestedWith: [],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-parallax-layers',
+    name: 'ParallaxLayers',
+    displayName: 'Parallax Layers',
+    source: 'gsap',
+    categories: ['animation', 'effect'],
+    tags: ['parallax', 'layers', 'depth', '3d', 'scroll'],
+    description: 'Multi-layer parallax effect with different scroll speeds per layer',
+    previewImage: '/components/gsap/parallax-layers.png',
+    props: [
+      { name: 'layers', type: 'array', required: true, description: 'Array of layer objects with content and speed' },
+      { name: 'height', type: 'string', required: false, default: '100vh', description: 'Section height' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-parallax-layers',
+    level: 'effect',
+    code: `import ParallaxLayers from '@/components/registry/gsap/parallax-layers'
+
+<ParallaxLayers layers={[
+  { content: "Background", speed: 0.2 },
+  { content: "Midground", speed: 0.5 },
+  { content: "Foreground", speed: 1.0 }
+]} />`,
+    suggestedWith: ['gsap-parallax', 'gsap-scroll-reveal'],
+    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollTrigger/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-scramble-text',
+    name: 'ScrambleText',
+    displayName: 'Scramble Text',
+    source: 'gsap',
+    categories: ['animation', 'text'],
+    tags: ['scramble', 'text', 'decode', 'cipher', 'glitch'],
+    description: 'Text scramble/decode animation that reveals text character by character',
+    previewImage: '/components/gsap/scramble-text.png',
+    props: [
+      { name: 'text', type: 'string', required: true, description: 'Text to scramble-reveal' },
+      { name: 'duration', type: 'number', required: false, default: 1.5, description: 'Scramble duration' },
+      { name: 'chars', type: 'string', required: false, default: '!<>-_\\/[]{}—=+*^?#', description: 'Scramble characters' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+    ],
+    modulePath: 'gsap-scramble-text',
+    level: 'effect',
+    code: `import ScrambleText from '@/components/registry/gsap/scramble-text'
+
+<ScrambleText text="Hello World" duration={1.5} />`,
+    suggestedWith: ['gsap-typewriter', 'gsap-text-split'],
+    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrambleTextPlugin/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-scroll-snap',
+    name: 'ScrollSnap',
+    displayName: 'Scroll Snap',
+    source: 'gsap',
+    categories: ['animation', 'layout'],
+    tags: ['scroll', 'snap', 'sections', 'fullpage', 'pagination'],
+    description: 'Full-page scroll snapping with smooth GSAP transitions between sections',
+    previewImage: '/components/gsap/scroll-snap.png',
+    props: [
+      { name: 'children', type: 'children', required: true, description: 'Section content' },
+      { name: 'duration', type: 'number', required: false, default: 0.8, description: 'Snap transition duration' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-scroll-snap',
+    level: 'layout',
+    code: `import ScrollSnap from '@/components/registry/gsap/scroll-snap'
+
+<ScrollSnap>
+  <section>Section 1</section>
+  <section>Section 2</section>
+  <section>Section 3</section>
+</ScrollSnap>`,
+    suggestedWith: ['gsap-pin-section'],
+    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollTrigger/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-smooth-scroll',
+    name: 'SmoothScroll',
+    displayName: 'Smooth Scroll',
+    source: 'gsap',
+    categories: ['animation', 'effect'],
+    tags: ['smooth', 'scroll', 'lerp', 'inertia', 'butter'],
+    description: 'Smooth scrolling wrapper that adds butter-smooth scroll behavior to content',
+    previewImage: '/components/gsap/smooth-scroll.png',
+    props: [
+      { name: 'children', type: 'children', required: true, description: 'Content to smooth scroll' },
+      { name: 'speed', type: 'number', required: false, default: 1, description: 'Scroll speed multiplier' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-smooth-scroll',
+    level: 'effect',
+    code: `import SmoothScroll from '@/components/registry/gsap/smooth-scroll'
+
+<SmoothScroll speed={1}>
+  {children}
+</SmoothScroll>`,
+    suggestedWith: ['gsap-scroll-reveal', 'gsap-parallax'],
+    docsUrl: 'https://gsap.com/docs/v3/Plugins/ScrollSmoother/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-split-screen',
+    name: 'SplitScreen',
+    displayName: 'Split Screen',
+    source: 'gsap',
+    categories: ['animation', 'layout'],
+    tags: ['split', 'screen', 'two-panel', 'reveal', 'scroll'],
+    description: 'Split screen layout with animated reveal on scroll',
+    previewImage: '/components/gsap/split-screen.png',
+    props: [
+      { name: 'leftContent', type: 'children', required: true, description: 'Left panel content' },
+      { name: 'rightContent', type: 'children', required: true, description: 'Right panel content' },
+      { name: 'direction', type: 'select', required: false, default: 'horizontal', options: ['horizontal', 'vertical'] },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-split-screen',
+    level: 'layout',
+    code: `import SplitScreen from '@/components/registry/gsap/split-screen'
+
+<SplitScreen
+  leftContent={<div>Left Panel</div>}
+  rightContent={<div>Right Panel</div>}
+/>`,
+    suggestedWith: ['gsap-scroll-reveal'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-stagger-reveal',
+    name: 'StaggerReveal',
+    displayName: 'Stagger Reveal',
+    source: 'gsap',
+    categories: ['animation', 'effect'],
+    tags: ['stagger', 'reveal', 'cascade', 'entrance', 'sequential'],
+    description: 'Staggered reveal animation for a group of elements on scroll',
+    previewImage: '/components/gsap/stagger-reveal.png',
+    props: [
+      { name: 'children', type: 'children', required: true, description: 'Elements to stagger-reveal' },
+      { name: 'stagger', type: 'number', required: false, default: 0.1, description: 'Delay between each element' },
+      { name: 'animation', type: 'select', required: false, default: 'fadeUp', options: ['fadeUp', 'fadeDown', 'fadeLeft', 'fadeRight', 'scale'] },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-stagger-reveal',
+    level: 'effect',
+    code: `import StaggerReveal from '@/components/registry/gsap/stagger-reveal'
+
+<StaggerReveal stagger={0.1} animation="fadeUp">
+  <div>Item 1</div>
+  <div>Item 2</div>
+  <div>Item 3</div>
+</StaggerReveal>`,
+    suggestedWith: ['gsap-scroll-reveal', 'gsap-stagger-cards'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
+  {
+    id: 'gsap-text-mask',
+    name: 'TextMask',
+    displayName: 'Text Mask',
+    source: 'gsap',
+    categories: ['animation', 'text'],
+    tags: ['text', 'mask', 'clip', 'reveal', 'overlay'],
+    description: 'Text reveal animation using a sliding mask/clip effect',
+    previewImage: '/components/gsap/text-mask.png',
+    props: [
+      { name: 'text', type: 'string', required: true, description: 'Text to reveal with mask' },
+      { name: 'direction', type: 'select', required: false, default: 'left', options: ['left', 'right', 'up', 'down'] },
+      { name: 'duration', type: 'number', required: false, default: 1, description: 'Mask animation duration' },
+      { name: 'className', type: 'string', required: false, description: 'Additional classes' },
+    ],
+    dependencies: ['gsap', '@gsap/react'],
+    dependencyManifest: [
+      { package: 'gsap', version: '^3.12.0' },
+      { package: '@gsap/react', version: '^2.1.0' },
+    ],
+    modulePath: 'gsap-text-mask',
+    level: 'effect',
+    code: `import TextMask from '@/components/registry/gsap/text-mask'
+
+<TextMask text="Revealed Text" direction="left" duration={1} />`,
+    suggestedWith: ['gsap-reveal-text', 'gsap-text-split'],
+    docsUrl: 'https://gsap.com/docs/v3/',
+    version: '1.0.0',
+  },
 ]
