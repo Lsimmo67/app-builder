@@ -54,7 +54,7 @@ export default function MovingBorder({
             transition={{
               duration,
               repeat: Infinity,
-              ease: 'linear',
+              ease: 'linear' as const,
             }}
           />
         </div>

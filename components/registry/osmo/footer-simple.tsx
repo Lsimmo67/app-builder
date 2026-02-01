@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface FooterLink {
@@ -21,8 +22,25 @@ const defaultLinks: FooterLink[] = [
   { label: 'Status', href: '#' },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: 'easeOut' as const },
+  },
+}
+
 export default function FooterSimple({
-  copyright = `© ${new Date().getFullYear()} Acme Inc. All rights reserved.`,
+  copyright = `\u00A9 ${new Date().getFullYear()} Acme Inc. All rights reserved.`,
   links = defaultLinks,
   className,
 }: Props) {
@@ -33,20 +51,34 @@ export default function FooterSimple({
         className,
       )}
     >
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
-        <p className="text-sm text-muted-foreground">{copyright}</p>
+      <motion.div
+        className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.5 }}
+        variants={containerVariants}
+      >
+        <motion.p
+          className="text-sm text-muted-foreground"
+          variants={itemVariants}
+        >
+          {copyright}
+        </motion.p>
         <nav className="flex flex-wrap items-center gap-6">
           {links.map((link, index) => (
-            <a
+            <motion.a
               key={index}
               href={link.href || '#'}
               className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              variants={itemVariants}
+              whileHover={{ y: -1 }}
+              transition={{ duration: 0.15 }}
             >
               {link.label}
-            </a>
+            </motion.a>
           ))}
         </nav>
-      </div>
+      </motion.div>
     </footer>
   )
 }

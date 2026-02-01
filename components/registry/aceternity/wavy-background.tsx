@@ -79,7 +79,7 @@ export default function WavyBackground({
               transition={{
                 duration: wave.duration,
                 repeat: Infinity,
-                ease: 'easeInOut',
+                ease: 'easeInOut' as const,
                 delay: wave.delay,
               }}
             />

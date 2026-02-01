@@ -1,28 +1,68 @@
 'use client'
 
+import { useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface MeteorsBgProps {
   className?: string
   children?: React.ReactNode
-  meteorCount?: number
-  meteorColor?: string
+  count?: number
 }
+
+interface MeteorConfig {
+  id: number
+  left: string
+  top: string
+  delay: number
+  duration: number
+  tailLength: number
+  headSize: number
+  brightness: number
+  xEnd: number
+  yEnd: number
+}
+
+/**
+ * The angle (in degrees, CSS-clockwise) at which each meteor streak travels.
+ * 215 deg produces a diagonal path from the upper-left toward the lower-right,
+ * which matches the classic "meteor shower" look of the original component.
+ */
+const METEOR_ANGLE_DEG = 215
+const METEOR_ANGLE_RAD = (METEOR_ANGLE_DEG * Math.PI) / 180
 
 export default function MeteorsBg({
   className,
   children,
-  meteorCount = 20,
-  meteorColor = 'from-slate-500 to-transparent',
+  count = 20,
 }: MeteorsBgProps) {
-  const meteors = Array.from({ length: meteorCount }, (_, i) => ({
-    id: i,
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    delay: `${Math.random() * 5}s`,
-    duration: `${1 + Math.random() * 2}s`,
-    size: `${100 + Math.random() * 200}px`,
-  }))
+  const meteors = useMemo<MeteorConfig[]>(() => {
+    return Array.from({ length: count }, (_, i) => {
+      // Each meteor travels a random distance between 400 and 800 px
+      const travelDistance = 400 + Math.random() * 400
+
+      // Convert the rotated-axis travel into screen-space x / y deltas.
+      // The negative sign mirrors the original CSS `translateX(-600px)`.
+      const xEnd = -travelDistance * Math.cos(METEOR_ANGLE_RAD)
+      const yEnd = -travelDistance * Math.sin(METEOR_ANGLE_RAD)
+
+      return {
+        id: i,
+        // Spread starting positions across (and slightly beyond) the container
+        // so meteors enter naturally from the edges.
+        left: `${-10 + Math.random() * 120}%`,
+        // Cluster toward the upper half so most streaks originate from the sky.
+        top: `${-15 + Math.random() * 70}%`,
+        delay: Math.random() * 6,
+        duration: 1 + Math.random() * 2,
+        tailLength: 80 + Math.random() * 180,
+        headSize: 1 + Math.random() * 1.5,
+        brightness: 0.6 + Math.random() * 0.4,
+        xEnd,
+        yEnd,
+      }
+    })
+  }, [count])
 
   return (
     <div
@@ -31,29 +71,60 @@ export default function MeteorsBg({
         className
       )}
     >
-      {/* Meteor trails */}
+      {/* Meteor layer */}
       {meteors.map((meteor) => (
-        <span
+        <motion.div
           key={meteor.id}
-          className={cn(
-            'pointer-events-none absolute rotate-[215deg] rounded-full bg-gradient-to-r',
-            meteorColor
-          )}
+          className="pointer-events-none absolute"
           style={{
-            top: meteor.top,
             left: meteor.left,
-            width: meteor.size,
-            height: '1px',
-            animation: `meteor-fall ${meteor.duration} linear ${meteor.delay} infinite`,
-            opacity: 0,
+            top: meteor.top,
+          }}
+          animate={{
+            x: [0, meteor.xEnd],
+            y: [0, meteor.yEnd],
+            opacity: [0, meteor.brightness, meteor.brightness, 0],
+          }}
+          transition={{
+            duration: meteor.duration,
+            repeat: Infinity,
+            delay: meteor.delay,
+            ease: 'linear' as const,
+            times: [0, 0.05, 0.7, 1],
           }}
         >
-          {/* Meteor head glow */}
-          <span className="absolute left-0 top-1/2 h-[3px] w-[3px] -translate-y-1/2 rounded-full bg-slate-300 shadow-[0_0_6px_2px_rgba(255,255,255,0.3)]" />
-        </span>
+          {/*
+           * Inner wrapper rotated to align the gradient tail with the
+           * direction of travel. transformOrigin sits at the head so the
+           * line fans out behind the bright dot.
+           */}
+          <div
+            className="relative"
+            style={{
+              transform: `rotate(${METEOR_ANGLE_DEG}deg)`,
+              transformOrigin: '0% 50%',
+            }}
+          >
+            {/* Gradient tail */}
+            <div
+              className="h-px rounded-full bg-gradient-to-r from-slate-500 to-transparent"
+              style={{ width: meteor.tailLength }}
+            />
+
+            {/* Bright head glow */}
+            <div
+              className="absolute left-0 top-1/2 -translate-y-1/2 rounded-full bg-slate-200"
+              style={{
+                width: meteor.headSize * 2,
+                height: meteor.headSize * 2,
+                boxShadow: `0 0 ${meteor.headSize * 4}px ${meteor.headSize}px rgba(255,255,255,0.3)`,
+              }}
+            />
+          </div>
+        </motion.div>
       ))}
 
-      {/* Subtle radial overlay */}
+      {/* Subtle radial vignette overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(10,10,10,0.9)_100%)]" />
 
       {/* Content */}
@@ -74,25 +145,6 @@ export default function MeteorsBg({
           </>
         )}
       </div>
-
-      <style jsx>{`
-        @keyframes meteor-fall {
-          0% {
-            transform: rotate(215deg) translateX(0);
-            opacity: 0;
-          }
-          5% {
-            opacity: 1;
-          }
-          70% {
-            opacity: 1;
-          }
-          100% {
-            transform: rotate(215deg) translateX(-600px);
-            opacity: 0;
-          }
-        }
-      `}</style>
     </div>
   )
 }

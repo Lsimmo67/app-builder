@@ -57,6 +57,40 @@ const defaultFeatures: FeatureItem[] = [
   },
 ]
 
+const headerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+  },
+}
+
+const headerItem = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: 'easeOut' as const },
+  },
+}
+
+const gridVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.2 },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 25 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
 export default function FeatureGridGlow({
   className,
   features = defaultFeatures,
@@ -66,43 +100,45 @@ export default function FeatureGridGlow({
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   return (
-    <section
-      className={cn('w-full bg-black px-4 py-24', className)}
-    >
+    <section className={cn('w-full bg-black px-4 py-24', className)}>
       <div className="mx-auto max-w-6xl">
         {/* Header */}
-        <div className="mb-16 text-center">
+        <motion.div
+          className="mb-16 text-center"
+          variants={headerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+        >
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
+            variants={headerItem}
             className="text-3xl font-bold text-white md:text-4xl"
           >
             {title}
           </motion.h2>
           {subtitle && (
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              viewport={{ once: true }}
+              variants={headerItem}
               className="mx-auto mt-4 max-w-xl text-base text-neutral-400"
             >
               {subtitle}
             </motion.p>
           )}
-        </div>
+        </motion.div>
 
         {/* Feature grid */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <motion.div
+          className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+          variants={gridVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+        >
           {features.map((feature, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: idx * 0.05 }}
-              viewport={{ once: true }}
+              variants={cardVariants}
+              whileHover={{ y: -4, transition: { type: 'spring' as const, stiffness: 300, damping: 20 } }}
               className="group relative overflow-hidden rounded-2xl border border-white/[0.06] bg-zinc-950 p-8 transition-all duration-500 hover:border-white/10"
               onMouseEnter={() => setHoveredIndex(idx)}
               onMouseLeave={() => setHoveredIndex(null)}
@@ -115,7 +151,11 @@ export default function FeatureGridGlow({
               }}
             >
               {/* Icon */}
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] transition-colors duration-500 group-hover:border-white/10">
+              <motion.div
+                className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-white/[0.06] bg-white/[0.03] transition-colors duration-500 group-hover:border-white/10"
+                whileHover={{ rotate: 5, scale: 1.05 }}
+                transition={{ type: 'spring' as const, stiffness: 400, damping: 15 }}
+              >
                 <svg
                   className="h-6 w-6 text-neutral-400 transition-colors duration-500 group-hover:text-white"
                   fill="none"
@@ -125,17 +165,13 @@ export default function FeatureGridGlow({
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d={feature.iconPath} />
                 </svg>
-              </div>
+              </motion.div>
 
-              <h3 className="mb-2 text-lg font-bold text-white">
-                {feature.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-neutral-400">
-                {feature.description}
-              </p>
+              <h3 className="mb-2 text-lg font-bold text-white">{feature.title}</h3>
+              <p className="text-sm leading-relaxed text-neutral-400">{feature.description}</p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

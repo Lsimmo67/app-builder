@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
+import { motion } from 'framer-motion'
 
 interface Feature {
   icon?: React.ReactNode
@@ -64,6 +65,33 @@ const columnsMap = {
   4: 'md:grid-cols-2 lg:grid-cols-4',
 }
 
+const sectionVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.2 },
+  },
+}
+
+const headingVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
+}
+
 export default function FeaturesGrid({
   headline = 'Everything you need to ship faster',
   subheadline = 'A complete toolkit designed to streamline your workflow and help you build products users love.',
@@ -72,25 +100,46 @@ export default function FeaturesGrid({
   className,
 }: Props) {
   return (
-    <section
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-100px' }}
+      variants={sectionVariants}
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          <motion.h2
+            variants={headingVariants}
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            variants={headingVariants}
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+          >
             {subheadline}
-          </p>
+          </motion.p>
         </div>
+
         <div className={cn('mt-16 grid gap-8', columnsMap[columns])}>
           {features.map((feature, index) => (
-            <div
+            <motion.div
               key={index}
-              className="rounded-xl border border-border bg-card p-8 transition-colors hover:bg-accent/50"
+              variants={cardVariants}
+              whileHover={{
+                y: -6,
+                boxShadow: '0 12px 40px rgba(0,0,0,0.08)',
+                transition: { type: 'spring' as const, stiffness: 300, damping: 20 },
+              }}
+              className="group rounded-xl border border-border bg-card p-8 transition-colors hover:border-primary/20"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <motion.div
+                className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10"
+                whileHover={{ rotate: 5, scale: 1.1 }}
+                transition={{ type: 'spring' as const, stiffness: 300, damping: 15 }}
+              >
                 <svg
                   className="h-6 w-6 text-primary"
                   fill="none"
@@ -104,17 +153,17 @@ export default function FeaturesGrid({
                     d={iconPaths[index % iconPaths.length]}
                   />
                 </svg>
-              </div>
+              </motion.div>
               <h3 className="mt-4 text-lg font-semibold text-foreground">
                 {feature.title}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 {feature.description}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface BlogPost {
@@ -50,6 +51,33 @@ const categoryColors: Record<string, string> = {
   Company: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 32, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
 export default function BlogCards({
   headline = 'Latest from our blog',
   subheadline = 'Insights, updates, and stories from our team.',
@@ -61,19 +89,43 @@ export default function BlogCards({
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        <motion.div
+          className="mx-auto max-w-2xl text-center"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          <motion.h2
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+            variants={itemVariants}
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+            variants={itemVariants}
+          >
             {subheadline}
-          </p>
-        </div>
-        <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          </motion.p>
+        </motion.div>
+        <motion.div
+          className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+        >
           {posts.map((post, index) => (
-            <article
+            <motion.article
               key={index}
-              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-shadow hover:shadow-lg"
+              className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card"
+              variants={cardVariants}
+              whileHover={{
+                y: -6,
+                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
+                transition: { duration: 0.25, ease: 'easeOut' as const },
+              }}
             >
               <div className="flex h-48 items-center justify-center bg-muted">
                 <svg
@@ -96,17 +148,14 @@ export default function BlogCards({
                     <span
                       className={cn(
                         'rounded-full px-2.5 py-0.5 text-xs font-medium',
-                        categoryColors[post.category] ||
-                          'bg-muted text-muted-foreground',
+                        categoryColors[post.category] || 'bg-muted text-muted-foreground',
                       )}
                     >
                       {post.category}
                     </span>
                   )}
                   {post.date && (
-                    <span className="text-xs text-muted-foreground">
-                      {post.date}
-                    </span>
+                    <span className="text-xs text-muted-foreground">{post.date}</span>
                   )}
                 </div>
                 <h3 className="mt-3 text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
@@ -118,25 +167,22 @@ export default function BlogCards({
                 <div className="mt-4">
                   <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
                     Read more
-                    <svg
-                      className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                    <motion.svg
+                      className="h-4 w-4"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={2}
                       viewBox="0 0 24 24"
+                      whileHover={{ x: 3 }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"
-                      />
-                    </svg>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                    </motion.svg>
                   </span>
                 </div>
               </div>
-            </article>
+            </motion.article>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

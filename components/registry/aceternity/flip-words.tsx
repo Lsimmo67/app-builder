@@ -63,7 +63,7 @@ export default function FlipWords({
               }}
               transition={{
                 duration: 0.4,
-                ease: 'easeInOut',
+                ease: 'easeInOut' as const,
               }}
               className="inline-block bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
             >

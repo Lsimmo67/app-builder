@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
+import { motion } from 'framer-motion'
 
 interface Feature {
   title: string
@@ -48,6 +49,50 @@ const defaultFeatures: Feature[] = [
   },
 ]
 
+const sectionVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.1 },
+  },
+}
+
+const headingVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
+}
+
+const slideFromLeft = {
+  hidden: { opacity: 0, x: -50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
+}
+
+const slideFromRight = {
+  hidden: { opacity: 0, x: 50 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
+}
+
+const bulletVariants = {
+  hidden: { opacity: 0, x: -15 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.4, ease: 'easeOut' as const },
+  },
+}
+
 export default function FeaturesAlternating({
   headline = 'Built for modern teams',
   subheadline = 'Every feature is designed to help you move faster and build better.',
@@ -55,17 +100,27 @@ export default function FeaturesAlternating({
   className,
 }: Props) {
   return (
-    <section
+    <motion.section
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-100px' }}
+      variants={sectionVariants}
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+          <motion.h2
+            variants={headingVariants}
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            variants={headingVariants}
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+          >
             {subheadline}
-          </p>
+          </motion.p>
         </div>
 
         <div className="mt-20 space-y-24">
@@ -73,14 +128,24 @@ export default function FeaturesAlternating({
             const isEven = index % 2 === 0
 
             return (
-              <div
+              <motion.div
                 key={index}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-80px' }}
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+                  },
+                }}
                 className={cn(
                   'grid items-center gap-12 lg:grid-cols-2 lg:gap-20',
                   !isEven && 'lg:[&>*:first-child]:order-2',
                 )}
               >
-                <div>
+                <motion.div variants={isEven ? slideFromLeft : slideFromRight}>
                   <h3 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
                     {feature.title}
                   </h3>
@@ -88,10 +153,20 @@ export default function FeaturesAlternating({
                     {feature.description}
                   </p>
                   {feature.bullets && (
-                    <ul className="mt-6 space-y-3">
+                    <motion.ul
+                      className="mt-6 space-y-3"
+                      variants={{
+                        hidden: { opacity: 0 },
+                        visible: {
+                          opacity: 1,
+                          transition: { staggerChildren: 0.08, delayChildren: 0.3 },
+                        },
+                      }}
+                    >
                       {feature.bullets.map((bullet, bulletIndex) => (
-                        <li
+                        <motion.li
                           key={bulletIndex}
+                          variants={bulletVariants}
                           className="flex items-center gap-3 text-sm text-foreground"
                         >
                           <svg
@@ -108,34 +183,39 @@ export default function FeaturesAlternating({
                             />
                           </svg>
                           {bullet}
-                        </li>
+                        </motion.li>
                       ))}
-                    </ul>
+                    </motion.ul>
                   )}
-                </div>
+                </motion.div>
 
-                <div className="aspect-video w-full overflow-hidden rounded-xl bg-muted">
-                  <div className="flex h-full w-full items-center justify-center">
-                    <svg
-                      className="h-16 w-16 text-muted-foreground/30"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
-                      />
-                    </svg>
+                <motion.div
+                  variants={isEven ? slideFromRight : slideFromLeft}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: 'spring' as const, stiffness: 200, damping: 20 }}
+                  className="aspect-video w-full overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/50 border border-border"
+                >
+                  <div className="flex h-full w-full flex-col">
+                    <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+                      <div className="h-2.5 w-2.5 rounded-full bg-red-400/50" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-yellow-400/50" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-green-400/50" />
+                    </div>
+                    <div className="flex flex-1 items-center justify-center p-6">
+                      <div className="space-y-3 w-full max-w-xs">
+                        <div className="h-3 w-2/3 rounded bg-muted-foreground/10" />
+                        <div className="h-3 w-full rounded bg-muted-foreground/8" />
+                        <div className="h-3 w-4/5 rounded bg-muted-foreground/8" />
+                        <div className="mt-4 h-8 w-28 rounded-md bg-primary/15" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             )
           })}
         </div>
       </div>
-    </section>
+    </motion.section>
   )
 }

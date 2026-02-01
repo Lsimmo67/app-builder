@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 
 interface Tab {
@@ -43,6 +43,22 @@ const defaultTabs: Tab[] = [
   },
 ]
 
+const contentVariants = {
+  enter: { opacity: 0, y: 12, filter: 'blur(4px)' },
+  center: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.3, ease: 'easeOut' as const },
+  },
+  exit: {
+    opacity: 0,
+    y: -12,
+    filter: 'blur(4px)',
+    transition: { duration: 0.2, ease: 'easeIn' as const },
+  },
+}
+
 export default function AnimatedTabs({
   className,
   tabs = defaultTabs,
@@ -53,11 +69,12 @@ export default function AnimatedTabs({
   const activeContent = tabs.find((t) => t.id === activeTab)
 
   return (
-    <div
-      className={cn(
-        'mx-auto w-full max-w-2xl px-4 py-10',
-        className
-      )}
+    <motion.div
+      className={cn('mx-auto w-full max-w-2xl px-4 py-10', className)}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' as const }}
+      viewport={{ once: true }}
     >
       {/* Tab header */}
       <div className="relative flex items-center rounded-xl border border-white/[0.06] bg-zinc-950 p-1">
@@ -77,7 +94,7 @@ export default function AnimatedTabs({
                 layoutId="activeTab"
                 className="absolute inset-0 rounded-lg bg-white/[0.08] shadow-sm"
                 transition={{
-                  type: 'spring',
+                  type: 'spring' as const,
                   stiffness: 400,
                   damping: 30,
                 }}
@@ -90,21 +107,41 @@ export default function AnimatedTabs({
 
       {/* Tab content */}
       <div className="mt-6 overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-950 p-8">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25 }}
-        >
-          <h3 className="mb-3 text-lg font-bold text-white">
-            {activeContent?.label}
-          </h3>
-          <p className="leading-relaxed text-neutral-400">
-            {activeContent?.content}
-          </p>
-        </motion.div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            variants={contentVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            <motion.h3
+              className="mb-3 text-lg font-bold text-white"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1, duration: 0.3, ease: 'easeOut' as const }}
+            >
+              {activeContent?.label}
+            </motion.h3>
+            <motion.p
+              className="leading-relaxed text-neutral-400"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.15, duration: 0.3, ease: 'easeOut' as const }}
+            >
+              {activeContent?.content}
+            </motion.p>
+
+            {/* Decorative animated bar */}
+            <motion.div
+              className="mt-6 h-1 rounded-full bg-gradient-to-r from-violet-500/40 via-indigo-500/40 to-transparent"
+              initial={{ scaleX: 0, originX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 0.2, duration: 0.5, ease: 'easeOut' as const }}
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   )
 }

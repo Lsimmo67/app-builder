@@ -55,7 +55,7 @@ export default function HeroHighlight({
                 className="relative inline-block"
                 initial={{ backgroundSize: '0% 100%' }}
                 animate={{ backgroundSize: '100% 100%' }}
-                transition={{ duration: 1, delay: 0.8 + i * 0.1, ease: 'easeOut' }}
+                transition={{ duration: 1, delay: 0.8 + i * 0.1, ease: 'easeOut' as const }}
                 style={{
                   backgroundImage: highlightGradient,
                   backgroundRepeat: 'no-repeat',

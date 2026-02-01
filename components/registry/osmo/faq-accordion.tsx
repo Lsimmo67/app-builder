@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface FaqItem {
@@ -48,9 +49,35 @@ const defaultItems: FaqItem[] = [
   },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
+const faqItemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: 'easeOut' as const },
+  },
+}
+
 export default function FaqAccordion({
   headline = 'Frequently asked questions',
-  subheadline = 'Everything you need to know about the product. Can\'t find your answer? Contact our support team.',
+  subheadline = "Everything you need to know about the product. Can't find your answer? Contact our support team.",
   items = defaultItems,
   className,
 }: Props) {
@@ -65,20 +92,38 @@ export default function FaqAccordion({
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-3xl">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        <motion.div
+          className="text-center"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          <motion.h2
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+            variants={itemVariants}
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+            variants={itemVariants}
+          >
             {subheadline}
-          </p>
-        </div>
-        <div className="mt-12 divide-y divide-border">
+          </motion.p>
+        </motion.div>
+        <motion.div
+          className="mt-12 divide-y divide-border"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.1 }}
+        >
           {items.map((item, index) => {
             const isOpen = openIndex === index
 
             return (
-              <div key={index}>
+              <motion.div key={index} variants={faqItemVariants}>
                 <button
                   onClick={() => toggle(index)}
                   className="flex w-full items-center justify-between py-5 text-left transition-colors hover:text-primary"
@@ -86,37 +131,41 @@ export default function FaqAccordion({
                   <span className="pr-4 text-base font-medium text-foreground">
                     {item.question}
                   </span>
-                  <svg
-                    className={cn(
-                      'h-5 w-5 shrink-0 text-muted-foreground transition-transform duration-200',
-                      isOpen && 'rotate-180',
-                    )}
+                  <motion.svg
+                    className="h-5 w-5 shrink-0 text-muted-foreground"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={2}
                     viewBox="0 0 24 24"
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' as const }}
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="M19 9l-7 7-7-7"
                     />
-                  </svg>
+                  </motion.svg>
                 </button>
-                <div
-                  className={cn(
-                    'overflow-hidden transition-all duration-200',
-                    isOpen ? 'max-h-96 pb-5' : 'max-h-0',
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: 'easeInOut' as const }}
+                      className="overflow-hidden"
+                    >
+                      <p className="pb-5 text-sm leading-relaxed text-muted-foreground">
+                        {item.answer}
+                      </p>
+                    </motion.div>
                   )}
-                >
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {item.answer}
-                  </p>
-                </div>
-              </div>
+                </AnimatePresence>
+              </motion.div>
             )
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

@@ -223,7 +223,7 @@ export default function TestimonialsLineReveal({
         {
           yPercent: -110,
           duration: 0.6,
-          ease: 'power4.inOut',
+          ease: 'power4.inOut' as const,
           stagger: { amount: 0.25 },
         },
         0
@@ -236,7 +236,7 @@ export default function TestimonialsLineReveal({
           {
             clipPath: 'circle(0% at 50% 50%)',
             duration: 0.6,
-            ease: 'power4.inOut',
+            ease: 'power4.inOut' as const,
           },
           0
         )
@@ -248,7 +248,7 @@ export default function TestimonialsLineReveal({
         {
           yPercent: 0,
           duration: 0.7,
-          ease: 'power4.inOut',
+          ease: 'power4.inOut' as const,
           stagger: { amount: 0.4 },
         },
         '>-=0.3'
@@ -261,7 +261,7 @@ export default function TestimonialsLineReveal({
           {
             clipPath: 'circle(50% at 50% 50%)',
             duration: 0.75,
-            ease: 'power4.inOut',
+            ease: 'power4.inOut' as const,
           },
           '<'
         )

@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface Integration {
@@ -58,6 +59,33 @@ const defaultIntegrations: Integration[] = [
   },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.4, ease: 'easeOut' as const },
+  },
+}
+
 export default function IntegrationsGrid({
   headline = 'Integrates with your stack',
   subheadline = 'Connect with the tools your team already uses. Seamless integration, zero friction.',
@@ -69,21 +97,49 @@ export default function IntegrationsGrid({
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        <motion.div
+          className="mx-auto max-w-2xl text-center"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          <motion.h2
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+            variants={itemVariants}
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+            variants={itemVariants}
+          >
             {subheadline}
-          </p>
-        </div>
-        <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          </motion.p>
+        </motion.div>
+        <motion.div
+          className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+        >
           {integrations.map((integration, index) => (
-            <div
+            <motion.div
               key={index}
-              className="group rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:shadow-md"
+              className="group rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary/30"
+              variants={cardVariants}
+              whileHover={{
+                y: -4,
+                boxShadow: '0 0 20px rgba(var(--primary), 0.08)',
+                transition: { duration: 0.25, ease: 'easeOut' as const },
+              }}
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
+              <motion.div
+                className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted"
+                whileHover={{ scale: 1.1 }}
+                transition={{ type: 'spring' as const, stiffness: 300, damping: 15 }}
+              >
                 <svg
                   className="h-6 w-6 text-foreground transition-colors group-hover:text-primary"
                   fill="currentColor"
@@ -91,16 +147,16 @@ export default function IntegrationsGrid({
                 >
                   <path d={integration.iconPath || 'M12 2L2 19.5h20L12 2z'} />
                 </svg>
-              </div>
+              </motion.div>
               <h3 className="mt-4 text-sm font-semibold text-foreground">
                 {integration.name}
               </h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 {integration.description}
               </p>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

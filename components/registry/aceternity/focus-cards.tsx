@@ -70,7 +70,7 @@ export default function FocusCards({
                 ? 'blur(2px)'
                 : 'blur(0px)',
           }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+          transition={{ duration: 0.3, ease: 'easeOut' as const }}
         >
           {/* Gradient background on hover */}
           <div
