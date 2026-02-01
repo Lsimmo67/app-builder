@@ -1,46 +1,57 @@
-'use client'
+"use client";
 
-import { useDroppable } from '@dnd-kit/core'
-import { useSortable } from '@dnd-kit/sortable'
+import { useDroppable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
 import {
   SortableContext,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
-import { useCanvasStore, useEditorStore } from '@/lib/store'
-import { componentRegistry } from '@/lib/components-registry'
-import { DEVICE_WIDTHS } from '@/types'
-import type { ComponentInstance } from '@/types'
-import { Plus, GripVertical, Lock, Eye, EyeOff, Trash2, Copy } from 'lucide-react'
-import { Badge, type BadgeProps } from '@/components/ui/badge'
-import { cn } from '@/lib/utils/cn'
-import { ComponentRenderer } from './component-renderer'
-import { isComponentAvailable } from '@/lib/component-loader'
-import { mergeStyles } from '@/lib/styles/styles-to-css'
-import React, { useMemo } from 'react'
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useCanvasStore, useEditorStore } from "@/lib/store";
+import { componentRegistry } from "@/lib/components-registry";
+import { DEVICE_WIDTHS } from "@/types";
+import type { ComponentInstance } from "@/types";
+import {
+  Plus,
+  GripVertical,
+  Lock,
+  Eye,
+  EyeOff,
+  Trash2,
+  Copy,
+} from "lucide-react";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { cn } from "@/lib/utils/cn";
+import { ComponentRenderer } from "./component-renderer";
+import { isComponentAvailable } from "@/lib/component-loader";
+import { mergeStyles } from "@/lib/styles/styles-to-css";
+import React, { useMemo } from "react";
 
 // ============================================
 // CANVAS NODE - Recursive nested rendering
 // ============================================
 
 interface CanvasNodeProps {
-  instance: ComponentInstance
-  depth: number
+  instance: ComponentInstance;
+  depth: number;
 }
 
 function CanvasNode({ instance, depth }: CanvasNodeProps) {
-  const { selectedComponentId, selectComponent, hoverComponent } = useEditorStore()
-  const { components, updateComponent, removeComponent, duplicateComponent } = useCanvasStore()
-  const registryItem = componentRegistry.getById(instance.componentRegistryId)
-  const canNest = registryItem?.acceptsChildren ?? false
+  const { selectedComponentId, selectComponent, hoverComponent } =
+    useEditorStore();
+  const { components, updateComponent, removeComponent, duplicateComponent } =
+    useCanvasStore();
+  const registryItem = componentRegistry.getById(instance.componentRegistryId);
+  const canNest = registryItem?.acceptsChildren ?? false;
 
   // Get child components sorted by order
   const children = useMemo(
-    () => components
-      .filter((c) => c.parentId === instance.id)
-      .sort((a, b) => a.order - b.order),
-    [components, instance.id]
-  )
+    () =>
+      components
+        .filter((c) => c.parentId === instance.id)
+        .sort((a, b) => a.order - b.order),
+    [components, instance.id],
+  );
 
   const {
     attributes,
@@ -52,57 +63,57 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
   } = useSortable({
     id: instance.id,
     data: {
-      type: 'canvas',
+      type: "canvas",
       instanceId: instance.id,
       parentId: instance.parentId,
     },
     disabled: instance.isLocked,
-  })
+  });
 
   const sortableStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
-  }
+  };
 
-  const isSelected = selectedComponentId === instance.id
+  const isSelected = selectedComponentId === instance.id;
 
   // Compute merged styles (structured + legacy)
-  const computedStyles = mergeStyles(instance.styles, instance.customStyles)
+  const computedStyles = mergeStyles(instance.styles, instance.customStyles);
 
   return (
     <div
       ref={setNodeRef}
       style={sortableStyle}
       className={cn(
-        'group/node relative',
-        isDragging && 'opacity-50 z-50',
-        instance.isHidden && 'opacity-40',
+        "group/node relative",
+        isDragging && "opacity-50 z-50",
+        instance.isHidden && "opacity-40",
       )}
       onClick={(e) => {
-        e.stopPropagation()
-        if (!instance.isLocked) selectComponent(instance.id)
+        e.stopPropagation();
+        if (!instance.isLocked) selectComponent(instance.id);
       }}
       onMouseEnter={(e) => {
-        e.stopPropagation()
-        hoverComponent(instance.id)
+        e.stopPropagation();
+        hoverComponent(instance.id);
       }}
       onMouseLeave={(e) => {
-        e.stopPropagation()
-        hoverComponent(null)
+        e.stopPropagation();
+        hoverComponent(null);
       }}
     >
       {/* Component Toolbar */}
       <div
         className={cn(
-          'flex items-center justify-between px-2 py-1 bg-card border rounded-t-md opacity-0 group-hover/node:opacity-100 transition-opacity z-20 text-xs',
-          isSelected && 'opacity-100 border-primary bg-primary/5'
+          "flex items-center justify-between px-2 py-1 bg-card border rounded-t-md opacity-0 group-hover/node:opacity-100 transition-opacity z-20 text-xs",
+          isSelected && "opacity-100 border-primary bg-primary/5",
         )}
       >
         <div className="flex items-center gap-1.5">
           <div
             className={cn(
-              'p-0.5 cursor-grab active:cursor-grabbing',
-              instance.isLocked && 'cursor-not-allowed opacity-50'
+              "p-0.5 cursor-grab active:cursor-grabbing",
+              instance.isLocked && "cursor-not-allowed opacity-50",
             )}
             {...attributes}
             {...listeners}
@@ -110,9 +121,12 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
             <GripVertical className="w-3.5 h-3.5 text-muted-foreground" />
           </div>
           <span className="font-medium truncate max-w-[120px]">
-            {instance.displayName || registryItem?.displayName || 'Component'}
+            {instance.displayName || registryItem?.displayName || "Component"}
           </span>
-          <Badge variant={instance.source as BadgeProps['variant']} className="text-[9px] px-1 py-0 leading-tight">
+          <Badge
+            variant={instance.source as BadgeProps["variant"]}
+            className="text-[9px] px-1 py-0 leading-tight"
+          >
             {instance.source}
           </Badge>
         </div>
@@ -120,11 +134,11 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
         <div className="flex items-center gap-0.5">
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              updateComponent(instance.id, { isHidden: !instance.isHidden })
+              e.stopPropagation();
+              updateComponent(instance.id, { isHidden: !instance.isHidden });
             }}
             className="p-0.5 hover:bg-muted rounded"
-            title={instance.isHidden ? 'Show' : 'Hide'}
+            title={instance.isHidden ? "Show" : "Hide"}
           >
             {instance.isHidden ? (
               <EyeOff className="w-3 h-3 text-muted-foreground" />
@@ -135,19 +149,22 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
 
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              updateComponent(instance.id, { isLocked: !instance.isLocked })
+              e.stopPropagation();
+              updateComponent(instance.id, { isLocked: !instance.isLocked });
             }}
-            className={cn('p-0.5 hover:bg-muted rounded', instance.isLocked && 'text-amber-500')}
-            title={instance.isLocked ? 'Unlock' : 'Lock'}
+            className={cn(
+              "p-0.5 hover:bg-muted rounded",
+              instance.isLocked && "text-amber-500",
+            )}
+            title={instance.isLocked ? "Unlock" : "Lock"}
           >
             <Lock className="w-3 h-3" />
           </button>
 
           <button
             onClick={(e) => {
-              e.stopPropagation()
-              duplicateComponent(instance.id)
+              e.stopPropagation();
+              duplicateComponent(instance.id);
             }}
             className="p-0.5 hover:bg-muted rounded"
             title="Duplicate"
@@ -157,16 +174,16 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
 
           <button
             onClick={(e) => {
-              e.stopPropagation()
+              e.stopPropagation();
               if (!instance.isLocked) {
-                removeComponent(instance.id)
-                if (isSelected) selectComponent(null)
+                removeComponent(instance.id);
+                if (isSelected) selectComponent(null);
               }
             }}
             disabled={instance.isLocked}
             className={cn(
-              'p-0.5 hover:bg-destructive/10 rounded',
-              instance.isLocked && 'opacity-50 cursor-not-allowed'
+              "p-0.5 hover:bg-destructive/10 rounded",
+              instance.isLocked && "opacity-50 cursor-not-allowed",
             )}
             title="Delete"
           >
@@ -178,10 +195,12 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
       {/* Component Content */}
       <div
         className={cn(
-          'relative border rounded-b-lg cursor-pointer transition-all',
-          isSelected ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50',
-          instance.isHidden && 'pointer-events-none',
-          canNest && 'min-h-[40px]',
+          "relative border rounded-b-lg cursor-pointer transition-all",
+          isSelected
+            ? "ring-2 ring-primary border-primary"
+            : "hover:border-primary/50",
+          instance.isHidden && "pointer-events-none",
+          canNest && "min-h-[40px]",
         )}
         style={computedStyles}
       >
@@ -213,9 +232,12 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
             ) : (
               <div className="h-20 bg-muted/50 rounded flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-sm font-medium">{registryItem?.displayName || 'Unknown'}</p>
+                  <p className="text-sm font-medium">
+                    {registryItem?.displayName || "Unknown"}
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {registryItem?.description?.slice(0, 50) || 'Component preview'}
+                    {registryItem?.description?.slice(0, 50) ||
+                      "Component preview"}
                   </p>
                 </div>
               </div>
@@ -224,7 +246,7 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 // ============================================
@@ -236,24 +258,27 @@ function ContainerDropZone({
   depth,
   children,
 }: {
-  instance: ComponentInstance
-  depth: number
-  children: React.ReactNode
+  instance: ComponentInstance;
+  depth: number;
+  children: React.ReactNode;
 }) {
-  const childComponents = useCanvasStore((state) =>
-    state.components
-      .filter((c) => c.parentId === instance.id)
-      .sort((a, b) => a.order - b.order)
-  )
+  const components = useCanvasStore((state) => state.components);
+  const childComponents = useMemo(
+    () =>
+      components
+        .filter((c) => c.parentId === instance.id)
+        .sort((a, b) => a.order - b.order),
+    [components, instance.id],
+  );
 
   const { setNodeRef, isOver } = useDroppable({
     id: `container-${instance.id}`,
     data: {
-      type: 'container',
+      type: "container",
       parentId: instance.id,
-      accepts: ['registry', 'canvas'],
+      accepts: ["registry", "canvas"],
     },
-  })
+  });
 
   return (
     <SortableContext
@@ -263,17 +288,15 @@ function ContainerDropZone({
       <div
         ref={setNodeRef}
         className={cn(
-          'min-h-[40px] p-2 transition-colors',
-          isOver && 'bg-primary/5 ring-1 ring-dashed ring-primary/40',
-          depth > 0 && 'ml-0',
+          "min-h-[40px] p-2 transition-colors",
+          isOver && "bg-primary/5 ring-1 ring-dashed ring-primary/40",
+          depth > 0 && "ml-0",
         )}
       >
-        <div className="space-y-2">
-          {children}
-        </div>
+        <div className="space-y-2">{children}</div>
       </div>
     </SortableContext>
-  )
+  );
 }
 
 // ============================================
@@ -284,26 +307,26 @@ function EmptyContainerPlaceholder({ instanceId }: { instanceId: string }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `empty-${instanceId}`,
     data: {
-      type: 'container',
+      type: "container",
       parentId: instanceId,
-      accepts: ['registry', 'canvas'],
+      accepts: ["registry", "canvas"],
     },
-  })
+  });
 
   return (
     <div
       ref={setNodeRef}
       className={cn(
-        'flex flex-col items-center justify-center py-6 border-2 border-dashed rounded-lg transition-colors',
+        "flex flex-col items-center justify-center py-6 border-2 border-dashed rounded-lg transition-colors",
         isOver
-          ? 'border-primary bg-primary/5 text-primary'
-          : 'border-muted-foreground/20 text-muted-foreground/50'
+          ? "border-primary bg-primary/5 text-primary"
+          : "border-muted-foreground/20 text-muted-foreground/50",
       )}
     >
       <Plus className="h-4 w-4 mb-1" />
       <span className="text-xs">Drop elements here</span>
     </div>
-  )
+  );
 }
 
 // ============================================
@@ -311,32 +334,31 @@ function EmptyContainerPlaceholder({ instanceId }: { instanceId: string }) {
 // ============================================
 
 export function Canvas() {
-  const components = useCanvasStore((state) => state.components)
-  const { previewDevice, selectComponent } = useEditorStore()
+  const components = useCanvasStore((state) => state.components);
+  const { previewDevice, selectComponent } = useEditorStore();
 
   // Only root-level components (no parentId)
   const rootComponents = useMemo(
-    () => components
-      .filter((c) => !c.parentId)
-      .sort((a, b) => a.order - b.order),
-    [components]
-  )
+    () =>
+      components.filter((c) => !c.parentId).sort((a, b) => a.order - b.order),
+    [components],
+  );
 
   const { setNodeRef, isOver } = useDroppable({
-    id: 'canvas-drop-zone',
+    id: "canvas-drop-zone",
     data: {
-      type: 'canvas',
-      accepts: ['registry'],
+      type: "canvas",
+      accepts: ["registry"],
     },
-  })
+  });
 
-  const canvasWidth = DEVICE_WIDTHS[previewDevice]
+  const canvasWidth = DEVICE_WIDTHS[previewDevice];
 
   return (
     <div className="h-full bg-muted/30 overflow-auto p-8">
       <div
         className="mx-auto bg-background border rounded-lg shadow-sm min-h-[600px] transition-all duration-300"
-        style={{ width: canvasWidth, maxWidth: '100%' }}
+        style={{ width: canvasWidth, maxWidth: "100%" }}
         onClick={() => selectComponent(null)}
       >
         <SortableContext
@@ -346,29 +368,32 @@ export function Canvas() {
           <div
             ref={setNodeRef}
             className={cn(
-              'min-h-[600px] p-4 transition-colors',
-              isOver && 'bg-primary/5 ring-2 ring-dashed ring-primary'
+              "min-h-[600px] p-4 transition-colors",
+              isOver && "bg-primary/5 ring-2 ring-dashed ring-primary",
             )}
           >
             {rootComponents.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center py-20">
-                <div className={cn(
-                  'w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors',
-                  isOver ? 'bg-primary/20' : 'bg-muted'
-                )}>
-                  <Plus className={cn(
-                    'h-8 w-8',
-                    isOver ? 'text-primary' : 'text-muted-foreground'
-                  )} />
+                <div
+                  className={cn(
+                    "w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-colors",
+                    isOver ? "bg-primary/20" : "bg-muted",
+                  )}
+                >
+                  <Plus
+                    className={cn(
+                      "h-8 w-8",
+                      isOver ? "text-primary" : "text-muted-foreground",
+                    )}
+                  />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">
-                  {isOver ? 'Drop to add' : 'Start building'}
+                  {isOver ? "Drop to add" : "Start building"}
                 </h3>
                 <p className="text-muted-foreground max-w-sm">
                   {isOver
-                    ? 'Release to add the component to your page'
-                    : 'Drag components from the sidebar to start building your page.'
-                  }
+                    ? "Release to add the component to your page"
+                    : "Drag components from the sidebar to start building your page."}
                 </p>
               </div>
             ) : (
@@ -382,5 +407,5 @@ export function Canvas() {
         </SortableContext>
       </div>
     </div>
-  )
+  );
 }
