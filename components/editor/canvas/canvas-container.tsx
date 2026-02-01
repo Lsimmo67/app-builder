@@ -12,7 +12,7 @@ import { componentRegistry } from '@/lib/components-registry'
 import { DEVICE_WIDTHS } from '@/types'
 import type { ComponentInstance } from '@/types'
 import { Plus, GripVertical, Lock, Eye, EyeOff, Trash2, Copy } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
 import { ComponentRenderer } from './component-renderer'
 import { isComponentAvailable } from '@/lib/component-loader'
@@ -29,7 +29,7 @@ interface CanvasNodeProps {
 }
 
 function CanvasNode({ instance, depth }: CanvasNodeProps) {
-  const { selectedComponentId, setSelectedComponentId, setHoveredComponentId } = useEditorStore()
+  const { selectedComponentId, selectComponent, hoverComponent } = useEditorStore()
   const { components, updateComponent, removeComponent, duplicateComponent } = useCanvasStore()
   const registryItem = componentRegistry.getById(instance.componentRegistryId)
   const canNest = registryItem?.acceptsChildren ?? false
@@ -80,15 +80,15 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
       )}
       onClick={(e) => {
         e.stopPropagation()
-        if (!instance.isLocked) setSelectedComponentId(instance.id)
+        if (!instance.isLocked) selectComponent(instance.id)
       }}
       onMouseEnter={(e) => {
         e.stopPropagation()
-        setHoveredComponentId(instance.id)
+        hoverComponent(instance.id)
       }}
       onMouseLeave={(e) => {
         e.stopPropagation()
-        setHoveredComponentId(null)
+        hoverComponent(null)
       }}
     >
       {/* Component Toolbar */}
@@ -112,7 +112,7 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
           <span className="font-medium truncate max-w-[120px]">
             {instance.displayName || registryItem?.displayName || 'Component'}
           </span>
-          <Badge variant={instance.source as any} className="text-[9px] px-1 py-0 leading-tight">
+          <Badge variant={instance.source as BadgeProps['variant']} className="text-[9px] px-1 py-0 leading-tight">
             {instance.source}
           </Badge>
         </div>
@@ -160,7 +160,7 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
               e.stopPropagation()
               if (!instance.isLocked) {
                 removeComponent(instance.id)
-                if (isSelected) setSelectedComponentId(null)
+                if (isSelected) selectComponent(null)
               }
             }}
             disabled={instance.isLocked}
@@ -312,7 +312,7 @@ function EmptyContainerPlaceholder({ instanceId }: { instanceId: string }) {
 
 export function Canvas() {
   const components = useCanvasStore((state) => state.components)
-  const { previewDevice, setSelectedComponentId } = useEditorStore()
+  const { previewDevice, selectComponent } = useEditorStore()
 
   // Only root-level components (no parentId)
   const rootComponents = useMemo(
@@ -337,7 +337,7 @@ export function Canvas() {
       <div
         className="mx-auto bg-background border rounded-lg shadow-sm min-h-[600px] transition-all duration-300"
         style={{ width: canvasWidth, maxWidth: '100%' }}
-        onClick={() => setSelectedComponentId(null)}
+        onClick={() => selectComponent(null)}
       >
         <SortableContext
           items={rootComponents.map((c) => c.id)}

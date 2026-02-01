@@ -5,7 +5,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, type BadgeProps } from '@/components/ui/badge'
 import {
   Search,
   Filter,
@@ -204,7 +204,7 @@ function ComponentCard({ component }: { component: ComponentRegistryItem }) {
             {component.description}
           </p>
           <div className="flex items-center gap-1.5">
-            <Badge variant={component.source as any} className="text-[10px] px-1.5 py-0">
+            <Badge variant={component.source as BadgeProps['variant']} className="text-[10px] px-1.5 py-0">
               {component.source}
             </Badge>
             {component.categories[0] && (
@@ -423,7 +423,7 @@ export function ComponentBrowser() {
                       <Badge
                         key={source}
                         variant={
-                          selectedSources.includes(source) ? (source as any) : 'outline'
+                          selectedSources.includes(source) ? (source as BadgeProps['variant']) : 'outline'
                         }
                         className="cursor-pointer text-xs"
                         onClick={() => toggleSource(source)}

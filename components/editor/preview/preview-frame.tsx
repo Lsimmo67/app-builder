@@ -47,13 +47,13 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
 
   const components = useCanvasStore((state) => state.components)
   const designSystem = useDesignSystemStore((state) => state.designSystem)
-  const { setSelectedComponentId, setHoveredComponentId } = useEditorStore()
+  const { selectComponent, hoverComponent } = useEditorStore()
 
   // Live preview bridge
   const { iframeRef, isReady, updateComponents, updateDesignSystem, setDarkMode: setPreviewDark } =
     usePreviewBridge({
-      onComponentClicked: (id) => setSelectedComponentId(id),
-      onComponentHovered: (id) => setHoveredComponentId(id),
+      onComponentClicked: (id) => selectComponent(id),
+      onComponentHovered: (id) => hoverComponent(id),
     })
 
   // Fallback HTML for non-live preview

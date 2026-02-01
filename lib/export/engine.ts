@@ -118,7 +118,7 @@ export class ExportEngine {
     files['package.json'] = this.getPackageJsonContent()
     files['next.config.js'] = this.getNextConfigContent()
     files['tsconfig.json'] = this.getTsConfigContent()
-    files['tailwind.config.js'] = this.getTailwindConfigContent()
+    files['postcss.config.mjs'] = this.getPostCssConfigContent()
     files['app/globals.css'] = this.getGlobalsCssContent()
     files['app/layout.tsx'] = this.getLayoutContent()
 
@@ -155,21 +155,21 @@ export class ExportEngine {
         lint: 'next lint',
       },
       dependencies: {
-        next: '^14.2.0',
-        react: '^18.3.0',
-        'react-dom': '^18.3.0',
+        next: getVersionForDep('next'),
+        react: getVersionForDep('react'),
+        'react-dom': getVersionForDep('react-dom'),
         ...dependencies,
       },
       devDependencies: {
-        '@types/node': '^20.0.0',
-        '@types/react': '^18.3.0',
-        '@types/react-dom': '^18.3.0',
-        typescript: '^5.0.0',
-        tailwindcss: '^3.4.0',
-        postcss: '^8.4.0',
-        autoprefixer: '^10.4.0',
-        eslint: '^8.0.0',
-        'eslint-config-next': '^14.2.0',
+        '@types/node': getVersionForDep('@types/node'),
+        '@types/react': getVersionForDep('@types/react'),
+        '@types/react-dom': getVersionForDep('@types/react-dom'),
+        typescript: getVersionForDep('typescript'),
+        tailwindcss: getVersionForDep('tailwindcss'),
+        '@tailwindcss/postcss': getVersionForDep('@tailwindcss/postcss'),
+        postcss: getVersionForDep('postcss'),
+        eslint: getVersionForDep('eslint'),
+        'eslint-config-next': getVersionForDep('eslint-config-next'),
       },
     }
 
@@ -185,11 +185,14 @@ export class ExportEngine {
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['images.unsplash.com', 'via.placeholder.com'],
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
+    ],
   },
 }
 
-module.exports = nextConfig
+export default nextConfig
 `
   }
 
@@ -226,69 +229,14 @@ module.exports = nextConfig
   }
 
   private async generateTailwindConfig(zip: JSZip): Promise<void> {
-    zip.file('tailwind.config.js', this.getTailwindConfigContent())
-    zip.file('postcss.config.js', this.getPostCssConfigContent())
-  }
-
-  private getTailwindConfigContent(): string {
-    const { colors, borderRadius } = this.designSystem
-
-    return `/** @type {import('tailwindcss').Config} */
-module.exports = {
-  darkMode: 'class',
-  content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './components/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        background: '${colors.background}',
-        foreground: '${colors.foreground}',
-        primary: {
-          DEFAULT: '${colors.primary}',
-          foreground: '${colors.primaryForeground}',
-        },
-        secondary: {
-          DEFAULT: '${colors.secondary}',
-          foreground: '${colors.secondaryForeground}',
-        },
-        muted: {
-          DEFAULT: '${colors.muted}',
-          foreground: '${colors.mutedForeground}',
-        },
-        accent: {
-          DEFAULT: '${colors.accent}',
-          foreground: '${colors.accentForeground}',
-        },
-        destructive: {
-          DEFAULT: '${colors.destructive}',
-          foreground: '#ffffff',
-        },
-        border: '${colors.border}',
-        ring: '${colors.primary}',
-      },
-      borderRadius: {
-        none: '${borderRadius.none}',
-        sm: '${borderRadius.sm}',
-        DEFAULT: '${borderRadius.md}',
-        md: '${borderRadius.md}',
-        lg: '${borderRadius.lg}',
-        xl: '${borderRadius.xl}',
-        full: '${borderRadius.full}',
-      },
-    },
-  },
-  plugins: [],
-}
-`
+    // Tailwind v4 uses CSS-based config, no tailwind.config.js needed
+    zip.file('postcss.config.mjs', this.getPostCssConfigContent())
   }
 
   private getPostCssConfigContent(): string {
-    return `module.exports = {
+    return `export default {
   plugins: {
-    tailwindcss: {},
-    autoprefixer: {},
+    '@tailwindcss/postcss': {},
   },
 }
 `
@@ -300,34 +248,39 @@ module.exports = {
   }
 
   private getGlobalsCssContent(): string {
-    const { colors, typography } = this.designSystem
+    const { colors, typography, borderRadius } = this.designSystem
 
-    return `@tailwind base;
-@tailwind components;
-@tailwind utilities;
+    return `@import "tailwindcss";
+
+@theme {
+  --color-background: ${colors.background};
+  --color-foreground: ${colors.foreground};
+  --color-primary: ${colors.primary};
+  --color-primary-foreground: ${colors.primaryForeground};
+  --color-secondary: ${colors.secondary};
+  --color-secondary-foreground: ${colors.secondaryForeground};
+  --color-muted: ${colors.muted};
+  --color-muted-foreground: ${colors.mutedForeground};
+  --color-accent: ${colors.accent};
+  --color-accent-foreground: ${colors.accentForeground};
+  --color-destructive: ${colors.destructive};
+  --color-border: ${colors.border};
+  --color-ring: ${colors.primary};
+
+  --radius-sm: ${borderRadius.sm};
+  --radius-md: ${borderRadius.md};
+  --radius-lg: ${borderRadius.lg};
+  --radius-xl: ${borderRadius.xl};
+}
 
 @layer base {
-  :root {
-    --background: ${colors.background};
-    --foreground: ${colors.foreground};
-    --primary: ${colors.primary};
-    --primary-foreground: ${colors.primaryForeground};
-    --secondary: ${colors.secondary};
-    --secondary-foreground: ${colors.secondaryForeground};
-    --muted: ${colors.muted};
-    --muted-foreground: ${colors.mutedForeground};
-    --accent: ${colors.accent};
-    --accent-foreground: ${colors.accentForeground};
-    --destructive: ${colors.destructive};
-    --border: ${colors.border};
-  }
-
   * {
-    @apply border-border;
+    border-color: var(--color-border);
   }
 
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
     font-family: ${typography.fontFamily.body}, system-ui, sans-serif;
   }
 
@@ -532,7 +485,7 @@ ${this.getDevCommand()}
 
 ## Tech Stack
 
-- **Framework:** Next.js 14
+- **Framework:** Next.js 15
 - **Styling:** Tailwind CSS
 - **Language:** TypeScript
 
@@ -662,7 +615,7 @@ MIT
       if (!registryItem) continue
 
       const componentName = this.toPascalCase(registryItem.name)
-      imports.push(`import { ${componentName} } from '@/components/${registryItem.source}/${registryItem.name.toLowerCase().replace(/\s+/g, '-')}'`)
+      imports.push(`import ${componentName} from '@/components/${registryItem.source}/${registryItem.name.toLowerCase().replace(/\s+/g, '-')}'`)
     }
 
     return imports.join('\n')
