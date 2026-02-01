@@ -14,19 +14,11 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  type DragStartEvent,
-  type DragEndEvent,
-  type UniqueIdentifier,
-  type CollisionDetection,
-} from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { nanoid } from "nanoid";
-import { EditorToolbar } from "@/components/editor/toolbar/editor-toolbar";
-import { ComponentBrowser } from "@/components/editor/sidebar/component-browser";
-import { Canvas } from "@/components/editor/canvas/canvas-container";
-import { PropertiesPanel } from "@/components/editor/properties/properties-panel";
-import { LayerTree } from "@/components/editor/layers";
-import { ElementBreadcrumb } from "@/components/editor/canvas/element-breadcrumb";
+  DragStartEvent,
+  DragEndEvent,
+  UniqueIdentifier,
+  CollisionDetection,
+} from '@dnd-kit/core'
 import {
   useProjectStore,
   useCanvasStore,
@@ -77,6 +69,24 @@ const PreviewFrame = dynamic(
     ),
   },
 );
+
+// Custom collision detection: pointerWithin for registry→canvas, closestCenter for reordering
+const customCollisionDetection: CollisionDetection = (args) => {
+  // First try pointerWithin (finds droppable zones the pointer is inside)
+  const pointerCollisions = pointerWithin(args)
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions
+  }
+
+  // Then try closestCenter (finds nearest sortable item)
+  const centerCollisions = closestCenter(args)
+  if (centerCollisions.length > 0) {
+    return centerCollisions
+  }
+
+  // Finally fallback to rectIntersection
+  return rectIntersection(args)
+}
 
 export default function EditorPage() {
   const params = useParams();
@@ -378,7 +388,7 @@ export default function EditorPage() {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={cascadeCollisionDetection}
+      collisionDetection={customCollisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
