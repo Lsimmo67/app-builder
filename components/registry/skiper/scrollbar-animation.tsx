@@ -190,7 +190,7 @@ const ScrollBar = ({
           transition={{
             duration: 0.2,
             delay: item % 5 === 0 ? (item / 5) * 0.05 : 0,
-            ease: 'easeOut',
+            ease: 'easeOut' as const,
           }}
           className={cn('h-[15px] w-[1px] bg-foreground')}
         />
@@ -209,7 +209,7 @@ const ScrollBar = ({
               : { y: '100%', opacity: 0 }
           }
           exit={{ y: '100%', opacity: 0 }}
-          transition={{ duration: 0.5, bounce: 0, type: 'spring' }}
+          transition={{ duration: 0.5, bounce: 0, type: 'spring' as const }}
           key={activeSection}
         >
           <ScrollCard section={sectionContent[activeSection]} />
@@ -236,7 +236,7 @@ const ScrollBar = ({
                     willChange: 'transform',
                   }}
                   transition={{
-                    type: 'tween',
+                    type: 'tween' as const,
                     duration: 0,
                   }}
                 />
@@ -301,7 +301,7 @@ const ScrollCard = ({
               exit={{ scale: 0 }}
               animate={{ scale: 1 }}
               initial={{ scale: 0 }}
-              transition={{ duration: 0.1, ease: 'easeInOut' }}
+              transition={{ duration: 0.1, ease: 'easeInOut' as const }}
               xmlns="http://www.w3.org/2000/svg"
               width="24"
               height="24"

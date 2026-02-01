@@ -74,7 +74,7 @@ export default function HeroSpotlight({
               cx: mousePosition.x,
               cy: mousePosition.y,
             }}
-            transition={{ type: 'spring', stiffness: 200, damping: 30 }}
+            transition={{ type: 'spring' as const, stiffness: 200, damping: 30 }}
           />
         </svg>
       </motion.div>
@@ -92,7 +92,7 @@ export default function HeroSpotlight({
           y: mousePosition.y - (spotlightSize * 1.5) / 2,
           opacity: isHovering ? 0.6 : 0,
         }}
-        transition={{ type: 'spring', stiffness: 150, damping: 25 }}
+        transition={{ type: 'spring' as const, stiffness: 150, damping: 25 }}
       />
 
       {/* Grid background */}

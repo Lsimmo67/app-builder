@@ -50,7 +50,7 @@ export default function GradientBgAnimated({
         transition={{
           duration: speed,
           repeat: Infinity,
-          ease: 'easeInOut',
+          ease: 'easeInOut' as const,
         }}
       />
 
@@ -73,7 +73,7 @@ export default function GradientBgAnimated({
         transition={{
           duration: speed * 1.3,
           repeat: Infinity,
-          ease: 'easeInOut',
+          ease: 'easeInOut' as const,
         }}
       />
 

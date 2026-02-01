@@ -1,8 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
-import { motion } from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
 
 interface SkillBar {
   label: string
@@ -26,6 +26,30 @@ const defaultSkills: SkillBar[] = [
   { label: 'DevOps & CI/CD', value: 75, gradient: 'from-amber-500 to-orange-500' },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 200,
+      damping: 20,
+    },
+  },
+}
+
 export default function ProgressBar({
   className,
   skills = defaultSkills,
@@ -34,39 +58,28 @@ export default function ProgressBar({
   showPercentage = true,
 }: ProgressBarProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [isVisible, setIsVisible] = useState(false)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.2 }
-    )
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current)
-    }
-
-    return () => observer.disconnect()
-  }, [])
+  const isVisible = useInView(containerRef, { once: true, amount: 0.2 })
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
       className={cn('mx-auto w-full max-w-xl px-4 py-10', className)}
+      variants={containerVariants}
+      initial="hidden"
+      animate={isVisible ? 'visible' : 'hidden'}
     >
       {title && (
-        <h3 className="mb-8 text-xl font-bold text-white">{title}</h3>
+        <motion.h3
+          className="mb-8 text-xl font-bold text-white"
+          variants={itemVariants}
+        >
+          {title}
+        </motion.h3>
       )}
 
       <div className="space-y-6">
         {skills.map((skill, idx) => (
-          <div key={idx}>
-            {/* Label row */}
+          <motion.div key={idx} variants={itemVariants}>
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-neutral-300">
                 {skill.label}
@@ -74,18 +87,20 @@ export default function ProgressBar({
               {showPercentage && (
                 <motion.span
                   className="text-sm tabular-nums text-neutral-500"
-                  initial={{ opacity: 0 }}
-                  animate={isVisible ? { opacity: 1 } : {}}
-                  transition={{ delay: idx * 0.1 + animationDuration * 0.5 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={isVisible ? { opacity: 1, scale: 1 } : {}}
+                  transition={{
+                    delay: idx * 0.1 + animationDuration * 0.6,
+                    type: 'spring' as const,
+                    stiffness: 300,
+                  }}
                 >
                   {skill.value}%
                 </motion.span>
               )}
             </div>
 
-            {/* Bar track */}
             <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
-              {/* Filled bar */}
               <motion.div
                 className={cn(
                   'absolute inset-y-0 left-0 rounded-full bg-gradient-to-r',
@@ -96,16 +111,25 @@ export default function ProgressBar({
                 transition={{
                   duration: animationDuration,
                   delay: idx * 0.1,
-                  ease: [0.33, 1, 0.68, 1],
+                  ease: [0.33, 1, 0.68, 1] as const,
                 }}
               >
-                {/* Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                  animate={{ x: ['-100%', '200%'] }}
+                  transition={{
+                    duration: 2,
+                    delay: animationDuration + idx * 0.1,
+                    repeat: Infinity,
+                    repeatDelay: 3,
+                    ease: 'easeInOut' as const,
+                  }}
+                />
               </motion.div>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   )
 }

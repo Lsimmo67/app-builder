@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
+import { motion } from 'framer-motion'
 
 interface PricingFeature {
   text: string
@@ -28,6 +29,23 @@ const defaultFeatures: PricingFeature[] = [
   { text: 'Enterprise SSO', included: false },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.2 },
+  },
+}
+
+const featureVariants = {
+  hidden: { opacity: 0, x: -10 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.3, ease: 'easeOut' as const },
+  },
+}
+
 export default function PricingCard({
   className,
   plan = 'Pro',
@@ -40,7 +58,12 @@ export default function PricingCard({
   onCtaClick,
 }: PricingCardProps) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, ease: 'easeOut' as const }}
+      viewport={{ once: true }}
+      whileHover={{ y: -6 }}
       className={cn(
         'group relative w-full max-w-sm overflow-hidden rounded-2xl',
         popular && 'scale-105',
@@ -49,7 +72,14 @@ export default function PricingCard({
     >
       {/* Animated gradient border */}
       {popular && (
-        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500 opacity-80" />
+        <motion.div
+          className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-violet-500 via-indigo-500 to-cyan-500"
+          animate={{
+            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+          }}
+          style={{ backgroundSize: '200% 200%' }}
+          transition={{ duration: 5, repeat: Infinity, ease: 'linear' as const }}
+        />
       )}
 
       <div
@@ -62,44 +92,85 @@ export default function PricingCard({
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-white/[0.03]" />
 
         {/* Accent glow */}
-        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl transition-all duration-700 group-hover:bg-violet-500/20" />
+        <motion.div
+          className="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-violet-500/10 blur-3xl"
+          animate={{ opacity: [0.5, 0.8, 0.5], scale: [1, 1.1, 1] }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
+        />
 
-        <div className="relative z-10">
+        <motion.div
+          className="relative z-10"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
           {/* Badge */}
           {popular && (
-            <div className="mb-4 inline-flex rounded-full bg-gradient-to-r from-violet-500/20 to-indigo-500/20 px-3 py-1 text-xs font-semibold text-violet-300">
-              Most Popular
-            </div>
+            <motion.div
+              className="mb-4 inline-flex rounded-full bg-gradient-to-r from-violet-500/20 to-indigo-500/20 px-3 py-1 text-xs font-semibold text-violet-300"
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              transition={{ type: 'spring' as const, stiffness: 400, damping: 15, delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              <motion.span
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' as const }}
+              >
+                Most Popular
+              </motion.span>
+            </motion.div>
           )}
 
           {/* Plan name */}
           <h3 className="text-lg font-semibold text-white">{plan}</h3>
 
           {/* Price */}
-          <div className="mt-4 flex items-baseline gap-1">
+          <motion.div
+            className="mt-4 flex items-baseline gap-1"
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.5, ease: 'easeOut' as const }}
+            viewport={{ once: true }}
+          >
             <span className="bg-gradient-to-b from-white to-white/70 bg-clip-text text-5xl font-bold text-transparent">
               {price}
             </span>
             <span className="text-sm text-neutral-500">{period}</span>
-          </div>
+          </motion.div>
 
           {/* Description */}
           <p className="mt-3 text-sm text-neutral-400">{description}</p>
 
           {/* Divider */}
-          <div className="my-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <motion.div
+            className="my-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' as const }}
+            viewport={{ once: true }}
+          />
 
           {/* Features */}
           <ul className="space-y-3">
             {features.map((feature, i) => (
-              <li key={i} className="flex items-center gap-3">
-                <div
+              <motion.li
+                key={i}
+                variants={featureVariants}
+                className="flex items-center gap-3"
+              >
+                <motion.div
                   className={cn(
                     'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
                     feature.included
                       ? 'bg-violet-500/20 text-violet-400'
                       : 'bg-neutral-800 text-neutral-600'
                   )}
+                  initial={{ scale: 0 }}
+                  whileInView={{ scale: 1 }}
+                  transition={{ delay: 0.3 + i * 0.05, type: 'spring' as const, stiffness: 400, damping: 15 }}
+                  viewport={{ once: true }}
                 >
                   {feature.included ? (
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -110,7 +181,7 @@ export default function PricingCard({
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   )}
-                </div>
+                </motion.div>
                 <span
                   className={cn(
                     'text-sm',
@@ -119,24 +190,27 @@ export default function PricingCard({
                 >
                   {feature.text}
                 </span>
-              </li>
+              </motion.li>
             ))}
           </ul>
 
           {/* CTA */}
-          <button
+          <motion.button
             onClick={onCtaClick}
             className={cn(
-              'mt-8 w-full rounded-xl py-3 text-sm font-semibold transition-all',
+              'mt-8 w-full rounded-xl py-3 text-sm font-semibold transition-shadow',
               popular
-                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:shadow-xl hover:shadow-violet-500/30'
-                : 'border border-white/10 bg-white/5 text-white hover:bg-white/10'
+                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25'
+                : 'border border-white/10 bg-white/5 text-white'
             )}
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring' as const, stiffness: 400, damping: 17 }}
           >
             {ctaText}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }

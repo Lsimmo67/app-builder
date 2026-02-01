@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface ComparisonFeature {
@@ -32,25 +33,51 @@ const defaultFeatures: ComparisonFeature[] = [
   { name: 'Dedicated Account Manager', basic: false, pro: false, enterprise: true },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
+const rowVariants = {
+  hidden: { opacity: 0, x: -16 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.4, ease: 'easeOut' as const },
+  },
+}
+
 function CellValue({ value }: { value: boolean | string }) {
   if (typeof value === 'string') {
     return <span className="text-sm font-medium text-foreground">{value}</span>
   }
   if (value) {
     return (
-      <svg
+      <motion.svg
         className="mx-auto h-5 w-5 text-primary"
         fill="none"
         stroke="currentColor"
         strokeWidth={2.5}
         viewBox="0 0 24 24"
+        initial={{ pathLength: 0, opacity: 0 }}
+        whileInView={{ pathLength: 1, opacity: 1 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4, ease: 'easeOut' as const }}
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M5 13l4 4L19 7"
-        />
-      </svg>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </motion.svg>
     )
   }
   return (
@@ -61,11 +88,7 @@ function CellValue({ value }: { value: boolean | string }) {
       strokeWidth={2}
       viewBox="0 0 24 24"
     >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6 18L18 6M6 6l12 12"
-      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   )
 }
@@ -82,15 +105,33 @@ export default function PricingComparison({
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-5xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        <motion.div
+          className="mx-auto max-w-2xl text-center"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          <motion.h2
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+            variants={itemVariants}
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+            variants={itemVariants}
+          >
             {subheadline}
-          </p>
-        </div>
-        <div className="mt-16 overflow-x-auto">
+          </motion.p>
+        </motion.div>
+        <motion.div
+          className="mt-16 overflow-x-auto"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: 'easeOut' as const }}
+        >
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
@@ -107,32 +148,30 @@ export default function PricingComparison({
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <motion.tbody
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+            >
               {features.map((feature, index) => (
-                <tr
+                <motion.tr
                   key={index}
                   className={cn(
                     'border-b border-border',
                     index % 2 === 0 && 'bg-muted/20',
                   )}
+                  variants={rowVariants}
                 >
-                  <td className="py-4 pr-4 text-sm text-foreground">
-                    {feature.name}
-                  </td>
-                  <td className="py-4 text-center">
-                    <CellValue value={feature.basic} />
-                  </td>
-                  <td className="py-4 text-center">
-                    <CellValue value={feature.pro} />
-                  </td>
-                  <td className="py-4 text-center">
-                    <CellValue value={feature.enterprise} />
-                  </td>
-                </tr>
+                  <td className="py-4 pr-4 text-sm text-foreground">{feature.name}</td>
+                  <td className="py-4 text-center"><CellValue value={feature.basic} /></td>
+                  <td className="py-4 text-center"><CellValue value={feature.pro} /></td>
+                  <td className="py-4 text-center"><CellValue value={feature.enterprise} /></td>
+                </motion.tr>
               ))}
-            </tbody>
+            </motion.tbody>
           </table>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

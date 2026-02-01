@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface Metric {
@@ -62,6 +64,73 @@ const defaultMetrics: Metric[] = [
   },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.45, ease: 'easeOut' as const },
+  },
+}
+
+function AnimatedMetricValue({ value }: { value: string }) {
+  const ref = useRef<HTMLParagraphElement>(null)
+  const isInView = useInView(ref, { once: true })
+  const [display, setDisplay] = useState(value)
+
+  useEffect(() => {
+    if (!isInView) return
+    const numMatch = value.match(/([\d,.]+)/)
+    if (!numMatch) {
+      setDisplay(value)
+      return
+    }
+    const numStr = numMatch[1]
+    const target = parseFloat(numStr.replace(/,/g, ''))
+    const prefix = value.slice(0, value.indexOf(numStr))
+    const suffix = value.slice(value.indexOf(numStr) + numStr.length)
+    const duration = 1000
+    const startTime = Date.now()
+
+    const tick = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      const current = target * eased
+      const hasDecimal = numStr.includes('.')
+      const decimals = hasDecimal ? numStr.split('.')[1].length : 0
+      const formatted = hasDecimal ? current.toFixed(decimals) : Math.round(current).toLocaleString()
+      setDisplay(prefix + formatted + suffix)
+      if (progress < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [isInView, value])
+
+  return (
+    <p ref={ref} className="text-3xl font-bold tracking-tight text-foreground">
+      {display}
+    </p>
+  )
+}
+
 export default function MetricsSection({
   headline = 'Platform performance',
   subheadline = 'Real-time metrics that demonstrate our commitment to reliability and growth.',
@@ -73,22 +142,46 @@ export default function MetricsSection({
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        <motion.div
+          className="mx-auto max-w-2xl text-center"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          <motion.h2
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+            variants={itemVariants}
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+            variants={itemVariants}
+          >
             {subheadline}
-          </p>
-        </div>
-        <div className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          </motion.p>
+        </motion.div>
+        <motion.div
+          className="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+        >
           {metrics.map((metric, index) => (
-            <div
+            <motion.div
               key={index}
               className="rounded-xl border border-border bg-card p-6"
+              variants={cardVariants}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <motion.div
+                  className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10"
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: 'spring' as const, stiffness: 300, damping: 15 }}
+                >
                   <svg
                     className="h-5 w-5 text-primary"
                     fill="none"
@@ -102,9 +195,9 @@ export default function MetricsSection({
                       d={metric.iconPath || 'M13 10V3L4 14h7v7l9-11h-7z'}
                     />
                   </svg>
-                </div>
+                </motion.div>
                 {metric.change && (
-                  <span
+                  <motion.span
                     className={cn(
                       'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
                       metric.changeType === 'positive' &&
@@ -114,22 +207,24 @@ export default function MetricsSection({
                       metric.changeType === 'neutral' &&
                         'bg-muted text-muted-foreground',
                     )}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
                   >
                     {metric.change}
-                  </span>
+                  </motion.span>
                 )}
               </div>
               <div className="mt-4">
-                <p className="text-3xl font-bold tracking-tight text-foreground">
-                  {metric.value}
-                </p>
+                <AnimatedMetricValue value={metric.value} />
                 <p className="mt-1 text-sm text-muted-foreground">
                   {metric.label}
                 </p>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

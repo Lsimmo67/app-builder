@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface Testimonial {
@@ -40,6 +41,33 @@ const defaultTestimonials: Testimonial[] = [
   },
 ]
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 32, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
 export default function TestimonialsCards({
   headline = 'Loved by teams worldwide',
   subheadline = 'See what our customers have to say about their experience.',
@@ -51,19 +79,39 @@ export default function TestimonialsCards({
       className={cn('bg-background px-6 py-20 md:px-12 lg:px-24', className)}
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        <motion.div
+          className="mx-auto max-w-2xl text-center"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.4 }}
+        >
+          <motion.h2
+            className="text-3xl font-bold tracking-tight text-foreground md:text-4xl"
+            variants={itemVariants}
+          >
             {headline}
-          </h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          </motion.h2>
+          <motion.p
+            className="mt-4 text-lg leading-relaxed text-muted-foreground"
+            variants={itemVariants}
+          >
             {subheadline}
-          </p>
-        </div>
-        <div className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          </motion.p>
+        </motion.div>
+        <motion.div
+          className="mt-16 grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+        >
           {testimonials.map((testimonial, index) => (
-            <div
+            <motion.div
               key={index}
               className="rounded-xl border border-border bg-muted/30 p-8"
+              variants={cardVariants}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
             >
               <svg
                 className="h-8 w-8 text-primary/40"
@@ -76,13 +124,22 @@ export default function TestimonialsCards({
                 {testimonial.quote}
               </p>
               <div className="mt-6 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                <motion.div
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+                  animate={{ y: [0, -3, 0] }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: index * 0.5,
+                    ease: 'easeInOut' as const,
+                  }}
+                >
                   {testimonial.avatarInitials ||
                     testimonial.name
                       .split(' ')
                       .map((n) => n[0])
                       .join('')}
-                </div>
+                </motion.div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">
                     {testimonial.name}
@@ -92,9 +149,9 @@ export default function TestimonialsCards({
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

@@ -102,7 +102,7 @@ export default function SparklesSection({
               duration: sparkle.duration,
               delay: sparkle.delay,
               repeat: Infinity,
-              ease: 'easeInOut',
+              ease: 'easeInOut' as const,
             }}
           >
             <svg

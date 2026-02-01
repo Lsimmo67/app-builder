@@ -72,7 +72,7 @@ export default function BackgroundBeams({
                 duration: beam.duration,
                 delay: beam.delay,
                 repeat: Infinity,
-                ease: 'easeInOut',
+                ease: 'easeInOut' as const,
                 times: [0, 0.3, 0.7, 1],
               }}
             />

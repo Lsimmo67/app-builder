@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
+import { motion } from 'framer-motion'
 
 interface Logo {
   name: string
@@ -28,6 +29,15 @@ const defaultLogos: Logo[] = [
   { name: 'Soylent' },
 ]
 
+const labelVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: 'easeOut' as const },
+  },
+}
+
 export default function LogoMarquee({
   className,
   logos = defaultLogos,
@@ -38,17 +48,24 @@ export default function LogoMarquee({
   const duplicatedLogos = [...logos, ...logos]
 
   return (
-    <div
-      className={cn(
-        'w-full overflow-hidden bg-zinc-950 py-12',
-        className
-      )}
+    <motion.div
+      className={cn('w-full overflow-hidden bg-zinc-950 py-12', className)}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ duration: 0.6, ease: 'easeOut' as const }}
+      viewport={{ once: true }}
     >
       {/* Label */}
       {label && (
-        <p className="mb-8 text-center text-sm font-medium uppercase tracking-wider text-neutral-500">
+        <motion.p
+          className="mb-8 text-center text-sm font-medium uppercase tracking-wider text-neutral-500"
+          variants={labelVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
           {label}
-        </p>
+        </motion.p>
       )}
 
       {/* Marquee container */}
@@ -58,17 +75,29 @@ export default function LogoMarquee({
         <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-zinc-950 to-transparent" />
 
         {/* Scrolling track */}
-        <div
+        <motion.div
           className="flex w-max items-center gap-12"
-          style={{
-            animation: `marquee-scroll ${speed}s linear infinite`,
-            animationDirection: direction === 'right' ? 'reverse' : 'normal',
+          animate={{
+            x: direction === 'left' ? ['0%', '-50%'] : ['-50%', '0%'],
+          }}
+          transition={{
+            x: {
+              duration: speed,
+              repeat: Infinity,
+              ease: 'linear' as const,
+            },
           }}
         >
           {duplicatedLogos.map((logo, i) => (
-            <div
+            <motion.div
               key={i}
-              className="flex shrink-0 items-center gap-2 rounded-lg border border-white/[0.04] bg-white/[0.02] px-6 py-3 text-sm font-semibold text-neutral-400 transition-colors hover:border-white/10 hover:text-neutral-300"
+              className="flex shrink-0 items-center gap-2 rounded-lg border border-white/[0.04] bg-white/[0.02] px-6 py-3 text-sm font-semibold text-neutral-400"
+              whileHover={{
+                scale: 1.05,
+                borderColor: 'rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.7)',
+              }}
+              transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
             >
               {/* Abstract logo icon */}
               <div className="flex h-6 w-6 items-center justify-center rounded bg-gradient-to-br from-white/10 to-white/5">
@@ -77,21 +106,10 @@ export default function LogoMarquee({
                 </span>
               </div>
               {logo.name}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
-
-      <style jsx>{`
-        @keyframes marquee-scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-      `}</style>
-    </div>
+    </motion.div>
   )
 }

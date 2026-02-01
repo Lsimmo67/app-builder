@@ -77,7 +77,7 @@ export default function HeroMeteors({
             delay: meteor.delay,
             repeat: Infinity,
             repeatDelay: Math.random() * 8 + 2,
-            ease: 'linear',
+            ease: 'linear' as const,
           }}
         >
           {/* Meteor head */}

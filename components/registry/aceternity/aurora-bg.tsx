@@ -44,7 +44,7 @@ export default function AuroraBg({
           transition={{
             duration: 20,
             repeat: Infinity,
-            ease: 'easeInOut',
+            ease: 'easeInOut' as const,
           }}
         />
 
@@ -65,7 +65,7 @@ export default function AuroraBg({
           transition={{
             duration: 25,
             repeat: Infinity,
-            ease: 'easeInOut',
+            ease: 'easeInOut' as const,
           }}
         />
 
@@ -85,7 +85,7 @@ export default function AuroraBg({
           transition={{
             duration: 22,
             repeat: Infinity,
-            ease: 'easeInOut',
+            ease: 'easeInOut' as const,
           }}
         />
 
@@ -96,7 +96,7 @@ export default function AuroraBg({
             background: `linear-gradient(90deg, transparent, ${primaryColor.replace('0.15', '0.4')}, transparent)`,
           }}
           animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' as const }}
         />
       </div>
 

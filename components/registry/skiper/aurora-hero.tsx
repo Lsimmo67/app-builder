@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
+import { motion } from 'framer-motion'
 
 interface AuroraHeroProps {
   className?: string
@@ -9,6 +10,71 @@ interface AuroraHeroProps {
   ctaText?: string
   onCtaClick?: () => void
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.4 },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30, filter: 'blur(4px)' },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    transition: { duration: 0.7, ease: 'easeOut' as const },
+  },
+}
+
+const auroraLayers = [
+  {
+    gradient: 'linear-gradient(135deg, transparent 30%, #22d3ee 50%, transparent 70%)',
+    blur: 60,
+    opacity: 0.3,
+    animate: {
+      x: ['-20%', '20%', '-20%'],
+      y: ['-10%', '10%', '-10%'],
+      rotate: [0, 10, 0],
+    },
+    duration: 8,
+  },
+  {
+    gradient: 'linear-gradient(225deg, transparent 30%, #a78bfa 50%, transparent 70%)',
+    blur: 80,
+    opacity: 0.25,
+    animate: {
+      x: ['20%', '-30%', '20%'],
+      y: ['10%', '-15%', '10%'],
+      rotate: [0, -15, 0],
+    },
+    duration: 10,
+  },
+  {
+    gradient: 'linear-gradient(315deg, transparent 30%, #34d399 50%, transparent 70%)',
+    blur: 70,
+    opacity: 0.2,
+    animate: {
+      x: ['10%', '-20%', '10%'],
+      y: ['20%', '-20%', '20%'],
+      rotate: [5, -10, 5],
+    },
+    duration: 12,
+  },
+  {
+    gradient: 'linear-gradient(45deg, transparent 20%, #f472b6 50%, transparent 80%)',
+    blur: 90,
+    opacity: 0.15,
+    animate: {
+      x: ['-15%', '25%', '-15%'],
+      y: ['-20%', '15%', '-20%'],
+      rotate: [-5, 15, -5],
+    },
+    duration: 9,
+  },
+]
 
 export default function AuroraHero({
   className,
@@ -24,79 +90,93 @@ export default function AuroraHero({
         className
       )}
     >
-      {/* Aurora layers */}
+      {/* Aurora layers powered by Framer Motion */}
       <div className="pointer-events-none absolute inset-0">
-        <div
-          className="aurora-layer absolute inset-0 opacity-30"
-          style={{
-            background: 'linear-gradient(135deg, transparent 30%, #22d3ee 50%, transparent 70%)',
-            animation: 'auroraShift1 8s ease-in-out infinite',
-            filter: 'blur(60px)',
-          }}
-        />
-        <div
-          className="aurora-layer absolute inset-0 opacity-25"
-          style={{
-            background: 'linear-gradient(225deg, transparent 30%, #a78bfa 50%, transparent 70%)',
-            animation: 'auroraShift2 10s ease-in-out infinite',
-            filter: 'blur(80px)',
-          }}
-        />
-        <div
-          className="aurora-layer absolute inset-0 opacity-20"
-          style={{
-            background: 'linear-gradient(315deg, transparent 30%, #34d399 50%, transparent 70%)',
-            animation: 'auroraShift3 12s ease-in-out infinite',
-            filter: 'blur(70px)',
-          }}
-        />
-        <div
-          className="aurora-layer absolute inset-0 opacity-15"
-          style={{
-            background: 'linear-gradient(45deg, transparent 20%, #f472b6 50%, transparent 80%)',
-            animation: 'auroraShift4 9s ease-in-out infinite',
-            filter: 'blur(90px)',
-          }}
-        />
+        {auroraLayers.map((layer, i) => (
+          <motion.div
+            key={i}
+            className="absolute inset-0"
+            style={{
+              background: layer.gradient,
+              filter: `blur(${layer.blur}px)`,
+              opacity: layer.opacity,
+            }}
+            animate={layer.animate}
+            transition={{
+              duration: layer.duration,
+              repeat: Infinity,
+              ease: 'easeInOut' as const,
+            }}
+          />
+        ))}
       </div>
 
       {/* Dark overlay for readability */}
       <div className="pointer-events-none absolute inset-0 bg-zinc-950/40" />
 
-      {/* Content */}
-      <div className="relative z-10 mx-auto max-w-3xl text-center">
-        <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl">
-          {headline}
-        </h1>
-        <p className="mx-auto mb-10 max-w-xl text-lg text-zinc-300">
-          {subtitle}
-        </p>
-        <button
-          onClick={onCtaClick}
-          className="rounded-xl border border-white/10 bg-white/5 px-8 py-3.5 font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:shadow-lg hover:shadow-cyan-500/10"
-        >
-          {ctaText}
-        </button>
+      {/* Starfield dots */}
+      <div className="pointer-events-none absolute inset-0">
+        {Array.from({ length: 20 }, (_, i) => (
+          <motion.div
+            key={i}
+            className="absolute h-px w-px rounded-full bg-white"
+            style={{
+              left: `${(i * 37 + 13) % 100}%`,
+              top: `${(i * 23 + 7) % 100}%`,
+            }}
+            animate={{
+              opacity: [0, 0.8, 0],
+              scale: [0.5, 1.5, 0.5],
+            }}
+            transition={{
+              duration: 3 + (i % 3),
+              repeat: Infinity,
+              delay: i * 0.3,
+              ease: 'easeInOut' as const,
+            }}
+          />
+        ))}
       </div>
 
-      <style jsx>{`
-        @keyframes auroraShift1 {
-          0%, 100% { transform: translateX(-20%) translateY(-10%) rotate(0deg); }
-          50% { transform: translateX(20%) translateY(10%) rotate(10deg); }
-        }
-        @keyframes auroraShift2 {
-          0%, 100% { transform: translateX(20%) translateY(10%) rotate(0deg); }
-          50% { transform: translateX(-30%) translateY(-15%) rotate(-15deg); }
-        }
-        @keyframes auroraShift3 {
-          0%, 100% { transform: translateX(10%) translateY(20%) rotate(5deg); }
-          50% { transform: translateX(-20%) translateY(-20%) rotate(-10deg); }
-        }
-        @keyframes auroraShift4 {
-          0%, 100% { transform: translateX(-15%) translateY(-20%) rotate(-5deg); }
-          50% { transform: translateX(25%) translateY(15%) rotate(15deg); }
-        }
-      `}</style>
+      {/* Content */}
+      <motion.div
+        className="relative z-10 mx-auto max-w-3xl text-center"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.h1
+          variants={itemVariants}
+          className="mb-6 text-5xl font-bold leading-tight tracking-tight text-white md:text-7xl"
+        >
+          {headline}
+        </motion.h1>
+
+        <motion.p
+          variants={itemVariants}
+          className="mx-auto mb-10 max-w-xl text-lg text-zinc-300"
+        >
+          {subtitle}
+        </motion.p>
+
+        <motion.div variants={itemVariants}>
+          <motion.button
+            onClick={onCtaClick}
+            className="relative overflow-hidden rounded-xl border border-white/10 bg-white/5 px-8 py-3.5 font-semibold text-white backdrop-blur-sm"
+            whileHover={{ scale: 1.06, boxShadow: '0 0 30px rgba(34,211,238,0.2)' }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: 'spring' as const, stiffness: 400, damping: 17 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+              initial={{ x: '-100%' }}
+              whileHover={{ x: '100%' }}
+              transition={{ duration: 0.5, ease: 'easeInOut' as const }}
+            />
+            <span className="relative z-10">{ctaText}</span>
+          </motion.button>
+        </motion.div>
+      </motion.div>
     </section>
   )
 }

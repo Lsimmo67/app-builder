@@ -109,7 +109,7 @@ export default function ShootingStars({
               delay: star.delay,
               repeat: Infinity,
               repeatDelay: interval,
-              ease: 'easeOut',
+              ease: 'easeOut' as const,
               times: [0, 0.1, 0.7, 1],
             }}
           />

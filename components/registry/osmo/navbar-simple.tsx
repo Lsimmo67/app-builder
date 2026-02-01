@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 
 interface NavLink {
@@ -22,6 +23,37 @@ const defaultLinks: NavLink[] = [
   { label: 'Blog', href: '#' },
 ]
 
+const navContainerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.06, delayChildren: 0.15 },
+  },
+}
+
+const navItemVariants = {
+  hidden: { opacity: 0, y: -8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: 'easeOut' as const },
+  },
+}
+
+const mobileMenuVariants = {
+  hidden: { opacity: 0, height: 0 },
+  visible: {
+    opacity: 1,
+    height: 'auto',
+    transition: { duration: 0.3, ease: 'easeOut' as const },
+  },
+  exit: {
+    opacity: 0,
+    height: 0,
+    transition: { duration: 0.2, ease: 'easeIn' as const },
+  },
+}
+
 export default function NavbarSimple({
   brandName = 'Acme',
   links = defaultLinks,
@@ -31,94 +63,134 @@ export default function NavbarSimple({
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <header
+    <motion.header
       className={cn(
         'sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md',
         className,
       )}
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.4, ease: 'easeOut' as const }}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 md:px-12">
-        {/* Brand */}
-        <a href="#" className="text-lg font-bold text-foreground">
+        <motion.a
+          href="#"
+          className="text-lg font-bold text-foreground"
+          whileHover={{ scale: 1.03 }}
+          transition={{ duration: 0.15 }}
+        >
           {brandName}
-        </a>
+        </motion.a>
 
-        {/* Desktop nav */}
-        <nav className="hidden items-center gap-8 md:flex">
+        <motion.nav
+          className="hidden items-center gap-8 md:flex"
+          variants={navContainerVariants}
+          initial="hidden"
+          animate="visible"
+        >
           {links.map((link, index) => (
-            <a
+            <motion.a
               key={index}
               href={link.href || '#'}
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              variants={navItemVariants}
+              whileHover={{ y: -1 }}
             >
               {link.label}
-            </a>
+            </motion.a>
           ))}
-        </nav>
+        </motion.nav>
 
-        {/* Desktop CTA */}
-        <div className="hidden md:block">
-          <button className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <motion.div
+          className="hidden md:block"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.35, ease: 'easeOut' as const }}
+        >
+          <motion.button
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             {ctaText}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        {/* Mobile menu button */}
-        <button
+        <motion.button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground md:hidden"
+          whileTap={{ scale: 0.9 }}
         >
-          {mobileOpen ? (
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          )}
-        </button>
+          <AnimatePresence mode="wait">
+            {mobileOpen ? (
+              <motion.svg
+                key="close"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+                initial={{ rotate: -90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: 90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </motion.svg>
+            ) : (
+              <motion.svg
+                key="menu"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                viewBox="0 0 24 24"
+                initial={{ rotate: 90, opacity: 0 }}
+                animate={{ rotate: 0, opacity: 1 }}
+                exit={{ rotate: -90, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </motion.svg>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </div>
 
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="border-t border-border bg-background px-6 py-4 md:hidden">
-          <nav className="flex flex-col gap-3">
-            {links.map((link, index) => (
-              <a
-                key={index}
-                href={link.href || '#'}
-                className="py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="border-t border-border bg-background px-6 py-4 md:hidden"
+            variants={mobileMenuVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <nav className="flex flex-col gap-3">
+              {links.map((link, index) => (
+                <motion.a
+                  key={index}
+                  href={link.href || '#'}
+                  className="py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3, ease: 'easeOut' as const }}
+                >
+                  {link.label}
+                </motion.a>
+              ))}
+              <motion.button
+                className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: links.length * 0.05, duration: 0.3 }}
               >
-                {link.label}
-              </a>
-            ))}
-            <button className="mt-2 inline-flex h-10 w-full items-center justify-center rounded-lg bg-primary text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90">
-              {ctaText}
-            </button>
-          </nav>
-        </div>
-      )}
-    </header>
+                {ctaText}
+              </motion.button>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.header>
   )
 }

@@ -65,7 +65,7 @@ export default function ThreeDCard({
           rotateY: isHovering ? rotateY : 0,
           scale: isHovering ? 1.05 : 1,
         }}
-        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+        transition={{ type: 'spring' as const, stiffness: 300, damping: 20 }}
         className="relative w-full max-w-sm"
         style={{ transformStyle: 'preserve-3d' }}
       >

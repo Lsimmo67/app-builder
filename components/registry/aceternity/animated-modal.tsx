@@ -59,7 +59,7 @@ export default function AnimatedModal({
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.9, opacity: 0, y: 20 }}
                 transition={{
-                  type: 'spring',
+                  type: 'spring' as const,
                   stiffness: 300,
                   damping: 25,
                 }}
@@ -86,7 +86,7 @@ export default function AnimatedModal({
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
                         transition={{
-                          type: 'spring',
+                          type: 'spring' as const,
                           stiffness: 200,
                           damping: 15,
                           delay: 0.1,

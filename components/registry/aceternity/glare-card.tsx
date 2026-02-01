@@ -53,7 +53,7 @@ export default function GlareCard({
           rotateY: rotation.y,
           scale: isHovering ? 1.02 : 1,
         }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        transition={{ type: 'spring' as const, stiffness: 400, damping: 25 }}
         className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-white/[0.1] bg-neutral-950"
         style={{ perspective: '1000px', transformStyle: 'preserve-3d' }}
       >
