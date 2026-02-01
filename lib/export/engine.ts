@@ -90,6 +90,7 @@ export class ExportEngine {
     await this.generateComponents(zip)
     await this.generateLibFiles(zip)
     await this.generateCMSFiles(zip)
+    await this.generateCMSHelpers(zip)
 
     if (this.options.includeReadme) {
       await this.generateReadme(zip)
@@ -248,7 +249,7 @@ export default nextConfig
   }
 
   private getGlobalsCssContent(): string {
-    const { colors, typography, borderRadius } = this.designSystem
+    const { colors, typography, borderRadius, spacing, shadows } = this.designSystem
 
     return `@import "tailwindcss";
 
@@ -271,6 +272,38 @@ export default nextConfig
   --radius-md: ${borderRadius.md};
   --radius-lg: ${borderRadius.lg};
   --radius-xl: ${borderRadius.xl};
+
+  --font-family-heading: ${typography.fontFamily.heading}, system-ui, sans-serif;
+  --font-family-body: ${typography.fontFamily.body}, system-ui, sans-serif;
+  --font-family-mono: ${typography.fontFamily.mono}, ui-monospace, monospace;
+
+  --font-size-xs: ${typography.fontSize.xs};
+  --font-size-sm: ${typography.fontSize.sm};
+  --font-size-base: ${typography.fontSize.base};
+  --font-size-lg: ${typography.fontSize.lg};
+  --font-size-xl: ${typography.fontSize.xl};
+  --font-size-2xl: ${typography.fontSize['2xl']};
+  --font-size-3xl: ${typography.fontSize['3xl']};
+  --font-size-4xl: ${typography.fontSize['4xl']};
+  --font-size-5xl: ${typography.fontSize['5xl']};
+
+  --font-weight-normal: ${typography.fontWeight.normal};
+  --font-weight-medium: ${typography.fontWeight.medium};
+  --font-weight-semibold: ${typography.fontWeight.semibold};
+  --font-weight-bold: ${typography.fontWeight.bold};
+
+  --line-height-tight: ${typography.lineHeight.tight};
+  --line-height-normal: ${typography.lineHeight.normal};
+  --line-height-relaxed: ${typography.lineHeight.relaxed};
+
+${spacing.scale.map((val, i) => `  --spacing-${i}: ${val}px;`).join('\n')}
+
+${shadows ? `  --shadow-sm: ${shadows.sm};
+  --shadow-md: ${shadows.md};
+  --shadow-lg: ${shadows.lg};
+  --shadow-xl: ${shadows.xl};
+  --shadow-2xl: ${shadows['2xl']};
+  --shadow-inner: ${shadows.inner};` : ''}
 }
 
 @layer base {
@@ -281,11 +314,15 @@ export default nextConfig
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    font-family: ${typography.fontFamily.body}, system-ui, sans-serif;
+    font-family: var(--font-family-body);
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: ${typography.fontFamily.heading}, system-ui, sans-serif;
+    font-family: var(--font-family-heading);
+  }
+
+  code, pre, kbd {
+    font-family: var(--font-family-mono);
   }
 }
 `
@@ -460,6 +497,37 @@ export function get${typeName}ById(id: string): ${typeName} | undefined {
 }).join('\n\n')}
 `
     cmsFolder.file('helpers.ts', helpers)
+  }
+
+  private async generateCMSHelpers(zip: JSZip): Promise<void> {
+    if (this.cmsCollections.length > 0) return
+
+    const hasCMSBindings = Array.from(this.componentsByPage.values())
+      .flat()
+      .some(c => c.cmsBindings && c.cmsBindings.length > 0)
+
+    if (!hasCMSBindings) return
+
+    const libFolder = zip.folder('lib')
+    const cmsFolder = libFolder?.folder('cms')
+
+    cmsFolder?.file('helpers.ts', `// CMS data helpers - replace with your actual data source
+export interface CMSItem {
+  id: string
+  slug: string
+  data: Record<string, unknown>
+}
+
+export async function getCollectionItems(collectionSlug: string): Promise<CMSItem[]> {
+  // TODO: Connect to your CMS (Contentful, Sanity, Strapi, etc.)
+  return []
+}
+
+export async function getCollectionItem(collectionSlug: string, itemSlug: string): Promise<CMSItem | null> {
+  const items = await getCollectionItems(collectionSlug)
+  return items.find(item => item.slug === itemSlug) ?? null
+}
+`)
   }
 
   private async generateReadme(zip: JSZip): Promise<void> {

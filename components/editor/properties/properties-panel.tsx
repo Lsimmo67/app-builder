@@ -38,21 +38,35 @@ function groupProps(props: ComponentProp[]): Record<string, ComponentProp[]> {
   }
 
   for (const prop of props) {
-    if (['children', 'title', 'subtitle', 'text', 'description', 'label', 'placeholder', 'heading', 'name', 'content', 'items', 'features', 'testimonials', 'plans', 'questions', 'links', 'stats', 'logos', 'images', 'cards', 'tabs', 'sections', 'buttons', 'actions', 'navigation', 'menu'].some(k =>
-      prop.name.toLowerCase().includes(k)
-    ) || prop.type === 'richtext' || prop.type === 'array') {
+    // Use explicit group if defined
+    if (prop.group && groups[prop.group]) {
+      groups[prop.group].push(prop)
+      continue
+    }
+
+    // Fallback heuristic
+    const name = prop.name.toLowerCase()
+    const type = prop.type
+
+    if (
+      type === 'children' ||
+      type === 'richtext' ||
+      type === 'image' ||
+      ['title', 'text', 'label', 'description', 'content', 'heading', 'subtitle', 'caption', 'alt', 'placeholder', 'name', 'src', 'href', 'url', 'items', 'options'].some(k => name.includes(k))
+    ) {
       groups.content.push(prop)
-    } else if (['color', 'background', 'border', 'size', 'variant', 'className', 'theme', 'dark', 'gradient', 'shadow', 'rounded', 'opacity'].some(k =>
-      prop.name.toLowerCase().includes(k)
-    ) || prop.type === 'color') {
+    } else if (
+      ['color', 'background', 'border', 'radius', 'shadow', 'opacity', 'size', 'width', 'height', 'padding', 'margin', 'gap', 'font', 'align', 'justify', 'rounded', 'variant', 'theme'].some(k => name.includes(k)) ||
+      type === 'color'
+    ) {
       groups.style.push(prop)
-    } else if (['onClick', 'onChange', 'onSubmit', 'disabled', 'loading', 'href', 'target', 'open', 'visible', 'active', 'animated', 'autoplay', 'loop', 'delay', 'duration', 'speed'].some(k =>
-      prop.name.toLowerCase().includes(k)
-    ) || prop.type === 'boolean') {
+    } else if (
+      ['on', 'handle', 'click', 'change', 'submit', 'open', 'close', 'toggle', 'disabled', 'loading', 'active', 'visible', 'animated', 'delay', 'duration', 'autoplay', 'loop', 'interval'].some(k => name.includes(k)) ||
+      type === 'boolean'
+    ) {
       groups.behavior.push(prop)
     } else {
-      // Put remaining props in content by default instead of advanced
-      groups.content.push(prop)
+      groups.advanced.push(prop)
     }
   }
 

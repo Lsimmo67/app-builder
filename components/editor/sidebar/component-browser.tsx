@@ -42,6 +42,8 @@ import { SOURCE_LABELS, CATEGORY_LABELS } from '@/types/component'
 import { componentRegistry, type ComponentRegistryItem } from '@/lib/components-registry'
 import { isComponentAvailable, preloadComponent } from '@/lib/component-loader'
 import { cn } from '@/lib/utils/cn'
+import { ComponentPreview } from './component-preview'
+import { CategoryIcon } from './category-icons'
 
 // ─── Element Icons Map ───────────────────────────────────────────────
 const ELEMENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -153,7 +155,17 @@ function ElementTile({ component }: { component: ComponentRegistryItem }) {
 }
 
 // ─── Draggable Component Card (library components) ───────────────────
-function ComponentCard({ component }: { component: ComponentRegistryItem }) {
+function ComponentCard({
+  component,
+  isPreviewVisible,
+  onPreviewEnter,
+  onPreviewLeave,
+}: {
+  component: ComponentRegistryItem
+  isPreviewVisible: boolean
+  onPreviewEnter: (id: string) => void
+  onPreviewLeave: () => void
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `registry-${component.id}`,
     data: {
@@ -172,49 +184,77 @@ function ComponentCard({ component }: { component: ComponentRegistryItem }) {
     if (hasImpl) {
       preloadComponent(component.id)
     }
-  }, [component.id, hasImpl])
+    onPreviewEnter(component.id)
+  }, [component.id, hasImpl, onPreviewEnter])
+
+  const handleMouseLeave = useCallback(() => {
+    onPreviewLeave()
+  }, [onPreviewLeave])
+
+  // Extract default props from component prop definitions
+  const defaultProps = useMemo(() => {
+    const props: Record<string, unknown> = {}
+    component.props.forEach((p) => {
+      if (p.default !== undefined) {
+        props[p.name] = p.default
+      }
+    })
+    return props
+  }, [component.props])
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        'group relative border rounded-lg p-2.5 cursor-grab hover:border-primary/50 transition-colors bg-card',
-        isDragging && 'opacity-50 z-50 shadow-lg'
-      )}
-      onMouseEnter={handleMouseEnter}
-      {...listeners}
-      {...attributes}
-    >
-      <div className="flex items-start gap-2.5">
-        <div className="shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            {hasImpl ? (
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-            ) : (
-              <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
-            )}
-            <span className="font-medium text-sm truncate">{component.displayName}</span>
+    <div>
+      <div
+        ref={setNodeRef}
+        style={style}
+        className={cn(
+          'group relative border rounded-lg p-2.5 cursor-grab hover:border-primary/50 transition-colors bg-card',
+          isDragging && 'opacity-50 z-50 shadow-lg'
+        )}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        {...listeners}
+        {...attributes}
+      >
+        <div className="flex items-start gap-2.5">
+          <div className="shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
-          <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
-            {component.description}
-          </p>
-          <div className="flex items-center gap-1.5">
-            <Badge variant={component.source as BadgeProps['variant']} className="text-[10px] px-1.5 py-0">
-              {component.source}
-            </Badge>
-            {component.categories[0] && (
-              <span className="text-[10px] text-muted-foreground capitalize">
-                {component.categories[0]}
-              </span>
-            )}
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              {hasImpl ? (
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+              ) : (
+                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 shrink-0" />
+              )}
+              <span className="font-medium text-sm truncate">{component.displayName}</span>
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+              {component.description}
+            </p>
+            <div className="flex items-center gap-1.5">
+              <Badge variant={component.source as BadgeProps['variant']} className="text-[10px] px-1.5 py-0">
+                {component.source}
+              </Badge>
+              {component.categories[0] && (
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground capitalize">
+                  <CategoryIcon category={component.categories[0]} className="h-3 w-3" />
+                  {component.categories[0]}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
+      {isPreviewVisible && (
+        <div className="border rounded-md overflow-hidden bg-background h-24 mt-1.5 mb-1">
+          <ComponentPreview
+            registryId={component.id}
+            defaultProps={defaultProps}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -232,8 +272,10 @@ export function ComponentBrowser() {
   const [selectedCategories, setSelectedCategories] = useState<ComponentCategory[]>([])
   const [showFilters, setShowFilters] = useState(false)
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set())
+  const [previewId, setPreviewId] = useState<string | null>(null)
 
   const parentRef = useRef<HTMLDivElement>(null)
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Build element data from registry
   const builtinElements = useMemo(() => {
@@ -257,11 +299,12 @@ export function ComponentBrowser() {
       .filter((c) => c.source !== 'builtin')
   }, [search, selectedSources, selectedCategories])
 
-  // Virtualized rendering for components tab
+  // Virtualized rendering for components tab (dynamic height for preview expansion)
   const virtualizer = useVirtualizer({
     count: filteredComponents.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 82,
+    measureElement: (el) => el.getBoundingClientRect().height,
     overscan: 5,
   })
 
@@ -285,6 +328,17 @@ export function ComponentBrowser() {
       return next
     })
   }
+
+  const handlePreviewEnter = useCallback((id: string) => {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
+    previewTimerRef.current = setTimeout(() => setPreviewId(id), 400)
+  }, [])
+
+  const handlePreviewLeave = useCallback(() => {
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
+    previewTimerRef.current = null
+    setPreviewId(null)
+  }, [])
 
   const libraryCount = componentRegistry.getAll().filter((c) => c.source !== 'builtin').length
 
@@ -477,17 +531,23 @@ export function ComponentBrowser() {
                 return (
                   <div
                     key={virtualItem.key}
+                    ref={virtualizer.measureElement}
+                    data-index={virtualItem.index}
                     style={{
                       position: 'absolute',
                       top: 0,
                       left: 0,
                       width: '100%',
-                      height: `${virtualItem.size}px`,
                       transform: `translateY(${virtualItem.start}px)`,
                     }}
                     className="px-4 py-1.5"
                   >
-                    <ComponentCard component={component} />
+                    <ComponentCard
+                      component={component}
+                      isPreviewVisible={previewId === component.id}
+                      onPreviewEnter={handlePreviewEnter}
+                      onPreviewLeave={handlePreviewLeave}
+                    />
                   </div>
                 )
               })}

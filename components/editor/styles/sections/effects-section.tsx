@@ -53,7 +53,10 @@ export function EffectsSection({ styles, onChange, onReset, disabled }: EffectsS
       {/* Opacity */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label className="text-[10px] text-muted-foreground">Opacity</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground">Opacity</Label>
+            {styles.opacity && styles.opacity !== '1' && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+          </div>
           <span className="text-[10px] text-muted-foreground">{Math.round(opacityNum)}%</span>
         </div>
         <Slider
@@ -69,7 +72,10 @@ export function EffectsSection({ styles, onChange, onReset, disabled }: EffectsS
 
       {/* Box Shadow */}
       <div className="space-y-1.5">
-        <Label className="text-[10px] text-muted-foreground">Box Shadow</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Box Shadow</Label>
+          {styles.boxShadow && styles.boxShadow !== 'none' && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <Input
           value={styles.boxShadow || ''}
           onChange={(e) => onChange('boxShadow', e.target.value)}
@@ -94,7 +100,10 @@ export function EffectsSection({ styles, onChange, onReset, disabled }: EffectsS
 
       {/* Transform */}
       <div className="space-y-1">
-        <Label className="text-[10px] text-muted-foreground">Transform</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Transform</Label>
+          {styles.transform && styles.transform !== 'none' && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <Input
           value={styles.transform || ''}
           onChange={(e) => onChange('transform', e.target.value)}

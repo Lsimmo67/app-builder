@@ -13,6 +13,7 @@ import { BorderSection } from './sections/border-section'
 import { EffectsSection } from './sections/effects-section'
 import type { ElementStyles } from '@/types'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
+import { DEBOUNCE_STYLE } from '@/lib/constants/debounce'
 
 interface StylePanelProps {
   disabled?: boolean
@@ -31,7 +32,7 @@ export function StylePanel({ disabled = false }: StylePanelProps) {
       if (!selectedComponentId) return
       updateComponent(selectedComponentId, { styles })
     },
-    150
+    DEBOUNCE_STYLE
   )
 
   const handleStyleChange = useCallback(

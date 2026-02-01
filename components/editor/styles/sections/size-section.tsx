@@ -30,7 +30,10 @@ export function SizeSection({ styles, onChange, onReset, disabled }: SizeSection
     <StyleSectionHeader title="Size" hasValues={hasValues} onReset={onReset}>
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Width</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground">Width</Label>
+            {styles.width && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+          </div>
           <UnitInput
             value={styles.width}
             onChange={(v) => onChange('width', v)}
@@ -39,7 +42,10 @@ export function SizeSection({ styles, onChange, onReset, disabled }: SizeSection
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-[10px] text-muted-foreground">Height</Label>
+          <div className="flex items-center gap-1">
+            <Label className="text-[10px] text-muted-foreground">Height</Label>
+            {styles.height && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+          </div>
           <UnitInput
             value={styles.height}
             onChange={(v) => onChange('height', v)}
@@ -92,7 +98,10 @@ export function SizeSection({ styles, onChange, onReset, disabled }: SizeSection
       </div>
 
       <div className="space-y-1.5">
-        <Label className="text-[10px] text-muted-foreground">Overflow</Label>
+        <div className="flex items-center gap-1">
+          <Label className="text-[10px] text-muted-foreground">Overflow</Label>
+          {styles.overflow && styles.overflow !== 'visible' && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
+        </div>
         <ToggleGroup
           value={styles.overflow}
           onChange={(v) => onChange('overflow', v)}

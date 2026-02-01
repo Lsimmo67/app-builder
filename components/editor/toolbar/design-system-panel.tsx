@@ -28,10 +28,10 @@ import {
 } from '@/components/ui/tooltip'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { HexColorPicker } from 'react-colorful'
-import { Palette, Check } from 'lucide-react'
+import { Palette, Check, Plus, Trash2 } from 'lucide-react'
 import { useDesignSystemStore } from '@/lib/store'
 import { presets, type DesignSystemPreset } from '@/lib/design-tokens/presets'
-import type { ColorTokens, TypographyTokens, BorderRadiusTokens } from '@/types'
+import type { ColorTokens, TypographyTokens, BorderRadiusTokens, ShadowTokens } from '@/types'
 
 function ColorTokenEditor({
   label,
@@ -118,6 +118,51 @@ export function DesignSystemPanel() {
     [applyPreset]
   )
 
+  const handleShadowChange = useCallback(
+    (key: string, value: string) => {
+      if (!designSystem) return
+      updateDesignSystem({
+        shadows: {
+          ...(designSystem.shadows || { sm: '', md: '', lg: '', xl: '', '2xl': '', inner: '' }),
+          [key]: value,
+        },
+      })
+    },
+    [designSystem, updateDesignSystem]
+  )
+
+  const handleSpacingScaleChange = useCallback(
+    (index: number, value: number) => {
+      if (!designSystem) return
+      const newScale = [...designSystem.spacing.scale]
+      newScale[index] = value
+      updateDesignSystem({
+        spacing: { ...designSystem.spacing, scale: newScale },
+      })
+    },
+    [designSystem, updateDesignSystem]
+  )
+
+  const handleSpacingScaleAdd = useCallback(() => {
+    if (!designSystem) return
+    const scale = designSystem.spacing.scale
+    const lastVal = scale[scale.length - 1] || 0
+    updateDesignSystem({
+      spacing: { ...designSystem.spacing, scale: [...scale, lastVal + 8] },
+    })
+  }, [designSystem, updateDesignSystem])
+
+  const handleSpacingScaleRemove = useCallback(
+    (index: number) => {
+      if (!designSystem) return
+      const newScale = designSystem.spacing.scale.filter((_, i) => i !== index)
+      updateDesignSystem({
+        spacing: { ...designSystem.spacing, scale: newScale },
+      })
+    },
+    [designSystem, updateDesignSystem]
+  )
+
   if (!designSystem) return null
 
   const colorEntries = Object.entries(designSystem.colors).filter(
@@ -162,6 +207,9 @@ export function DesignSystemPanel() {
               </TabsTrigger>
               <TabsTrigger value="spacing" className="flex-1 text-xs">
                 Spacing
+              </TabsTrigger>
+              <TabsTrigger value="shadows" className="flex-1 text-xs">
+                Shadows
               </TabsTrigger>
             </TabsList>
           </div>
@@ -367,18 +415,90 @@ export function DesignSystemPanel() {
                 <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
                   Spacing Scale
                 </h4>
-                <div className="flex flex-wrap gap-2">
+                <div className="space-y-2">
                   {designSystem.spacing.scale.map((val, idx) => (
-                    <div key={idx} className="flex items-center gap-1">
-                      <div
-                        className="bg-primary/20 border border-primary/30"
-                        style={{ width: Math.min(val, 48), height: 16 }}
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-4">{idx}</span>
+                      <Input
+                        type="number"
+                        value={val}
+                        onChange={(e) => handleSpacingScaleChange(idx, parseInt(e.target.value) || 0)}
+                        className="h-7 text-xs flex-1"
                       />
-                      <span className="text-[10px] text-muted-foreground">{val}px</span>
+                      <div
+                        className="bg-primary/20 border border-primary/30 h-4"
+                        style={{ width: Math.min(val, 64) }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => handleSpacingScaleRemove(idx)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full h-7 text-xs"
+                    onClick={handleSpacingScaleAdd}
+                  >
+                    <Plus className="h-3 w-3 mr-1" /> Add Step
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Shadows Tab */}
+            <TabsContent value="shadows" className="mt-3 space-y-4">
+              {designSystem.shadows ? (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    Edit shadow tokens. Values use CSS box-shadow syntax.
+                  </p>
+                  {Object.entries(designSystem.shadows).map(([key, value]) => (
+                    <div key={key} className="space-y-1">
+                      <Label className="text-xs">{key}</Label>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          value={value as string}
+                          onChange={(e) => handleShadowChange(key, e.target.value)}
+                          className="h-7 text-xs font-mono flex-1"
+                          placeholder="0 1px 3px rgba(0,0,0,0.12)"
+                        />
+                        <div
+                          className="h-8 w-8 rounded bg-background border shrink-0"
+                          style={{ boxShadow: value as string }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-sm text-muted-foreground mb-3">No shadow tokens defined</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      updateDesignSystem({
+                        shadows: {
+                          sm: '0 1px 2px rgba(0,0,0,0.05)',
+                          md: '0 4px 6px rgba(0,0,0,0.07)',
+                          lg: '0 10px 15px rgba(0,0,0,0.1)',
+                          xl: '0 20px 25px rgba(0,0,0,0.1)',
+                          '2xl': '0 25px 50px rgba(0,0,0,0.15)',
+                          inner: 'inset 0 2px 4px rgba(0,0,0,0.06)',
+                        },
+                      })
+                    }}
+                  >
+                    Add Default Shadows
+                  </Button>
+                </div>
+              )}
             </TabsContent>
           </ScrollArea>
         </Tabs>

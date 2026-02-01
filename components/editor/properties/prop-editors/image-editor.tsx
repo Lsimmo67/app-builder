@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { RotateCcw, Upload, ExternalLink, X, Image as ImageIcon } from 'lucide-react'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
+import { DEBOUNCE_MEDIA } from '@/lib/constants/debounce'
 
 interface ImageEditorProps {
   value: string
@@ -24,6 +25,7 @@ export function ImageEditor({
   const [localValue, setLocalValue] = useState(value || '')
   const [previewError, setPreviewError] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setLocalValue(value || '')
@@ -32,7 +34,7 @@ export function ImageEditor({
 
   const debouncedOnChange = useDebouncedCallback((newValue: string) => {
     onChange(newValue)
-  }, 500)
+  }, DEBOUNCE_MEDIA)
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +60,7 @@ export function ImageEditor({
 
   const showReset = localValue !== defaultValue && defaultValue !== ''
   const hasValue = localValue.length > 0
-  const isValidUrl = hasValue && (localValue.startsWith('http://') || localValue.startsWith('https://') || localValue.startsWith('/'))
+  const isValidUrl = hasValue && (localValue.startsWith('http://') || localValue.startsWith('https://') || localValue.startsWith('/') || localValue.startsWith('data:'))
 
   return (
     <div className="space-y-2">
@@ -101,9 +103,7 @@ export function ImageEditor({
           className="flex-1 h-7 text-xs"
           disabled={disabled}
           onClick={() => {
-            // Placeholder for upload functionality
-            // In a real app, this would open a file picker
-            console.log('Upload clicked')
+            fileInputRef.current?.click()
           }}
         >
           <Upload className="h-3 w-3 mr-1" />
@@ -149,6 +149,27 @@ export function ImageEditor({
           Failed to load image preview
         </div>
       )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (!file) return
+          if (!file.type.startsWith('image/')) return
+          if (file.size > 5 * 1024 * 1024) return
+          const reader = new FileReader()
+          reader.onload = () => {
+            const dataUrl = reader.result as string
+            setLocalValue(dataUrl)
+            onChange(dataUrl)
+          }
+          reader.readAsDataURL(file)
+          e.target.value = ''
+        }}
+      />
     </div>
   )
 }

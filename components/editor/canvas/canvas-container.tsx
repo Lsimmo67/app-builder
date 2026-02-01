@@ -26,6 +26,8 @@ import { ComponentRenderer } from "./component-renderer";
 import { isComponentAvailable } from "@/lib/component-loader";
 import { mergeStyles } from "@/lib/styles/styles-to-css";
 import React, { useMemo } from "react";
+import { useCMSStore } from "@/lib/store/cms-store";
+import { resolveAllBindings } from "@/lib/cms/resolve-bindings";
 
 // ============================================
 // CANVAS NODE - Recursive nested rendering
@@ -43,6 +45,12 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
     useCanvasStore();
   const registryItem = componentRegistry.getById(instance.componentRegistryId);
   const canNest = registryItem?.acceptsChildren ?? false;
+
+  const { collections, items } = useCMSStore();
+  const resolved = useMemo(
+    () => resolveAllBindings(instance, collections, items),
+    [instance, collections, items],
+  );
 
   // Get child components sorted by order
   const children = useMemo(
@@ -78,7 +86,10 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
   const isSelected = selectedComponentId === instance.id;
 
   // Compute merged styles (structured + legacy)
-  const computedStyles = mergeStyles(instance.styles, instance.customStyles);
+  const computedStyles = mergeStyles(
+    resolved.styles ?? instance.styles,
+    instance.customStyles,
+  );
 
   return (
     <div
@@ -223,7 +234,7 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
                 <div className="pointer-events-none">
                   <ComponentRenderer
                     registryId={instance.componentRegistryId}
-                    props={instance.props}
+                    props={resolved.props}
                     componentName={registryItem?.displayName}
                   />
                 </div>

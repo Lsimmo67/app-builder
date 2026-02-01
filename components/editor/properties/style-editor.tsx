@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { HexColorPicker } from 'react-colorful'
 import { RotateCcw } from 'lucide-react'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
+import { DEBOUNCE_STYLE } from '@/lib/constants/debounce'
 import { useDesignSystemStore } from '@/lib/store'
 
 interface StyleEditorProps {
@@ -139,7 +140,7 @@ export function StyleEditor({ customStyles, onChange, disabled }: StyleEditorPro
   const debouncedOnChange = useDebouncedCallback((newStyles: StyleValues) => {
     const serialized = serializeStyles(newStyles)
     onChange(serialized)
-  }, 200)
+  }, DEBOUNCE_STYLE)
 
   const updateStyle = useCallback(
     (key: keyof StyleValues, value: string) => {
