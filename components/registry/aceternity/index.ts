@@ -125,3 +125,47 @@ export type { AceternityFloatingNavbarProps } from "./floating-navbar"
 
 export { default as AceternityImagesSlider } from "./images-slider"
 export type { AceternityImagesSliderProps } from "./images-slider"
+
+// --- New components (Batch 2) ---
+
+// 3D & Visual Effects
+export { default as Aceternity3DMarquee } from "./3d-marquee"
+export { default as Aceternity3DPin } from "./3d-pin"
+export { default as AceternityEvervaultCard } from "./evervault-card"
+export { default as AceternityGlowingStars } from "./glowing-stars"
+export { default as AceternityLens } from "./lens"
+export { default as AceternitySvgMaskEffect } from "./svg-mask-effect"
+export { default as AceternityTextHoverEffect } from "./text-hover-effect"
+export { default as AceternityVortex } from "./vortex"
+export { default as AceternitySpotlightNew } from "./spotlight-new"
+
+// Cards & Containers
+export { default as AceternityAppleCardsCarousel } from "./apple-cards-carousel"
+export { default as AceternityCardSpotlight } from "./card-spotlight"
+export { default as AceternityCardStack } from "./card-stack"
+export { default as AceternityContainerScrollAnimation } from "./container-scroll-animation"
+export { default as AceternityDraggableCard } from "./draggable-card"
+
+// Navigation & Menus
+export { default as AceternityNavbarMenu } from "./navbar-menu"
+export { default as AceternitySidebar } from "./sidebar"
+export { default as AceternityFollowingPointer } from "./following-pointer"
+
+// Backgrounds
+export { default as AceternityBackgroundBeamsWithCollision } from "./background-beams-with-collision"
+export { default as AceternityBackgroundBoxes } from "./background-boxes"
+export { default as AceternityBackgroundLines } from "./background-lines"
+
+// Scrolling & Carousels
+export { default as AceternityCarousel } from "./carousel"
+export { default as AceternityParallaxScroll } from "./parallax-scroll"
+export { default as AceternityLayoutGrid } from "./layout-grid"
+export { default as AceternityMacbookScroll } from "./macbook-scroll"
+export { default as AceternityHoverBorderGradient } from "./hover-border-gradient"
+
+// Inputs & Forms
+export { default as AceternityPlaceholdersAndVanishInput } from "./placeholders-and-vanish-input"
+export { default as AceternityFileUpload } from "./file-upload"
+
+// Loaders & Utilities
+export { default as AceternityMultiStepLoader } from "./multi-step-loader"
