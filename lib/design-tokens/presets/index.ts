@@ -8,6 +8,15 @@ export interface DesignSystemPreset {
   tokens: Omit<DesignSystem, 'id' | 'projectId' | 'presetId'>
 }
 
+const DEFAULT_SHADOWS = {
+  sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+  md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+  xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+  '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+  inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.05)',
+}
+
 export const presets: DesignSystemPreset[] = [
   {
     id: 'minimal',
@@ -17,14 +26,18 @@ export const presets: DesignSystemPreset[] = [
     tokens: {
       colors: {
         primary: '#18181b',
+        primaryForeground: '#ffffff',
         secondary: '#71717a',
+        secondaryForeground: '#ffffff',
         accent: '#3b82f6',
+        accentForeground: '#ffffff',
         background: '#ffffff',
         foreground: '#09090b',
         muted: '#f4f4f5',
         mutedForeground: '#71717a',
         border: '#e4e4e7',
         destructive: '#ef4444',
+        destructiveForeground: '#ffffff',
         success: '#22c55e',
         warning: '#eab308',
       },
@@ -69,6 +82,7 @@ export const presets: DesignSystemPreset[] = [
         xl: '0.75rem',
         full: '9999px',
       },
+      shadows: DEFAULT_SHADOWS,
     },
   },
   {
@@ -79,14 +93,18 @@ export const presets: DesignSystemPreset[] = [
     tokens: {
       colors: {
         primary: '#ffffff',
+        primaryForeground: '#09090b',
         secondary: '#a1a1aa',
+        secondaryForeground: '#09090b',
         accent: '#8b5cf6',
+        accentForeground: '#ffffff',
         background: '#09090b',
         foreground: '#fafafa',
         muted: '#27272a',
         mutedForeground: '#a1a1aa',
         border: '#3f3f46',
         destructive: '#ef4444',
+        destructiveForeground: '#ffffff',
         success: '#22c55e',
         warning: '#eab308',
       },
@@ -131,6 +149,14 @@ export const presets: DesignSystemPreset[] = [
         xl: '1rem',
         full: '9999px',
       },
+      shadows: {
+        sm: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
+        md: '0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3)',
+        lg: '0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
+        xl: '0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.3)',
+        '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.6)',
+        inner: 'inset 0 2px 4px 0 rgb(0 0 0 / 0.3)',
+      },
     },
   },
   {
@@ -141,14 +167,18 @@ export const presets: DesignSystemPreset[] = [
     tokens: {
       colors: {
         primary: '#000000',
+        primaryForeground: '#ffffff',
         secondary: '#525252',
+        secondaryForeground: '#ffffff',
         accent: '#f97316',
+        accentForeground: '#ffffff',
         background: '#fafaf9',
         foreground: '#0c0a09',
         muted: '#f5f5f4',
         mutedForeground: '#78716c',
         border: '#e7e5e4',
         destructive: '#dc2626',
+        destructiveForeground: '#ffffff',
         success: '#16a34a',
         warning: '#ca8a04',
       },
@@ -193,6 +223,7 @@ export const presets: DesignSystemPreset[] = [
         xl: '0.5rem',
         full: '9999px',
       },
+      shadows: DEFAULT_SHADOWS,
     },
   },
   {
@@ -203,14 +234,18 @@ export const presets: DesignSystemPreset[] = [
     tokens: {
       colors: {
         primary: '#6366f1',
+        primaryForeground: '#ffffff',
         secondary: '#8b5cf6',
+        secondaryForeground: '#ffffff',
         accent: '#ec4899',
+        accentForeground: '#ffffff',
         background: '#fefefe',
         foreground: '#1e1b4b',
         muted: '#f1f5f9',
         mutedForeground: '#64748b',
         border: '#e2e8f0',
         destructive: '#f43f5e',
+        destructiveForeground: '#ffffff',
         success: '#10b981',
         warning: '#f59e0b',
       },
@@ -255,6 +290,14 @@ export const presets: DesignSystemPreset[] = [
         xl: '1.5rem',
         full: '9999px',
       },
+      shadows: {
+        sm: '0 1px 3px 0 rgb(99 102 241 / 0.06)',
+        md: '0 4px 6px -1px rgb(99 102 241 / 0.08), 0 2px 4px -2px rgb(99 102 241 / 0.06)',
+        lg: '0 10px 15px -3px rgb(99 102 241 / 0.08), 0 4px 6px -4px rgb(99 102 241 / 0.06)',
+        xl: '0 20px 25px -5px rgb(99 102 241 / 0.1), 0 8px 10px -6px rgb(99 102 241 / 0.06)',
+        '2xl': '0 25px 50px -12px rgb(99 102 241 / 0.2)',
+        inner: 'inset 0 2px 4px 0 rgb(99 102 241 / 0.05)',
+      },
     },
   },
   {
@@ -265,14 +308,18 @@ export const presets: DesignSystemPreset[] = [
     tokens: {
       colors: {
         primary: '#1e40af',
+        primaryForeground: '#ffffff',
         secondary: '#475569',
+        secondaryForeground: '#ffffff',
         accent: '#0891b2',
+        accentForeground: '#ffffff',
         background: '#ffffff',
         foreground: '#0f172a',
         muted: '#f8fafc',
         mutedForeground: '#64748b',
         border: '#e2e8f0',
         destructive: '#dc2626',
+        destructiveForeground: '#ffffff',
         success: '#059669',
         warning: '#d97706',
       },
@@ -317,6 +364,7 @@ export const presets: DesignSystemPreset[] = [
         xl: '0.75rem',
         full: '9999px',
       },
+      shadows: DEFAULT_SHADOWS,
     },
   },
 ]
