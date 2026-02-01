@@ -37,3 +37,6 @@ export { default as OsmoFooterParallaxEffect } from './footer-parallax-effect'
 export { default as OsmoMagneticCursor } from './magnetic-cursor'
 export { default as OsmoStickyFeatures } from './sticky-features'
 export { default as OsmoGlowingDotsGrid } from './glowing-dots-grid'
+
+// Buttons
+export { default as OsmoDownloadButton } from './download-button'

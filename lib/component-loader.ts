@@ -63,7 +63,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'shadcn-toggle': () => import('@/components/registry/shadcn/toggle'),
   'shadcn-tooltip': () => import('@/components/registry/shadcn/tooltip'),
 
-  // === Aceternity UI (40) ===
+  // === Aceternity UI (68) ===
   'aceternity-animated-modal': () => import('@/components/registry/aceternity/animated-modal'),
   'aceternity-animated-tabs': () => import('@/components/registry/aceternity/animated-tabs'),
   'aceternity-animated-testimonials': () => import('@/components/registry/aceternity/animated-testimonials'),
@@ -104,6 +104,34 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'aceternity-typewriter-effect': () => import('@/components/registry/aceternity/typewriter-effect'),
   'aceternity-wavy-background': () => import('@/components/registry/aceternity/wavy-background'),
   'aceternity-wobble-card': () => import('@/components/registry/aceternity/wobble-card'),
+  'aceternity-3d-marquee': () => import('@/components/registry/aceternity/3d-marquee'),
+  'aceternity-3d-pin': () => import('@/components/registry/aceternity/3d-pin'),
+  'aceternity-apple-cards-carousel': () => import('@/components/registry/aceternity/apple-cards-carousel'),
+  'aceternity-background-beams-with-collision': () => import('@/components/registry/aceternity/background-beams-with-collision'),
+  'aceternity-background-boxes': () => import('@/components/registry/aceternity/background-boxes'),
+  'aceternity-background-lines': () => import('@/components/registry/aceternity/background-lines'),
+  'aceternity-card-spotlight': () => import('@/components/registry/aceternity/card-spotlight'),
+  'aceternity-card-stack': () => import('@/components/registry/aceternity/card-stack'),
+  'aceternity-carousel': () => import('@/components/registry/aceternity/carousel'),
+  'aceternity-container-scroll-animation': () => import('@/components/registry/aceternity/container-scroll-animation'),
+  'aceternity-draggable-card': () => import('@/components/registry/aceternity/draggable-card'),
+  'aceternity-evervault-card': () => import('@/components/registry/aceternity/evervault-card'),
+  'aceternity-file-upload': () => import('@/components/registry/aceternity/file-upload'),
+  'aceternity-following-pointer': () => import('@/components/registry/aceternity/following-pointer'),
+  'aceternity-glowing-stars': () => import('@/components/registry/aceternity/glowing-stars'),
+  'aceternity-hover-border-gradient': () => import('@/components/registry/aceternity/hover-border-gradient'),
+  'aceternity-layout-grid': () => import('@/components/registry/aceternity/layout-grid'),
+  'aceternity-lens': () => import('@/components/registry/aceternity/lens'),
+  'aceternity-macbook-scroll': () => import('@/components/registry/aceternity/macbook-scroll'),
+  'aceternity-multi-step-loader': () => import('@/components/registry/aceternity/multi-step-loader'),
+  'aceternity-navbar-menu': () => import('@/components/registry/aceternity/navbar-menu'),
+  'aceternity-parallax-scroll': () => import('@/components/registry/aceternity/parallax-scroll'),
+  'aceternity-placeholders-and-vanish-input': () => import('@/components/registry/aceternity/placeholders-and-vanish-input'),
+  'aceternity-sidebar': () => import('@/components/registry/aceternity/sidebar'),
+  'aceternity-spotlight-new': () => import('@/components/registry/aceternity/spotlight-new'),
+  'aceternity-svg-mask-effect': () => import('@/components/registry/aceternity/svg-mask-effect'),
+  'aceternity-text-hover-effect': () => import('@/components/registry/aceternity/text-hover-effect'),
+  'aceternity-vortex': () => import('@/components/registry/aceternity/vortex'),
 
   // === Skiper UI (28) ===
   'skiper-animated-number': () => import('@/components/registry/skiper/animated-number'),
@@ -157,7 +185,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'gsap-text-scramble': () => import('@/components/registry/gsap/text-scramble'),
   'gsap-text-split-animation': () => import('@/components/registry/gsap/text-split-animation'),
 
-  // === Osmo Supply (30) ===
+  // === Osmo Supply (31) ===
   'osmo-apple-dock-navigation': () => import('@/components/registry/osmo/apple-dock-navigation'),
   'osmo-before-after-split-slider': () => import('@/components/registry/osmo/before-after-split-slider'),
   'osmo-bold-fullscreen-navigation': () => import('@/components/registry/osmo/bold-fullscreen-navigation'),
@@ -188,6 +216,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: ComponentType<Recor
   'osmo-text-scramble': () => import('@/components/registry/osmo/text-scramble'),
   'osmo-three-d-image-carousel': () => import('@/components/registry/osmo/three-d-image-carousel'),
   'osmo-variable-font-weight-hover': () => import('@/components/registry/osmo/variable-font-weight-hover'),
+  'osmo-download-button': () => import('@/components/registry/osmo/download-button'),
 
   // === Custom imported components ===
   'custom-html-block': () => import('@/components/registry/custom/html-block'),
