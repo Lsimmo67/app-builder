@@ -39,6 +39,15 @@ export interface TypographyScale {
   [key: string]: TypographyScaleEntry
 }
 
+export interface CustomFontConfig {
+  family: string
+  fileName: string
+  format: 'woff' | 'woff2' | 'truetype'
+  dataUrl: string
+  weight?: number
+  style?: string
+}
+
 export interface DesignSystem {
   id: string
   projectId: string
@@ -49,6 +58,7 @@ export interface DesignSystem {
   borderRadius: BorderRadiusTokens
   shadows?: ShadowTokens
   googleFonts?: GoogleFontConfig[]
+  customFonts?: CustomFontConfig[]
   typographyScale?: TypographyScale
 }
 

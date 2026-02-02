@@ -43,6 +43,8 @@ import { CMSPanel } from '@/components/editor/cms'
 import { PageSelector } from './page-selector'
 import { DesignSystemPanel } from './design-system-panel'
 import { ComponentImportDialog } from './component-import-dialog'
+import { MediaLibraryDialog } from '@/components/editor/media/media-library-dialog'
+import { AIAssistantPanel } from '@/components/editor/ai/ai-assistant-panel'
 import type { ViewMode, PreviewDevice } from '@/types'
 
 const viewModeIcons: Record<ViewMode, typeof Layout> = {
@@ -180,8 +182,14 @@ export function EditorToolbar() {
           <RelumeImportDialog />
           <ComponentImportDialog />
 
+          {/* Media Library */}
+          <MediaLibraryDialog />
+
           {/* Design System */}
           <DesignSystemPanel />
+
+          {/* AI Assistant */}
+          <AIAssistantPanel />
 
           {/* CMS */}
           <Sheet>

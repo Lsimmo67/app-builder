@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,10 +29,10 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { HexColorPicker } from 'react-colorful'
 import { Badge } from '@/components/ui/badge'
-import { Palette, Check, Plus, Trash2, Search, Type, Loader2, X } from 'lucide-react'
+import { Palette, Check, Plus, Trash2, Search, Type, Loader2, X, Upload } from 'lucide-react'
 import { useDesignSystemStore } from '@/lib/store'
 import { presets, type DesignSystemPreset } from '@/lib/design-tokens/presets'
-import type { ColorTokens, TypographyTokens, BorderRadiusTokens, ShadowTokens, GoogleFontConfig, TypographyScale, TypographyScaleEntry } from '@/types'
+import type { ColorTokens, TypographyTokens, BorderRadiusTokens, ShadowTokens, GoogleFontConfig, TypographyScale, TypographyScaleEntry, CustomFontConfig } from '@/types'
 
 // Popular Google Fonts curated list for offline browsing
 const POPULAR_GOOGLE_FONTS = [
@@ -85,6 +85,25 @@ function buildGoogleFontsUrl(fonts: GoogleFontConfig[]): string {
     return `family=${encodeURIComponent(f.family)}:wght@${weights}`
   })
   return `https://fonts.googleapis.com/css2?${families.join('&')}&display=swap`
+}
+
+function registerCustomFont(font: CustomFontConfig) {
+  try {
+    const formatStr = font.format === 'truetype' ? 'truetype' : font.format
+    const fontFace = new FontFace(
+      font.family,
+      `url(${font.dataUrl}) format("${formatStr}")`,
+      {
+        weight: String(font.weight || 400),
+        style: font.style || 'normal',
+      }
+    )
+    fontFace.load().then((loaded) => {
+      document.fonts.add(loaded)
+    })
+  } catch {
+    // FontFace API not available or failed
+  }
 }
 
 function ColorTokenEditor({
@@ -267,6 +286,80 @@ export function DesignSystemPanel() {
     [designSystem, updateDesignSystem]
   )
 
+  // Custom font upload
+  const fontUploadRef = useRef<HTMLInputElement>(null)
+
+  const handleCustomFontUpload = useCallback(
+    async (file: File) => {
+      if (!designSystem) return
+      const ext = file.name.split('.').pop()?.toLowerCase()
+      let format: CustomFontConfig['format']
+      if (ext === 'woff2') format = 'woff2'
+      else if (ext === 'woff') format = 'woff'
+      else if (ext === 'ttf') format = 'truetype'
+      else return
+
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = reject
+        reader.readAsDataURL(file)
+      })
+
+      // Extract font family from filename (user can rename later)
+      const family = file.name
+        .replace(/\.(woff2?|ttf)$/i, '')
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase())
+
+      const existing = designSystem.customFonts || []
+      const newFont: CustomFontConfig = {
+        family,
+        fileName: file.name,
+        format,
+        dataUrl,
+        weight: 400,
+        style: 'normal',
+      }
+
+      updateDesignSystem({ customFonts: [...existing, newFont] })
+
+      // Register the font face in the browser
+      registerCustomFont(newFont)
+    },
+    [designSystem, updateDesignSystem]
+  )
+
+  const handleRemoveCustomFont = useCallback(
+    (fileName: string) => {
+      if (!designSystem) return
+      const existing = designSystem.customFonts || []
+      updateDesignSystem({ customFonts: existing.filter((f) => f.fileName !== fileName) })
+    },
+    [designSystem, updateDesignSystem]
+  )
+
+  const handleCustomFontWeightChange = useCallback(
+    (fileName: string, weight: number) => {
+      if (!designSystem) return
+      const existing = designSystem.customFonts || []
+      updateDesignSystem({
+        customFonts: existing.map((f) =>
+          f.fileName === fileName ? { ...f, weight } : f
+        ),
+      })
+    },
+    [designSystem, updateDesignSystem]
+  )
+
+  // Load custom fonts on mount
+  useMemo(() => {
+    if (!designSystem?.customFonts?.length) return
+    for (const font of designSystem.customFonts) {
+      registerCustomFont(font)
+    }
+  }, [designSystem?.customFonts])
+
   // Typography Scale management
   const handleTypographyScaleChange = useCallback(
     (element: string, key: keyof TypographyScaleEntry, value: string | number) => {
@@ -315,6 +408,11 @@ export function DesignSystemPanel() {
         if (!fonts.includes(f.family)) fonts.push(f.family)
       }
     }
+    if (designSystem?.customFonts) {
+      for (const f of designSystem.customFonts) {
+        if (!fonts.includes(f.family)) fonts.push(f.family)
+      }
+    }
     return [...new Set(fonts)]
   }, [designSystem])
 
@@ -331,6 +429,7 @@ export function DesignSystemPanel() {
   )
 
   const installedFonts = designSystem.googleFonts || []
+  const customFonts = designSystem.customFonts || []
   const typographyScale = designSystem.typographyScale
 
   return (
@@ -778,8 +877,94 @@ export function DesignSystemPanel() {
                 </div>
               </div>
 
+              {/* Custom Font Upload */}
+              <div>
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Custom Fonts ({customFonts.length})
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1 mb-2">
+                  Upload .woff, .woff2, or .ttf font files.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-8 text-xs mb-2"
+                  onClick={() => fontUploadRef.current?.click()}
+                >
+                  <Upload className="h-3 w-3 mr-1" />
+                  Upload Font File
+                </Button>
+                <input
+                  ref={fontUploadRef}
+                  type="file"
+                  accept=".woff,.woff2,.ttf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handleCustomFontUpload(file)
+                    if (fontUploadRef.current) fontUploadRef.current.value = ''
+                  }}
+                />
+                {customFonts.length > 0 && (
+                  <div className="space-y-2">
+                    {customFonts.map((font) => (
+                      <div key={font.fileName} className="border rounded-lg p-2.5">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="font-medium text-sm"
+                            style={{ fontFamily: `"${font.family}", sans-serif` }}
+                          >
+                            {font.family}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handleRemoveCustomFont(font.fileName)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-[9px]">
+                            {font.format === 'truetype' ? 'TTF' : font.format.toUpperCase()}
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground truncate">
+                            {font.fileName}
+                          </span>
+                        </div>
+                        <div className="mt-1.5">
+                          <Label className="text-[9px] text-muted-foreground">Weight</Label>
+                          <Select
+                            value={String(font.weight || 400)}
+                            onValueChange={(v) => handleCustomFontWeightChange(font.fileName, Number(v))}
+                          >
+                            <SelectTrigger className="h-6 text-[10px]">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[100, 200, 300, 400, 500, 600, 700, 800, 900].map((w) => (
+                                <SelectItem key={w} value={String(w)} className="text-xs">
+                                  {w}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <p
+                          className="text-xs mt-1.5 text-muted-foreground"
+                          style={{ fontFamily: `"${font.family}", sans-serif` }}
+                        >
+                          The quick brown fox jumps over the lazy dog
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Assign to Design System */}
-              {installedFonts.length > 0 && (
+              {(installedFonts.length > 0 || customFonts.length > 0) && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Assign to Design System

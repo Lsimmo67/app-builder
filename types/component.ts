@@ -192,6 +192,21 @@ export const SOURCE_LABELS: Record<ComponentSource, string> = {
   builtin: 'Elements',
 }
 
+export interface MediaAsset {
+  id: string
+  projectId: string
+  name: string
+  fileName: string
+  mimeType: string
+  size: number
+  dataUrl: string
+  thumbnail?: string
+  width?: number
+  height?: number
+  createdAt: Date
+  tags?: string[]
+}
+
 export const CATEGORY_LABELS: Record<ComponentCategory, string> = {
   hero: 'Hero Sections',
   cta: 'Call to Action',

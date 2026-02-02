@@ -19,6 +19,8 @@ import {
   EyeOff,
   Trash2,
   Copy,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
@@ -163,6 +165,10 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
 
   const isSelected = selectedComponentId === instance.id;
 
+  // Check for responsive overrides
+  const hasTabletOverrides = instance.responsiveStyles?.tablet && Object.keys(instance.responsiveStyles.tablet).length > 0;
+  const hasMobileOverrides = instance.responsiveStyles?.mobile && Object.keys(instance.responsiveStyles.mobile).length > 0;
+
   // Inline text editing state
   const [isInlineEditing, setIsInlineEditing] = useState(false);
   const textPropKey = getTextPropKey(instance.componentRegistryId);
@@ -258,6 +264,16 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
           >
             {instance.source}
           </Badge>
+          {hasTabletOverrides && (
+            <span className="flex items-center text-[9px] text-blue-500" title="Has tablet overrides">
+              <Tablet className="w-3 h-3" />
+            </span>
+          )}
+          {hasMobileOverrides && (
+            <span className="flex items-center text-[9px] text-orange-500" title="Has mobile overrides">
+              <Smartphone className="w-3 h-3" />
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-0.5">
