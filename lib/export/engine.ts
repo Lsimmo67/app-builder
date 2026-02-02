@@ -324,8 +324,8 @@ ${shadows ? `  --shadow-sm: ${shadows.sm};
   code, pre, kbd {
     font-family: var(--font-family-mono);
   }
-}
-`
+${this.generateTypographyScaleCSS()}}
+${this.generateResponsiveCSS()}`
   }
 
   private async generateLayoutFile(zip: JSZip): Promise<void> {
@@ -334,6 +334,18 @@ ${shadows ? `  --shadow-sm: ${shadows.sm};
   }
 
   private getLayoutContent(): string {
+    // Generate Google Fonts link tag if configured
+    const googleFonts = this.designSystem.googleFonts || []
+    let fontLink = ''
+    if (googleFonts.length > 0) {
+      const families = googleFonts.map((f) => {
+        const weights = f.weights.sort().join(';')
+        return `family=${encodeURIComponent(f.family)}:wght@${weights}`
+      })
+      const fontUrl = `https://fonts.googleapis.com/css2?${families.join('&')}&display=swap`
+      fontLink = `\n      <link rel="preconnect" href="https://fonts.googleapis.com" />\n      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />\n      <link href="${fontUrl}" rel="stylesheet" />`
+    }
+
     return `import type { Metadata } from 'next'
 import './globals.css'
 
@@ -349,6 +361,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>${fontLink}
+      </head>
       <body>{children}</body>
     </html>
   )
@@ -793,6 +807,74 @@ MIT
       return `${camelProp}: '${val}'`
     })
     return ` style={{ ${entries.join(', ')} }}`
+  }
+
+  /**
+   * Generate typography scale CSS for H1-H6, P elements
+   */
+  private generateTypographyScaleCSS(): string {
+    const scale = this.designSystem.typographyScale
+    if (!scale) return ''
+
+    const elements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p'] as const
+    const rules: string[] = []
+
+    for (const el of elements) {
+      const entry = scale[el]
+      if (!entry) continue
+      const props: string[] = []
+      if (entry.fontFamily && entry.fontFamily !== 'inherit') {
+        props.push(`font-family: "${entry.fontFamily}", system-ui, sans-serif`)
+      }
+      if (entry.fontSize) props.push(`font-size: ${entry.fontSize}`)
+      if (entry.fontWeight) props.push(`font-weight: ${entry.fontWeight}`)
+      if (entry.lineHeight) props.push(`line-height: ${entry.lineHeight}`)
+      if (entry.letterSpacing) props.push(`letter-spacing: ${entry.letterSpacing}`)
+      if (props.length > 0) {
+        rules.push(`\n  ${el} {\n    ${props.join(';\n    ')};\n  }`)
+      }
+    }
+
+    return rules.join('\n')
+  }
+
+  /**
+   * Generate responsive CSS media queries for components with responsive overrides
+   */
+  private generateResponsiveCSS(): string {
+    const allComponents = this.getAllUsedComponents()
+    const tabletRules: string[] = []
+    const mobileRules: string[] = []
+
+    for (const comp of allComponents) {
+      if (!comp.responsiveStyles) continue
+
+      const tabletStyles = comp.responsiveStyles.tablet
+      const mobileStyles = comp.responsiveStyles.mobile
+
+      if (tabletStyles && Object.keys(tabletStyles).length > 0) {
+        const css = stylesToCSSString(tabletStyles as any)
+        if (css) {
+          tabletRules.push(`  [data-component-id="${comp.id}"] { ${css}; }`)
+        }
+      }
+
+      if (mobileStyles && Object.keys(mobileStyles).length > 0) {
+        const css = stylesToCSSString(mobileStyles as any)
+        if (css) {
+          mobileRules.push(`  [data-component-id="${comp.id}"] { ${css}; }`)
+        }
+      }
+    }
+
+    let css = ''
+    if (tabletRules.length > 0) {
+      css += `\n@media (max-width: 768px) {\n${tabletRules.join('\n')}\n}\n`
+    }
+    if (mobileRules.length > 0) {
+      css += `\n@media (max-width: 480px) {\n${mobileRules.join('\n')}\n}\n`
+    }
+    return css
   }
 
   private generatePropsString(props: Record<string, unknown>): string {

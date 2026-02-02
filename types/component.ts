@@ -143,6 +143,11 @@ export interface ElementStyles {
   cursor?: string
 }
 
+export interface ResponsiveStyles {
+  tablet?: Partial<ElementStyles>
+  mobile?: Partial<ElementStyles>
+}
+
 export interface CMSBinding {
   fieldSlug: string
   collectionId: string
@@ -159,6 +164,7 @@ export interface ComponentInstance {
   order: number
   props: Record<string, unknown>
   styles?: ElementStyles
+  responsiveStyles?: ResponsiveStyles
   customCode?: string
   customStyles?: string
   isLocked: boolean

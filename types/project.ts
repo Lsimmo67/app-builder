@@ -14,6 +14,31 @@ export interface ProjectWithDetails extends Project {
   stackRecommendations: StackRecommendation[]
 }
 
+export interface GoogleFontConfig {
+  family: string
+  weights: number[]
+  styles: string[]
+}
+
+export interface TypographyScaleEntry {
+  fontFamily: string
+  fontSize: string
+  fontWeight: number
+  lineHeight: string
+  letterSpacing?: string
+}
+
+export interface TypographyScale {
+  h1: TypographyScaleEntry
+  h2: TypographyScaleEntry
+  h3: TypographyScaleEntry
+  h4: TypographyScaleEntry
+  h5: TypographyScaleEntry
+  h6: TypographyScaleEntry
+  p: TypographyScaleEntry
+  [key: string]: TypographyScaleEntry
+}
+
 export interface DesignSystem {
   id: string
   projectId: string
@@ -23,6 +48,8 @@ export interface DesignSystem {
   spacing: SpacingTokens
   borderRadius: BorderRadiusTokens
   shadows?: ShadowTokens
+  googleFonts?: GoogleFontConfig[]
+  typographyScale?: TypographyScale
 }
 
 export interface ColorTokens {
