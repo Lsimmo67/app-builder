@@ -19,6 +19,8 @@ import {
   UniqueIdentifier,
   CollisionDetection,
 } from '@dnd-kit/core'
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { nanoid } from "nanoid";
 import {
   useProjectStore,
   useCanvasStore,
@@ -26,20 +28,15 @@ import {
   useEditorStore,
 } from "@/lib/store";
 import { componentRegistry } from "@/lib/components-registry";
+import { ComponentBrowser } from "@/components/editor/sidebar/component-browser";
+import { LayerTree } from "@/components/editor/layers";
+import { Canvas } from "@/components/editor/canvas/canvas-container";
+import { ElementBreadcrumb } from "@/components/editor/canvas/element-breadcrumb";
+import { PropertiesPanel } from "@/components/editor/properties/properties-panel";
+import { EditorToolbar } from "@/components/editor/toolbar/editor-toolbar";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import type { ComponentInstance } from "@/types";
-
-// Cascade collision detection: pointerWithin → closestCenter → rectIntersection
-const cascadeCollisionDetection: CollisionDetection = (args) => {
-  const pointerCollisions = pointerWithin(args);
-  if (pointerCollisions.length > 0) return pointerCollisions;
-
-  const centerCollisions = closestCenter(args);
-  if (centerCollisions.length > 0) return centerCollisions;
-
-  return rectIntersection(args);
-};
 
 // Dynamic imports for heavy components
 const CodePanel = dynamic(

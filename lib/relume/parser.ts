@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid'
 import {
   RelumeSection,
   RelumeImportJson,

@@ -299,8 +299,6 @@ export function cn(...inputs: ClassValue[]) {
 
   private generateTailwindConfig(): string {
     const colors = this.designSystem.colors || {}
-    const spacing = this.designSystem.spacing || { scale: [4, 8, 12, 16, 24, 32, 48, 64, 96, 128] }
-    const borderRadius = this.designSystem.borderRadius || {}
 
     return `import type { Config } from 'tailwindcss'
 
@@ -367,7 +365,6 @@ export default config
   }
 
   private generateGlobalsCss(): string {
-    const colors = this.designSystem.colors || {}
 
     return `@tailwind base;
 @tailwind components;

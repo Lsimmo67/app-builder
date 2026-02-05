@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import { nanoid } from 'nanoid'
 import {
   Dialog,
   DialogContent,
@@ -44,7 +43,6 @@ import {
   Loader2,
   Info,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 interface RelumeImportDialogProps {
   trigger?: React.ReactNode
@@ -391,8 +389,6 @@ interface SectionPreviewCardProps {
 }
 
 function SectionPreviewCard({ section, index, onChangeMapping }: SectionPreviewCardProps) {
-  const sourceColor = SOURCE_COLORS[section.suggestedComponent.source]
-
   // Get all possible components for this type
   const allOptions = useMemo(() => {
     const alternatives = findAlternatives(section.relumeType)
