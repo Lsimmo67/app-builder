@@ -334,12 +334,14 @@ ${shadows ? `  --shadow-sm: ${shadows.sm};
   }
 
   private getLayoutContent(): string {
+    const escapedName = (this.project.name || '').replace(/'/g, "\\'")
+    const escapedDesc = (this.project.description || 'Built with App Builder').replace(/'/g, "\\'")
     return `import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: '${this.project.name}',
-  description: '${this.project.description || 'Built with App Builder'}',
+  title: '${escapedName}',
+  description: '${escapedDesc}',
 }
 
 export default function RootLayout({
@@ -754,14 +756,14 @@ MIT
 
     // Special self-closing tags
     if (tag === 'img') {
-      const src = comp.props.src as string || '/placeholder.jpg'
-      const alt = comp.props.alt as string || ''
+      const src = this.escapeJsxString(comp.props.src as string || '/placeholder.jpg')
+      const alt = this.escapeJsxString(comp.props.alt as string || '')
       return `${pad}<img src="${src}" alt="${alt}"${styleStr} />`
     }
     if (tag === 'input') {
-      const type = comp.props.type as string || 'text'
-      const placeholder = comp.props.placeholder as string || ''
-      const name = comp.props.name as string || ''
+      const type = this.escapeJsxString(comp.props.type as string || 'text')
+      const placeholder = this.escapeJsxString(comp.props.placeholder as string || '')
+      const name = this.escapeJsxString(comp.props.name as string || '')
       return `${pad}<input type="${type}" name="${name}" placeholder="${placeholder}"${styleStr} />`
     }
 
@@ -787,26 +789,44 @@ MIT
     const cssString = stylesToCSSString(comp.styles)
     if (!cssString) return ''
     // Convert CSS string to React style object entries
+    // Use indexOf for colon splitting to handle values containing colons (e.g., url())
     const entries = cssString.split(';').filter(Boolean).map((rule) => {
-      const [prop, val] = rule.split(':').map((s) => s.trim())
+      const colonIdx = rule.indexOf(':')
+      if (colonIdx === -1) return ''
+      const prop = rule.slice(0, colonIdx).trim()
+      const val = rule.slice(colonIdx + 1).trim()
       const camelProp = prop.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase())
       return `${camelProp}: '${val}'`
-    })
+    }).filter(Boolean)
     return ` style={{ ${entries.join(', ')} }}`
+  }
+
+  private escapeJsxString(str: string): string {
+    return str
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/\{/g, '&#123;')
+      .replace(/\}/g, '&#125;')
   }
 
   private generatePropsString(props: Record<string, unknown>): string {
     const entries = Object.entries(props).filter(([, value]) => value !== undefined && value !== null)
-    
+
     if (entries.length === 0) return ''
 
     const propsArray = entries.map(([key, value]) => {
       if (typeof value === 'string') {
-        return `${key}="${value}"`
+        return `${key}="${this.escapeJsxString(value)}"`
       } else if (typeof value === 'boolean') {
         return value ? key : `${key}={false}`
       } else {
-        return `${key}={${JSON.stringify(value)}}`
+        try {
+          return `${key}={${JSON.stringify(value)}}`
+        } catch {
+          return `${key}={undefined /* non-serializable */}`
+        }
       }
     })
 

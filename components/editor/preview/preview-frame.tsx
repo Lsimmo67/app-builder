@@ -136,7 +136,7 @@ export function PreviewFrame({ className }: PreviewFrameProps) {
     if (Math.abs(fitScale - zoom) > 5) {
       setZoom(Math.round(fitScale))
     }
-  }, [device, autoResize, deviceSize])
+  }, [device, autoResize, deviceSize, zoom])
 
   return (
     <div

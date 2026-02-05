@@ -1,4 +1,3 @@
-import { ComponentSource } from '@/types/component'
 import { componentRegistry } from '@/lib/components-registry'
 import { RelumeSectionType, ComponentMapping, ParsedSection } from './types'
 import { nanoid } from 'nanoid'
