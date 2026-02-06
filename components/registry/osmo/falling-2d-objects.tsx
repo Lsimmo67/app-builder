@@ -1,17 +1,24 @@
-"use client"
+"use client";
 
-import React, { useRef, useEffect } from "react"
+import React, { useRef, useEffect } from "react";
 
 export interface OsmoFalling2DObjectsProps {
-  textures?: string[]
-  objectCount?: number
-  objectSize?: number
-  gravity?: number
-  bounciness?: number
-  className?: string
+  textures?: string[];
+  objectCount?: number;
+  objectSize?: number;
+  gravity?: number;
+  bounciness?: number;
+  className?: string;
 }
 
-const defaultTextures = ["#667eea", "#764ba2", "#f093fb", "#f5576c", "#4facfe", "#43e97b"]
+const defaultTextures = [
+  "#667eea",
+  "#764ba2",
+  "#f093fb",
+  "#f5576c",
+  "#4facfe",
+  "#43e97b",
+];
 
 export default function OsmoFalling2DObjects({
   textures = defaultTextures,
@@ -21,32 +28,41 @@ export default function OsmoFalling2DObjects({
   bounciness = 0.6,
   className,
 }: OsmoFalling2DObjectsProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const engineRef = useRef<any>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<unknown>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !canvasRef.current) return
+    if (!containerRef.current || !canvasRef.current) return;
 
-    let cleanup: (() => void) | undefined
+    let cleanup: (() => void) | undefined;
 
     // Dynamically import Matter.js
     const loadMatter = async () => {
       try {
-        const Matter = await import("matter-js")
+        // @ts-expect-error - matter-js types don't support dynamic import
+        const Matter = await import("matter-js");
 
-        const container = containerRef.current!
-        const canvas = canvasRef.current!
-        const width = container.offsetWidth
-        const height = container.offsetHeight
+        const container = containerRef.current!;
+        const canvas = canvasRef.current!;
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
 
-        canvas.width = width
-        canvas.height = height
+        canvas.width = width;
+        canvas.height = height;
 
-        const { Engine, Render, World, Bodies, Runner, Mouse, MouseConstraint } = Matter
+        const {
+          Engine,
+          Render,
+          World,
+          Bodies,
+          Runner,
+          Mouse,
+          MouseConstraint,
+        } = Matter;
 
-        const engine = Engine.create({ gravity: { x: 0, y: gravity } })
-        engineRef.current = engine
+        const engine = Engine.create({ gravity: { x: 0, y: gravity } });
+        engineRef.current = engine;
 
         const render = Render.create({
           canvas,
@@ -58,26 +74,44 @@ export default function OsmoFalling2DObjects({
             background: "transparent",
             pixelRatio: window.devicePixelRatio || 1,
           },
-        })
+        });
 
         // Walls
-        const wallThickness = 50
+        const wallThickness = 50;
         const walls = [
-          Bodies.rectangle(width / 2, height + wallThickness / 2, width, wallThickness, { isStatic: true, render: { visible: false } }),
-          Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height, { isStatic: true, render: { visible: false } }),
-          Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height, { isStatic: true, render: { visible: false } }),
-        ]
+          Bodies.rectangle(
+            width / 2,
+            height + wallThickness / 2,
+            width,
+            wallThickness,
+            { isStatic: true, render: { visible: false } },
+          ),
+          Bodies.rectangle(
+            -wallThickness / 2,
+            height / 2,
+            wallThickness,
+            height,
+            { isStatic: true, render: { visible: false } },
+          ),
+          Bodies.rectangle(
+            width + wallThickness / 2,
+            height / 2,
+            wallThickness,
+            height,
+            { isStatic: true, render: { visible: false } },
+          ),
+        ];
 
-        World.add(engine.world, walls)
+        World.add(engine.world, walls);
 
         // Create falling objects
-        const objects: any[] = []
+        const objects: unknown[] = [];
         for (let i = 0; i < objectCount; i++) {
-          const x = Math.random() * width
-          const y = -Math.random() * height - objectSize
-          const size = objectSize * (0.5 + Math.random() * 0.8)
-          const color = textures[i % textures.length]
-          const isCircle = Math.random() > 0.5
+          const x = Math.random() * width;
+          const y = -Math.random() * height - objectSize;
+          const size = objectSize * (0.5 + Math.random() * 0.8);
+          const color = textures[i % textures.length];
+          const isCircle = Math.random() > 0.5;
 
           const body = isCircle
             ? Bodies.circle(x, y, size / 2, {
@@ -90,53 +124,54 @@ export default function OsmoFalling2DObjects({
                 friction: 0.3,
                 chamfer: { radius: size * 0.15 },
                 render: { fillStyle: color },
-              })
+              });
 
-          objects.push(body)
+          objects.push(body);
         }
 
         // Stagger adding objects
         objects.forEach((body, i) => {
           setTimeout(() => {
-            World.add(engine.world, body)
-          }, i * 100)
-        })
+            World.add(engine.world, body);
+          }, i * 100);
+        });
 
         // Mouse interaction
-        const mouse = Mouse.create(canvas)
+        const mouse = Mouse.create(canvas);
         const mouseConstraint = MouseConstraint.create(engine, {
           mouse,
           constraint: { stiffness: 0.2, render: { visible: false } },
-        })
-        World.add(engine.world, mouseConstraint)
+        });
+        World.add(engine.world, mouseConstraint);
 
-        const runner = Runner.create()
-        Runner.run(runner, engine)
-        Render.run(render)
+        const runner = Runner.create();
+        Runner.run(runner, engine);
+        Render.run(render);
 
         cleanup = () => {
-          Render.stop(render)
-          Runner.stop(runner)
-          Engine.clear(engine)
-          render.canvas.remove()
-        }
+          Render.stop(render);
+          Runner.stop(runner);
+          Engine.clear(engine);
+          render.canvas.remove();
+        };
       } catch {
         // Matter.js not available - show fallback
         if (containerRef.current) {
-          const fallback = document.createElement("div")
-          fallback.style.cssText = "display:flex;align-items:center;justify-content:center;height:100%;opacity:0.5;font-size:1rem;"
-          fallback.textContent = "Install matter-js for physics simulation"
-          containerRef.current.appendChild(fallback)
+          const fallback = document.createElement("div");
+          fallback.style.cssText =
+            "display:flex;align-items:center;justify-content:center;height:100%;opacity:0.5;font-size:1rem;";
+          fallback.textContent = "Install matter-js for physics simulation";
+          containerRef.current.appendChild(fallback);
         }
       }
-    }
+    };
 
-    loadMatter()
+    loadMatter();
 
     return () => {
-      cleanup?.()
-    }
-  }, [textures, objectCount, objectSize, gravity, bounciness])
+      cleanup?.();
+    };
+  }, [textures, objectCount, objectSize, gravity, bounciness]);
 
   return (
     <div
@@ -161,5 +196,5 @@ export default function OsmoFalling2DObjects({
         }}
       />
     </div>
-  )
+  );
 }
