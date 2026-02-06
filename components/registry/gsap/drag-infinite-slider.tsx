@@ -1,67 +1,84 @@
-"use client"
+"use client";
 
-import React, { useRef, useEffect } from "react"
-import { gsap } from "gsap"
-import { Draggable } from "gsap/Draggable"
+import React, { useRef, useEffect } from "react";
+import { gsap } from "gsap";
+import { Draggable } from "gsap/dist/Draggable";
 
 if (typeof window !== "undefined") {
-  gsap.registerPlugin(Draggable)
+  gsap.registerPlugin(Draggable);
 }
 
 export interface SliderItem {
-  content: string
-  image: string
+  content: string;
+  image: string;
 }
 
 export interface GsapDragInfiniteSliderProps {
-  items?: SliderItem[]
-  direction?: "horizontal" | "vertical"
-  className?: string
+  items?: SliderItem[];
+  direction?: "horizontal" | "vertical";
+  className?: string;
 }
 
 const defaultItems: SliderItem[] = [
-  { content: "Project Alpha", image: "https://picsum.photos/seed/drag1/400/300" },
-  { content: "Project Beta", image: "https://picsum.photos/seed/drag2/400/300" },
-  { content: "Project Gamma", image: "https://picsum.photos/seed/drag3/400/300" },
-  { content: "Project Delta", image: "https://picsum.photos/seed/drag4/400/300" },
-  { content: "Project Epsilon", image: "https://picsum.photos/seed/drag5/400/300" },
-]
+  {
+    content: "Project Alpha",
+    image: "https://picsum.photos/seed/drag1/400/300",
+  },
+  {
+    content: "Project Beta",
+    image: "https://picsum.photos/seed/drag2/400/300",
+  },
+  {
+    content: "Project Gamma",
+    image: "https://picsum.photos/seed/drag3/400/300",
+  },
+  {
+    content: "Project Delta",
+    image: "https://picsum.photos/seed/drag4/400/300",
+  },
+  {
+    content: "Project Epsilon",
+    image: "https://picsum.photos/seed/drag5/400/300",
+  },
+];
 
 export default function GsapDragInfiniteSlider({
   items = defaultItems,
   direction = "horizontal",
   className,
 }: GsapDragInfiniteSliderProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const trackRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current || !trackRef.current) return
+    if (!containerRef.current || !trackRef.current) return;
 
-    const track = trackRef.current
-    const isHoriz = direction === "horizontal"
-    const cards = track.querySelectorAll<HTMLElement>(".drag-slide")
-    if (cards.length === 0) return
+    const track = trackRef.current;
+    const isHoriz = direction === "horizontal";
+    const cards = track.querySelectorAll<HTMLElement>(".drag-slide");
+    if (cards.length === 0) return;
 
-    const cardSize = isHoriz ? cards[0].offsetWidth + 24 : cards[0].offsetHeight + 24
-    const totalSize = cardSize * items.length
+    const cardSize = isHoriz
+      ? cards[0].offsetWidth + 24
+      : cards[0].offsetHeight + 24;
+    const totalSize = cardSize * items.length;
 
     // Clone items for seamless loop
     const ctx = gsap.context(() => {
-      const wrap = gsap.utils.wrap(-totalSize, 0)
+      const wrap = gsap.utils.wrap(-totalSize, 0);
 
       const draggable = Draggable.create(track, {
         type: isHoriz ? "x" : "y",
         inertia: true,
         onDrag: function () {
-          const val = isHoriz ? this.x : this.y
-          gsap.set(track, { [isHoriz ? "x" : "y"]: wrap(val) })
+          const val = isHoriz ? this.x : this.y;
+          gsap.set(track, { [isHoriz ? "x" : "y"]: wrap(val) });
         },
         onThrowUpdate: function () {
-          const val = isHoriz ? this.x : this.y
-          gsap.set(track, { [isHoriz ? "x" : "y"]: wrap(val) })
+          const val = isHoriz ? this.x : this.y;
+          gsap.set(track, { [isHoriz ? "x" : "y"]: wrap(val) });
         },
-      })
+      });
 
       // Auto-slide animation
       const autoSlide = gsap.to(track, {
@@ -72,17 +89,17 @@ export default function GsapDragInfiniteSlider({
         modifiers: {
           [isHoriz ? "x" : "y"]: (val: string) => wrap(parseFloat(val)) + "px",
         },
-      })
+      });
 
       // Pause auto on drag
-      track.addEventListener("mousedown", () => autoSlide.pause())
-      track.addEventListener("mouseup", () => autoSlide.resume())
-    }, containerRef)
+      track.addEventListener("mousedown", () => autoSlide.pause());
+      track.addEventListener("mouseup", () => autoSlide.resume());
+    }, containerRef);
 
-    return () => ctx.revert()
-  }, [items, direction])
+    return () => ctx.revert();
+  }, [items, direction]);
 
-  const isHoriz = direction === "horizontal"
+  const isHoriz = direction === "horizontal";
 
   return (
     <div
@@ -122,14 +139,21 @@ export default function GsapDragInfiniteSlider({
               src={item.image}
               alt={item.content}
               draggable={false}
-              style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }}
+              style={{
+                width: "100%",
+                height: "200px",
+                objectFit: "cover",
+                display: "block",
+              }}
             />
             <div style={{ padding: "1.25rem" }}>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 700 }}>{item.content}</h3>
+              <h3 style={{ fontSize: "1.25rem", fontWeight: 700 }}>
+                {item.content}
+              </h3>
             </div>
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }

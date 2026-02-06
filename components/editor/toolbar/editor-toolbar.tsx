@@ -1,13 +1,13 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   ArrowLeft,
   Monitor,
@@ -55,17 +55,17 @@ const viewModeIcons: Record<ViewMode, typeof Layout> = {
   split: Columns,
   code: Code,
   preview: Eye,
-}
+};
 
 const deviceIcons: Record<PreviewDevice, typeof Monitor> = {
   desktop: Monitor,
   tablet: Tablet,
   mobile: Smartphone,
-}
+};
 
 export function EditorToolbar() {
-  const router = useRouter()
-  const currentProject = useProjectStore((state) => state.currentProject)
+  const router = useRouter();
+  const currentProject = useProjectStore((state) => state.currentProject);
   const {
     viewMode,
     setViewMode,
@@ -81,32 +81,32 @@ export function EditorToolbar() {
     redo,
     canUndo,
     canRedo,
-  } = useEditorStore()
+  } = useEditorStore();
 
-  const [showExportDialog, setShowExportDialog] = useState(false)
-  const [showDeployDialog, setShowDeployDialog] = useState(false)
-  const [isExporting, setIsExporting] = useState(false)
-  const [exportSuccess, setExportSuccess] = useState(false)
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showDeployDialog, setShowDeployDialog] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportSuccess, setExportSuccess] = useState(false);
 
   const handleExport = async () => {
-    if (!currentProject) return
+    if (!currentProject) return;
 
-    setIsExporting(true)
-    setExportSuccess(false)
+    setIsExporting(true);
+    setExportSuccess(false);
 
     try {
-      await exportProject(currentProject.id)
-      setExportSuccess(true)
+      await exportProject(currentProject.id);
+      setExportSuccess(true);
       setTimeout(() => {
-        setShowExportDialog(false)
-        setExportSuccess(false)
-      }, 2000)
+        setShowExportDialog(false);
+        setExportSuccess(false);
+      }, 2000);
     } catch (error) {
-      console.error('Export failed:', error)
+      console.error("Export failed:", error);
     } finally {
-      setIsExporting(false)
+      setIsExporting(false);
     }
-  }
+  };
 
   return (
     <>
@@ -115,7 +115,12 @@ export function EditorToolbar() {
         <div className="flex items-center gap-1 min-w-0">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => router.push('/')}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={() => router.push("/")}
+              >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -125,7 +130,7 @@ export function EditorToolbar() {
           <div className="h-6 w-px bg-border shrink-0" />
 
           <span className="font-medium truncate max-w-[120px] text-sm">
-            {currentProject?.name || 'Untitled'}
+            {currentProject?.name || "Untitled"}
           </span>
 
           <div className="h-6 w-px bg-border shrink-0" />
@@ -140,7 +145,7 @@ export function EditorToolbar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={sidebarOpen ? 'secondary' : 'ghost'}
+                  variant={sidebarOpen ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -154,7 +159,7 @@ export function EditorToolbar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={layerTreeOpen ? 'secondary' : 'ghost'}
+                  variant={layerTreeOpen ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => setLayerTreeOpen(!layerTreeOpen)}
@@ -168,7 +173,7 @@ export function EditorToolbar() {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={propertiesOpen ? 'secondary' : 'ghost'}
+                  variant={propertiesOpen ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => setPropertiesOpen(!propertiesOpen)}
@@ -217,12 +222,12 @@ export function EditorToolbar() {
         {/* Center section - Device toggles */}
         <div className="flex items-center gap-1 bg-muted rounded-lg p-1 shrink-0">
           {(Object.keys(deviceIcons) as PreviewDevice[]).map((device) => {
-            const Icon = deviceIcons[device]
+            const Icon = deviceIcons[device];
             return (
               <Tooltip key={device}>
                 <TooltipTrigger asChild>
                   <Button
-                    variant={previewDevice === device ? 'secondary' : 'ghost'}
+                    variant={previewDevice === device ? "secondary" : "ghost"}
                     size="sm"
                     className="h-7 w-7 p-0"
                     onClick={() => setPreviewDevice(device)}
@@ -232,7 +237,7 @@ export function EditorToolbar() {
                 </TooltipTrigger>
                 <TooltipContent className="capitalize">{device}</TooltipContent>
               </Tooltip>
-            )
+            );
           })}
         </div>
 
@@ -241,12 +246,12 @@ export function EditorToolbar() {
           {/* View mode toggles */}
           <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
             {(Object.keys(viewModeIcons) as ViewMode[]).map((mode) => {
-              const Icon = viewModeIcons[mode]
+              const Icon = viewModeIcons[mode];
               return (
                 <Tooltip key={mode}>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={viewMode === mode ? 'secondary' : 'ghost'}
+                      variant={viewMode === mode ? "secondary" : "ghost"}
                       size="sm"
                       className="h-7 w-7 p-0"
                       onClick={() => setViewMode(mode)}
@@ -256,7 +261,7 @@ export function EditorToolbar() {
                   </TooltipTrigger>
                   <TooltipContent className="capitalize">{mode}</TooltipContent>
                 </Tooltip>
-              )
+              );
             })}
           </div>
 
@@ -298,13 +303,22 @@ export function EditorToolbar() {
           <div className="h-6 w-px bg-border" />
 
           {/* Export & Deploy */}
-          <Button size="sm" className="h-8" onClick={() => setShowExportDialog(true)}>
+          <Button
+            size="sm"
+            className="h-8"
+            onClick={() => setShowExportDialog(true)}
+          >
             <Download className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Export</span>
           </Button>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button size="sm" variant="outline" className="h-8" onClick={() => setShowDeployDialog(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8"
+                onClick={() => setShowDeployDialog(true)}
+              >
                 <Rocket className="h-4 w-4 mr-1" />
                 <span className="hidden sm:inline">Deploy</span>
               </Button>
@@ -345,10 +359,16 @@ export function EditorToolbar() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExportDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowExportDialog(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleExport} disabled={isExporting || !currentProject}>
+            <Button
+              onClick={handleExport}
+              disabled={isExporting || !currentProject}
+            >
               {isExporting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -374,9 +394,9 @@ export function EditorToolbar() {
       <DeployDialog
         open={showDeployDialog}
         onOpenChange={setShowDeployDialog}
-        projectName={currentProject?.name || 'project'}
+        projectName={currentProject?.name || "project"}
         zipBlob={null}
       />
     </>
-  )
+  );
 }
