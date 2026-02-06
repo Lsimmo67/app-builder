@@ -33,7 +33,6 @@ export default function OsmoFalling2DObjects({
     // Dynamically import Matter.js
     const loadMatter = async () => {
       try {
-        // @ts-expect-error - matter-js may not be installed
         const Matter = await import("matter-js")
 
         const container = containerRef.current!

@@ -286,7 +286,7 @@ export const useProjectStore = create<ProjectState>()(
         })
       } catch (error) {
         set((state) => {
-          state.error = (error as Error).message
+          state.error = error instanceof Error ? error.message : String(error)
           state.isLoading = false
         })
       }
@@ -364,7 +364,7 @@ export const useProjectStore = create<ProjectState>()(
         })
       } catch (error) {
         set((state) => {
-          state.error = (error as Error).message
+          state.error = error instanceof Error ? error.message : String(error)
           state.isLoading = false
         })
       }
@@ -500,9 +500,11 @@ export const useProjectStore = create<ProjectState>()(
 
           // Second pass: add with remapped IDs and parentIds
           for (const comp of components) {
+            const newId = componentIdMap.get(comp.id)
+            if (!newId) continue
             await db.componentInstances.add({
               ...comp,
-              id: componentIdMap.get(comp.id)!,
+              id: newId,
               pageId: newPageId,
               parentId: comp.parentId ? componentIdMap.get(comp.parentId) : undefined,
             })
@@ -647,7 +649,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
         pushToHistory()
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -676,7 +678,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
         pushToHistory()
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -693,7 +695,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
         pushToHistory()
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -724,7 +726,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
         pushToHistory()
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -746,7 +748,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
         pushToHistory()
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -802,7 +804,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
         pushToHistory()
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -847,7 +849,7 @@ export const useCanvasStore = create<CanvasState>()(
         })
         pushToHistory()
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -903,7 +905,7 @@ export const useDesignSystemStore = create<DesignSystemState>()(
         })
       } catch (error) {
         set((state) => {
-          state.error = (error as Error).message
+          state.error = error instanceof Error ? error.message : String(error)
           state.isLoading = false
         })
       }
@@ -923,7 +925,7 @@ export const useDesignSystemStore = create<DesignSystemState>()(
           }
         })
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
 
@@ -950,7 +952,7 @@ export const useDesignSystemStore = create<DesignSystemState>()(
           }
         })
       } catch (error) {
-        set((state) => { state.error = (error as Error).message })
+        set((state) => { state.error = error instanceof Error ? error.message : String(error) })
       }
     },
   }))

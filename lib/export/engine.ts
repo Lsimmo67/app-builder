@@ -369,6 +369,12 @@ ${
     const headingImport = headingFont.replace(/\s+/g, "_");
     const bodyImport = bodyFont.replace(/\s+/g, "_");
 
+    // Escape project name and description for safe JSX
+    const escapedName = this.escapeJsxString(this.project.name || "");
+    const escapedDesc = this.escapeJsxString(
+      this.project.description || "Built with App Builder",
+    );
+
     // If both fonts are the same, only import once
     const sameFont = headingFont === bodyFont;
 
@@ -384,8 +390,8 @@ const font = ${headingImport}({
 })
 
 export const metadata: Metadata = {
-  title: '${this.project.name}',
-  description: '${this.project.description || "Built with App Builder"}',
+  title: '${escapedName}',
+  description: '${escapedDesc}',
 }
 
 export default function RootLayout({
@@ -419,8 +425,8 @@ const bodyFont = ${bodyImport}({
 })
 
 export const metadata: Metadata = {
-  title: '${this.project.name}',
-  description: '${this.project.description || "Built with App Builder"}',
+  title: '${escapedName}',
+  description: '${escapedDesc}',
 }
 
 export default function RootLayout({
@@ -1033,16 +1039,20 @@ MIT
       tag = validLevels.includes(level) ? level : "h2";
     }
 
-    // Special self-closing tags
+    // Special self-closing tags with proper escaping
     if (tag === "img") {
-      const src = (comp.props.src as string) || "/placeholder.jpg";
-      const alt = (comp.props.alt as string) || "";
+      const src = this.escapeJsxString(
+        (comp.props.src as string) || "/placeholder.jpg",
+      );
+      const alt = this.escapeJsxString((comp.props.alt as string) || "");
       return `${pad}<img src="${src}" alt="${alt}"${styleStr} />`;
     }
     if (tag === "input") {
-      const type = (comp.props.type as string) || "text";
-      const placeholder = (comp.props.placeholder as string) || "";
-      const name = (comp.props.name as string) || "";
+      const type = this.escapeJsxString((comp.props.type as string) || "text");
+      const placeholder = this.escapeJsxString(
+        (comp.props.placeholder as string) || "",
+      );
+      const name = this.escapeJsxString((comp.props.name as string) || "");
       return `${pad}<input type="${type}" name="${name}" placeholder="${placeholder}"${styleStr} />`;
     }
 
@@ -1064,7 +1074,7 @@ MIT
     }
 
     if (textContent) {
-      return `${pad}<${tag}${styleStr}>${textContent}</${tag}>`;
+      return `${pad}<${tag}${styleStr}>${this.escapeJsxString(textContent)}</${tag}>`;
     }
 
     return `${pad}<${tag}${styleStr} />`;
@@ -1074,17 +1084,33 @@ MIT
     const cssString = stylesToCSSString(comp.styles);
     if (!cssString) return "";
     // Convert CSS string to React style object entries
+    // Use indexOf for colon splitting to handle values containing colons (e.g., url())
     const entries = cssString
       .split(";")
       .filter(Boolean)
       .map((rule) => {
-        const [prop, val] = rule.split(":").map((s) => s.trim());
+        const colonIdx = rule.indexOf(":");
+        if (colonIdx === -1) return "";
+        const prop = rule.slice(0, colonIdx).trim();
+        const val = rule.slice(colonIdx + 1).trim();
         const camelProp = prop.replace(/-([a-z])/g, (_, c: string) =>
           c.toUpperCase(),
         );
         return `${camelProp}: '${val}'`;
-      });
+      })
+      .filter(Boolean);
     return ` style={{ ${entries.join(", ")} }}`;
+  }
+
+  private escapeJsxString(str: string): string {
+    return str
+      .replace(/\\/g, "\\\\")
+      .replace(/"/g, '\\"')
+      .replace(/'/g, "\\'")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\{/g, "&#123;")
+      .replace(/\}/g, "&#125;");
   }
 
   private generatePropsString(props: Record<string, unknown>): string {
@@ -1096,11 +1122,15 @@ MIT
 
     const propsArray = entries.map(([key, value]) => {
       if (typeof value === "string") {
-        return `${key}="${value}"`;
+        return `${key}="${this.escapeJsxString(value)}"`;
       } else if (typeof value === "boolean") {
         return value ? key : `${key}={false}`;
       } else {
-        return `${key}={${JSON.stringify(value)}}`;
+        try {
+          return `${key}={${JSON.stringify(value)}}`;
+        } catch {
+          return `${key}={undefined /* non-serializable */}`;
+        }
       }
     });
 
