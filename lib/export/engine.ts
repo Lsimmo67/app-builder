@@ -499,7 +499,10 @@ export default function ${this.toPascalCase(page.name)}Page() {
       // Skip builtin elements (they emit raw HTML, no component file needed)
       if (registryItem.source === "builtin") continue;
 
-      const componentCode = this.generateComponentCode(registryItem);
+      const sourceFolder = componentsFolder.folder(registryItem.source)!
+      sourceFolder.file(filename, code)
+    }
+  }
 
       // Use modulePath for filename, fallback to kebab-cased name
       const filename = registryItem.modulePath
@@ -516,13 +519,15 @@ export default function ${this.toPascalCase(page.name)}Page() {
         neededUiPrimitives.add(match[1]);
       }
 
-      // Scan for @/components/registry/_shared/ imports
-      const sharedImportRegex =
-        /from\s+["']@\/components\/registry\/_shared\/([^"']+)["']/g;
-      let sharedMatch;
-      while ((sharedMatch = sharedImportRegex.exec(componentCode)) !== null) {
-        neededSharedHelpers.add(sharedMatch[1]);
-      }
+    }
+  }
+
+  /**
+   * Copy shared registry components (_shared/section-wrapper, placeholder-image)
+   */
+  private async generateSharedComponents(zip: JSZip): Promise<void> {
+    const sources = await this.fetchSourceFiles()
+    const sharedFolder = zip.folder('components')!.folder('registry')!.folder('_shared')!
 
       // Also check for relative _shared imports (../_shared/)
       const relativeSharedRegex = /from\s+["']\.\.?\/_shared\/([^"']+)["']/g;
@@ -607,34 +612,7 @@ export default function ${this.toPascalCase(page.name)}Page() {
       return code;
     }
 
-    // Fallback: use stub component
-    console.warn(
-      `[ExportEngine] No source found for ${registryItem.id}, using stub`,
-    );
-
-    const componentName = this.toPascalCase(registryItem.name);
-    const propsInterface = registryItem.props
-      .map(
-        (p) =>
-          `  ${p.name}?: ${p.type === "boolean" ? "boolean" : p.type === "number" ? "number" : "string"}`,
-      )
-      .join("\n");
-
-    return `'use client'
-
-interface ${componentName}Props {
-${propsInterface}
-}
-
-export default function ${componentName}(props: ${componentName}Props) {
-  return (
-    <div data-component="${registryItem.id}" className="p-4">
-      {/* TODO: Implement ${registryItem.displayName} */}
-      <p className="text-muted-foreground">Component: ${registryItem.displayName}</p>
-    </div>
-  )
-}
-`;
+    return code
   }
 
   private async generateLibFiles(zip: JSZip): Promise<void> {
@@ -671,35 +649,23 @@ export function cn(...inputs: ClassValue[]) {
 
     const cmsFolder = zip.folder("lib/cms")!;
 
-    // Generate TypeScript types for each collection
-    const typeDefs = this.cmsCollections
-      .map((col) => {
-        const fields = col.fields.map((f) => {
-          let tsType = "string";
-          switch (f.type) {
-            case "number":
-              tsType = "number";
-              break;
-            case "boolean":
-              tsType = "boolean";
-              break;
-            case "date":
-              tsType = "string";
-              break;
-            case "option":
-              tsType = f.validation?.options
-                ? f.validation.options.map((o) => `'${o}'`).join(" | ")
-                : "string";
-              break;
-            default:
-              tsType = "string";
-          }
-          return `  ${f.slug}${f.required ? "" : "?"}: ${tsType}`;
-        });
-        const typeName = this.toPascalCase(col.name);
-        return `export interface ${typeName} {\n  id: string\n${fields.join("\n")}\n  _status: 'draft' | 'published'\n}`;
-      })
-      .join("\n\n");
+    const typeDefs = this.cmsCollections.map((col) => {
+      const typeName = this.toPascalCase(col.name)
+      const fields = col.fields.map((f) => {
+        let tsType = 'string'
+        switch (f.type) {
+          case 'number': tsType = 'number'; break
+          case 'boolean': tsType = 'boolean'; break
+          case 'date': tsType = 'string'; break
+          case 'option': tsType = f.validation?.options
+            ? f.validation.options.map((o) => `'${o}'`).join(' | ')
+            : 'string'; break
+          default: tsType = 'string'
+        }
+        return `  ${f.slug}${f.required ? '' : '?'}: ${tsType}`
+      }).join("\n")
+      return `export interface ${typeName} {\n${fields}\n}`
+    }).join("\n\n");
 
     cmsFolder.file("types.ts", typeDefs + "\n");
 

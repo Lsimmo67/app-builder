@@ -35,20 +35,20 @@ import {
   PanelRight,
   Database,
   Rocket,
-} from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useEditorStore, useProjectStore } from "@/lib/store";
-import { exportProject } from "@/lib/export";
-import { RelumeImportDialog } from "@/components/relume";
-import { CMSPanel } from "@/components/editor/cms";
-import { MediaLibraryDialog } from "@/components/editor/media/media-library-dialog";
-import { AIAssistantPanel } from "@/components/editor/ai/ai-assistant-panel";
-import { PageSelector } from "./page-selector";
-import { DesignSystemPanel } from "./design-system-panel";
-import { ComponentImportDialog } from "./component-import-dialog";
-import { ImportContentDialog } from "./import-content-dialog";
-import { DeployDialog } from "./deploy-dialog";
-import type { ViewMode, PreviewDevice } from "@/types";
+} from 'lucide-react'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { useEditorStore, useProjectStore } from '@/lib/store'
+import { exportProject } from '@/lib/export'
+import { RelumeImportDialog } from '@/components/relume'
+import { CMSPanel } from '@/components/editor/cms'
+import { PageSelector } from './page-selector'
+import { DesignSystemPanel } from './design-system-panel'
+import { ComponentImportDialog } from './component-import-dialog'
+import { ImportContentDialog } from './import-content-dialog'
+import { DeployDialog } from './deploy-dialog'
+import { MediaLibraryDialog } from '@/components/editor/media/media-library-dialog'
+import { AIAssistantPanel } from '@/components/editor/ai/ai-assistant-panel'
+import type { ViewMode, PreviewDevice } from '@/types'
 
 const viewModeIcons: Record<ViewMode, typeof Layout> = {
   visual: Layout,
