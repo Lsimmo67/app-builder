@@ -7,6 +7,7 @@ import type {
   HistoryEntry,
   CMSCollection,
   CMSItem,
+  MediaAsset,
 } from '@/types'
 
 export interface RelumeImport {
@@ -27,6 +28,7 @@ export class AppBuilderDB extends Dexie {
   history!: Table<HistoryEntry>
   cmsCollections!: Table<CMSCollection>
   cmsItems!: Table<CMSItem>
+  mediaAssets!: Table<MediaAsset>
 
   constructor() {
     super('AppBuilderDB')
@@ -49,6 +51,18 @@ export class AppBuilderDB extends Dexie {
       history: 'id, pageId, timestamp',
       cmsCollections: 'id, projectId',
       cmsItems: 'id, collectionId',
+    })
+
+    this.version(3).stores({
+      projects: 'id, name, createdAt, updatedAt',
+      designSystems: 'id, projectId',
+      pages: 'id, projectId, order',
+      componentInstances: 'id, pageId, parentId, order, componentRegistryId',
+      relumeImports: 'id, pageId',
+      history: 'id, pageId, timestamp',
+      cmsCollections: 'id, projectId',
+      cmsItems: 'id, collectionId',
+      mediaAssets: 'id, projectId, name, mimeType, createdAt',
     })
   }
 }

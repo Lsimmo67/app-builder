@@ -19,15 +19,95 @@ import {
   EyeOff,
   Trash2,
   Copy,
+  Tablet,
+  Smartphone,
 } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/cn";
 import { ComponentRenderer } from "./component-renderer";
 import { isComponentAvailable } from "@/lib/component-loader";
 import { mergeStyles } from "@/lib/styles/styles-to-css";
-import React, { useMemo } from "react";
+import type { ElementStyles } from "@/types";
+import React, { useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { useCMSStore } from "@/lib/store/cms-store";
 import { resolveAllBindings } from "@/lib/cms/resolve-bindings";
+
+// Text-based builtin registry IDs that support inline editing
+const INLINE_EDITABLE_IDS = new Set([
+  'builtin-heading',
+  'builtin-paragraph',
+  'builtin-text-block',
+  'builtin-button',
+  'builtin-link',
+])
+
+// Get the text prop key for a given component
+function getTextPropKey(registryId: string): string | null {
+  if (registryId === 'builtin-heading') return 'text'
+  if (registryId === 'builtin-paragraph') return 'text'
+  if (registryId === 'builtin-text-block') return 'text'
+  if (registryId === 'builtin-button') return 'text'
+  if (registryId === 'builtin-link') return 'text'
+  return null
+}
+
+// ============================================
+// INLINE TEXT EDITOR
+// ============================================
+
+function InlineTextEditor({
+  value,
+  onChange,
+  onBlur,
+  styles,
+}: {
+  value: string
+  onChange: (val: string) => void
+  onBlur: () => void
+  styles?: React.CSSProperties
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.focus()
+      // Place cursor at end
+      const range = document.createRange()
+      range.selectNodeContents(ref.current)
+      range.collapse(false)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(range)
+    }
+  }, [])
+
+  return (
+    <div
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      className="outline-none ring-2 ring-primary/30 rounded min-h-[1.2em] px-0.5"
+      style={styles}
+      onBlur={(e) => {
+        onChange(e.currentTarget.textContent || '')
+        onBlur()
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          onBlur()
+        }
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault()
+          onChange(e.currentTarget.textContent || '')
+          onBlur()
+        }
+        e.stopPropagation()
+      }}
+      onClick={(e) => e.stopPropagation()}
+      dangerouslySetInnerHTML={{ __html: value }}
+    />
+  )
+}
 
 // ============================================
 // CANVAS NODE - Recursive nested rendering
@@ -39,7 +119,7 @@ interface CanvasNodeProps {
 }
 
 function CanvasNode({ instance, depth }: CanvasNodeProps) {
-  const { selectedComponentId, selectComponent, hoverComponent } =
+  const { selectedComponentId, selectComponent, hoverComponent, previewDevice } =
     useEditorStore();
   const { components, updateComponent, removeComponent, duplicateComponent } =
     useCanvasStore();
@@ -85,11 +165,55 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
 
   const isSelected = selectedComponentId === instance.id;
 
-  // Compute merged styles (structured + legacy)
-  const computedStyles = mergeStyles(
-    resolved.styles ?? instance.styles,
-    instance.customStyles,
+  // Check for responsive overrides
+  const hasTabletOverrides = instance.responsiveStyles?.tablet && Object.keys(instance.responsiveStyles.tablet).length > 0;
+  const hasMobileOverrides = instance.responsiveStyles?.mobile && Object.keys(instance.responsiveStyles.mobile).length > 0;
+
+  // Inline text editing state
+  const [isInlineEditing, setIsInlineEditing] = useState(false);
+  const textPropKey = getTextPropKey(instance.componentRegistryId);
+  const isInlineEditable = INLINE_EDITABLE_IDS.has(instance.componentRegistryId) && textPropKey !== null;
+
+  const handleDoubleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (isInlineEditable && !instance.isLocked) {
+        setIsInlineEditing(true);
+      }
+    },
+    [isInlineEditable, instance.isLocked]
   );
+
+  const handleInlineTextChange = useCallback(
+    (newText: string) => {
+      if (!textPropKey) return;
+      updateComponent(instance.id, {
+        props: { ...instance.props, [textPropKey]: newText },
+      });
+    },
+    [instance.id, instance.props, textPropKey, updateComponent]
+  );
+
+  // Compute merged styles (structured + responsive overrides + legacy)
+  const computedStyles = useMemo(() => {
+    let baseStyles = resolved.styles ?? instance.styles ?? {};
+    // Apply responsive overrides based on current preview device
+    if (previewDevice !== 'desktop' && instance.responsiveStyles) {
+      const deviceKey = previewDevice as 'tablet' | 'mobile';
+      const overrides = instance.responsiveStyles[deviceKey];
+      if (overrides && Object.keys(overrides).length > 0) {
+        baseStyles = { ...baseStyles, ...overrides } as ElementStyles;
+      }
+      // For mobile, also apply tablet overrides first (cascade)
+      if (deviceKey === 'mobile' && instance.responsiveStyles.tablet) {
+        const tabletOverrides = instance.responsiveStyles.tablet;
+        if (Object.keys(tabletOverrides).length > 0) {
+          baseStyles = { ...instance.styles, ...tabletOverrides, ...overrides } as ElementStyles;
+        }
+      }
+    }
+    return mergeStyles(baseStyles, instance.customStyles);
+  }, [resolved.styles, instance.styles, instance.responsiveStyles, instance.customStyles, previewDevice]);
 
   return (
     <div
@@ -140,6 +264,16 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
           >
             {instance.source}
           </Badge>
+          {hasTabletOverrides && (
+            <span className="flex items-center text-[9px] text-blue-500" title="Has tablet overrides">
+              <Tablet className="w-3 h-3" />
+            </span>
+          )}
+          {hasMobileOverrides && (
+            <span className="flex items-center text-[9px] text-orange-500" title="Has mobile overrides">
+              <Smartphone className="w-3 h-3" />
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-0.5">
@@ -212,10 +346,20 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
             : "hover:border-primary/50",
           instance.isHidden && "pointer-events-none",
           canNest && "min-h-[40px]",
+          isInlineEditing && "ring-2 ring-blue-400",
         )}
         style={computedStyles}
+        onDoubleClick={handleDoubleClick}
       >
-        {canNest ? (
+        {isInlineEditing && isInlineEditable && textPropKey ? (
+          // Inline text editing mode
+          <InlineTextEditor
+            value={String(instance.props[textPropKey] || '')}
+            onChange={handleInlineTextChange}
+            onBlur={() => setIsInlineEditing(false)}
+            styles={computedStyles}
+          />
+        ) : canNest ? (
           // Container element: render children recursively
           <ContainerDropZone instance={instance} depth={depth}>
             {children.length > 0 ? (
@@ -231,7 +375,7 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
           <>
             {isComponentAvailable(instance.componentRegistryId) ? (
               <>
-                <div className="pointer-events-none">
+                <div className={cn("pointer-events-none", isInlineEditable && isSelected && "cursor-text")}>
                   <ComponentRenderer
                     registryId={instance.componentRegistryId}
                     props={resolved.props}
@@ -239,6 +383,11 @@ function CanvasNode({ instance, depth }: CanvasNodeProps) {
                   />
                 </div>
                 <div className="absolute inset-0" />
+                {isInlineEditable && isSelected && (
+                  <div className="absolute bottom-1 right-1 text-[9px] text-muted-foreground bg-background/80 rounded px-1 py-0.5 pointer-events-none">
+                    Double-click to edit
+                  </div>
+                )}
               </>
             ) : (
               <div className="h-20 bg-muted/50 rounded flex items-center justify-center">

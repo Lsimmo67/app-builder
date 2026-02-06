@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/tooltip'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Upload,
   Check,
@@ -36,10 +37,18 @@ import {
   Code,
   FileCode,
   Loader2,
+  Wand2,
 } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useProjectStore, useCanvasStore } from '@/lib/store'
 import type { ComponentInstance, ComponentSource } from '@/types'
+
+interface ImportOptions {
+  includeAnimations: boolean
+  makeTextEditable: boolean
+  extractImages: boolean
+  scopeStyles: boolean
+}
 
 interface ImportState {
   step: 'input' | 'preview' | 'done'
@@ -49,6 +58,7 @@ interface ImportState {
   css: string
   js: string
   error: string | null
+  options: ImportOptions
 }
 
 const initialState: ImportState = {
@@ -59,6 +69,12 @@ const initialState: ImportState = {
   css: '',
   js: '',
   error: null,
+  options: {
+    includeAnimations: true,
+    makeTextEditable: true,
+    extractImages: false,
+    scopeStyles: true,
+  },
 }
 
 function generateComponentId(name: string, source: string): string {
@@ -106,8 +122,8 @@ export function ComponentImportDialog() {
     setIsImporting(true)
     try {
       // Build the custom component HTML that will be rendered via dangerouslySetInnerHTML
-      const componentHtml = buildComponentHtml(state.html, state.css, state.js)
-      const componentId = generateComponentId(state.name, state.source)
+      const jsCode = state.options.includeAnimations ? state.js : ''
+      const componentHtml = buildComponentHtml(state.html, state.css, jsCode, state.options.scopeStyles ? state.name : undefined)
 
       const newInstance: ComponentInstance = {
         id: nanoid(),
@@ -121,8 +137,9 @@ export function ComponentImportDialog() {
           htmlContent: componentHtml,
           rawHtml: state.html,
           rawCss: state.css,
-          rawJs: state.js,
+          rawJs: jsCode,
           sourceLibrary: state.source,
+          options: state.options,
         },
         customCode: undefined,
         customStyles: undefined,
@@ -319,6 +336,64 @@ document.querySelector('.hero-section').addEventListener('click', () => {
                 </TabsContent>
               </Tabs>
 
+              {/* Import Options */}
+              <div className="border rounded-lg p-3 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-medium">
+                  <Wand2 className="h-3 w-3" />
+                  Import Options
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={state.options.includeAnimations}
+                      onCheckedChange={(checked) =>
+                        setState((s) => ({
+                          ...s,
+                          options: { ...s.options, includeAnimations: !!checked },
+                        }))
+                      }
+                    />
+                    <span className="text-xs">Include animations & JS</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={state.options.makeTextEditable}
+                      onCheckedChange={(checked) =>
+                        setState((s) => ({
+                          ...s,
+                          options: { ...s.options, makeTextEditable: !!checked },
+                        }))
+                      }
+                    />
+                    <span className="text-xs">Make text content editable</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={state.options.extractImages}
+                      onCheckedChange={(checked) =>
+                        setState((s) => ({
+                          ...s,
+                          options: { ...s.options, extractImages: !!checked },
+                        }))
+                      }
+                    />
+                    <span className="text-xs">Extract images as props</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={state.options.scopeStyles}
+                      onCheckedChange={(checked) =>
+                        setState((s) => ({
+                          ...s,
+                          options: { ...s.options, scopeStyles: !!checked },
+                        }))
+                      }
+                    />
+                    <span className="text-xs">Scope CSS to component (prevent leaking)</span>
+                  </label>
+                </div>
+              </div>
+
               {state.error && (
                 <div className="flex items-center gap-2 text-destructive text-sm">
                   <AlertCircle className="h-4 w-4" />
@@ -367,12 +442,33 @@ document.querySelector('.hero-section').addEventListener('click', () => {
   )
 }
 
-function buildComponentHtml(html: string, css: string, js: string): string {
+function buildComponentHtml(html: string, css: string, js: string, scopeName?: string): string {
   let result = ''
   if (css) {
-    result += `<style>${css}</style>`
-  }
-  if (html) {
+    if (scopeName) {
+      // Scope CSS by wrapping in a unique data attribute selector
+      const scopeId = scopeName.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      const scopedCss = css.replace(
+        /([^{}@]+?)(\s*\{)/g,
+        (match, selector, brace) => {
+          // Don't scope @rules
+          if (selector.trim().startsWith('@')) return match
+          // Add scope prefix to each selector
+          const selectors = selector.split(',').map((s: string) => {
+            const trimmed = s.trim()
+            if (!trimmed || trimmed.startsWith('@')) return s
+            return `[data-scope="${scopeId}"] ${trimmed}`
+          })
+          return selectors.join(', ') + brace
+        }
+      )
+      result += `<style>${scopedCss}</style>`
+      result += `<div data-scope="${scopeId}">${html}</div>`
+    } else {
+      result += `<style>${css}</style>`
+      result += html
+    }
+  } else {
     result += html
   }
   if (js) {
