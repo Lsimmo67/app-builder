@@ -576,7 +576,7 @@ function WalletView({ setView }: { setView: (view: string) => void }) {
 export function Button({
   borderRadius = "1.75rem",
   children,
-  as: Component = "button",
+  as: Tag = "button",
   containerClassName,
   borderClassName,
   duration,
@@ -592,6 +592,7 @@ export function Button({
   className?: string;
   [key: string]: unknown;
 }) {
+  const Component = Tag as React.ElementType<React.HTMLAttributes<HTMLElement>>;
   return (
     <Component
       className={cn(

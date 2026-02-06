@@ -40,7 +40,6 @@ export default function OsmoFalling2DObjects({
     // Dynamically import Matter.js
     const loadMatter = async () => {
       try {
-        // @ts-expect-error - matter-js types don't support dynamic import
         const Matter = await import("matter-js");
 
         const container = containerRef.current!;
@@ -105,7 +104,7 @@ export default function OsmoFalling2DObjects({
         World.add(engine.world, walls);
 
         // Create falling objects
-        const objects: unknown[] = [];
+        const objects: Matter.Body[] = [];
         for (let i = 0; i < objectCount; i++) {
           const x = Math.random() * width;
           const y = -Math.random() * height - objectSize;
