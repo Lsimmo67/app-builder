@@ -143,6 +143,11 @@ export interface ElementStyles {
   cursor?: string
 }
 
+export interface ResponsiveStyles {
+  tablet?: Partial<ElementStyles>
+  mobile?: Partial<ElementStyles>
+}
+
 export interface CMSBinding {
   fieldSlug: string
   collectionId: string
@@ -159,6 +164,7 @@ export interface ComponentInstance {
   order: number
   props: Record<string, unknown>
   styles?: ElementStyles
+  responsiveStyles?: ResponsiveStyles
   customCode?: string
   customStyles?: string
   isLocked: boolean
@@ -184,6 +190,21 @@ export const SOURCE_LABELS: Record<ComponentSource, string> = {
   skiper: 'Skiper UI',
   gsap: 'GSAP Effects',
   builtin: 'Elements',
+}
+
+export interface MediaAsset {
+  id: string
+  projectId: string
+  name: string
+  fileName: string
+  mimeType: string
+  size: number
+  dataUrl: string
+  thumbnail?: string
+  width?: number
+  height?: number
+  createdAt: Date
+  tags?: string[]
 }
 
 export const CATEGORY_LABELS: Record<ComponentCategory, string> = {

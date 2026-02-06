@@ -8,27 +8,27 @@ import { getVersionForDep, DEPENDENCY_VERSIONS } from './dependency-versions'
 
 // Map builtin registry IDs to their HTML element tags
 const BUILTIN_TAG_MAP: Record<string, string> = {
-  'builtin-section': 'section',
-  'builtin-container': 'div',
-  'builtin-div-block': 'div',
-  'builtin-flex-box': 'div',
-  'builtin-grid-layout': 'div',
-  'builtin-columns': 'div',
-  'builtin-heading': 'h2',
-  'builtin-paragraph': 'p',
-  'builtin-text-block': 'span',
-  'builtin-link-element': 'a',
-  'builtin-rich-text': 'div',
-  'builtin-list-element': 'ul',
-  'builtin-image': 'img',
-  'builtin-video': 'video',
-  'builtin-form-block': 'form',
-  'builtin-input-field': 'input',
-  'builtin-text-area': 'textarea',
-  'builtin-select-field': 'select',
-  'builtin-button-element': 'button',
-  'builtin-link-block': 'a',
-}
+  "builtin-section": "section",
+  "builtin-container": "div",
+  "builtin-div-block": "div",
+  "builtin-flex-box": "div",
+  "builtin-grid-layout": "div",
+  "builtin-columns": "div",
+  "builtin-heading": "dynamic", // resolved from props.level
+  "builtin-paragraph": "p",
+  "builtin-text-block": "span",
+  "builtin-link-element": "a",
+  "builtin-rich-text": "div",
+  "builtin-list-element": "ul",
+  "builtin-image": "img",
+  "builtin-video": "video",
+  "builtin-form-block": "form",
+  "builtin-input-field": "input",
+  "builtin-text-area": "textarea",
+  "builtin-select-field": "select",
+  "builtin-button-element": "button",
+  "builtin-link-block": "a",
+};
 
 // Extended 'use client' detection patterns
 const USE_CLIENT_PATTERNS = [
@@ -63,11 +63,11 @@ const USE_CLIENT_PATTERNS = [
 const ALWAYS_CLIENT_SOURCES = ['aceternity', 'gsap', 'osmo', 'skiper']
 
 export interface ExportOptions {
-  includeReadme: boolean
-  includeTypeScript: boolean
-  includeTailwind: boolean
-  includeEnvExample: boolean
-  packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun'
+  includeReadme: boolean;
+  includeTypeScript: boolean;
+  includeTailwind: boolean;
+  includeEnvExample: boolean;
+  packageManager: "npm" | "yarn" | "pnpm" | "bun";
 }
 
 const DEFAULT_OPTIONS: ExportOptions = {
@@ -75,8 +75,8 @@ const DEFAULT_OPTIONS: ExportOptions = {
   includeTypeScript: true,
   includeTailwind: true,
   includeEnvExample: true,
-  packageManager: 'npm',
-}
+  packageManager: "npm",
+};
 
 interface SourceFiles {
   ui: Record<string, string>
@@ -103,13 +103,13 @@ export class ExportEngine {
     cmsCollections: CMSCollection[] = [],
     cmsItems: CMSItem[] = [],
   ) {
-    this.project = project
-    this.designSystem = designSystem
-    this.pages = pages
-    this.componentsByPage = componentsByPage
-    this.cmsCollections = cmsCollections
-    this.cmsItems = cmsItems
-    this.options = { ...DEFAULT_OPTIONS, ...options }
+    this.project = project;
+    this.designSystem = designSystem;
+    this.pages = pages;
+    this.componentsByPage = componentsByPage;
+    this.cmsCollections = cmsCollections;
+    this.cmsItems = cmsItems;
+    this.options = { ...DEFAULT_OPTIONS, ...options };
   }
 
   /**
@@ -152,11 +152,11 @@ export class ExportEngine {
     await this.generateCMSHelpers(zip)
 
     if (this.options.includeReadme) {
-      await this.generateReadme(zip)
+      await this.generateReadme(zip);
     }
 
     if (this.options.includeEnvExample) {
-      await this.generateEnvExample(zip)
+      await this.generateEnvExample(zip);
     }
 
     zip.file('.gitignore', this.getGitignore())
@@ -181,12 +181,13 @@ export class ExportEngine {
     files['app/layout.tsx'] = this.getLayoutContent()
 
     for (const page of this.pages) {
-      const components = this.componentsByPage.get(page.id) || []
-      const pagePath = page.slug === 'home' ? 'app/page.tsx' : `app/${page.slug}/page.tsx`
-      files[pagePath] = this.generatePageContent(page, components)
+      const components = this.componentsByPage.get(page.id) || [];
+      const pagePath =
+        page.slug === "home" ? "app/page.tsx" : `app/${page.slug}/page.tsx`;
+      files[pagePath] = this.generatePageContent(page, components);
     }
 
-    return files
+    return files;
   }
 
   // =====================================
@@ -194,47 +195,47 @@ export class ExportEngine {
   // =====================================
 
   private async generatePackageJson(zip: JSZip): Promise<void> {
-    zip.file('package.json', this.getPackageJsonContent())
+    zip.file("package.json", this.getPackageJsonContent());
   }
 
   private getPackageJsonContent(): string {
-    const allComponents = this.getAllUsedComponents()
-    const dependencies = this.collectDependencies(allComponents)
+    const allComponents = this.getAllUsedComponents();
+    const dependencies = this.collectDependencies(allComponents);
 
     const packageJson = {
-      name: this.project.name.toLowerCase().replace(/\s+/g, '-'),
-      version: '0.1.0',
+      name: this.project.name.toLowerCase().replace(/\s+/g, "-"),
+      version: "0.1.0",
       private: true,
       scripts: {
-        dev: 'next dev',
-        build: 'next build',
-        start: 'next start',
-        lint: 'next lint',
+        dev: "next dev",
+        build: "next build",
+        start: "next start",
+        lint: "next lint",
       },
       dependencies: {
-        next: getVersionForDep('next'),
-        react: getVersionForDep('react'),
-        'react-dom': getVersionForDep('react-dom'),
+        next: getVersionForDep("next"),
+        react: getVersionForDep("react"),
+        "react-dom": getVersionForDep("react-dom"),
         ...dependencies,
       },
       devDependencies: {
-        '@types/node': getVersionForDep('@types/node'),
-        '@types/react': getVersionForDep('@types/react'),
-        '@types/react-dom': getVersionForDep('@types/react-dom'),
-        typescript: getVersionForDep('typescript'),
-        tailwindcss: getVersionForDep('tailwindcss'),
-        '@tailwindcss/postcss': getVersionForDep('@tailwindcss/postcss'),
-        postcss: getVersionForDep('postcss'),
-        eslint: getVersionForDep('eslint'),
-        'eslint-config-next': getVersionForDep('eslint-config-next'),
+        "@types/node": getVersionForDep("@types/node"),
+        "@types/react": getVersionForDep("@types/react"),
+        "@types/react-dom": getVersionForDep("@types/react-dom"),
+        typescript: getVersionForDep("typescript"),
+        tailwindcss: getVersionForDep("tailwindcss"),
+        "@tailwindcss/postcss": getVersionForDep("@tailwindcss/postcss"),
+        postcss: getVersionForDep("postcss"),
+        eslint: getVersionForDep("eslint"),
+        "eslint-config-next": getVersionForDep("eslint-config-next"),
       },
-    }
+    };
 
-    return JSON.stringify(packageJson, null, 2)
+    return JSON.stringify(packageJson, null, 2);
   }
 
   private async generateNextConfig(zip: JSZip): Promise<void> {
-    zip.file('next.config.js', this.getNextConfigContent())
+    zip.file("next.config.js", this.getNextConfigContent());
   }
 
   private getNextConfigContent(): string {
@@ -250,44 +251,44 @@ const nextConfig = {
 }
 
 export default nextConfig
-`
+`;
   }
 
   private async generateTsConfig(zip: JSZip): Promise<void> {
-    zip.file('tsconfig.json', this.getTsConfigContent())
+    zip.file("tsconfig.json", this.getTsConfigContent());
   }
 
   private getTsConfigContent(): string {
     const tsConfig = {
       compilerOptions: {
-        target: 'es5',
-        lib: ['dom', 'dom.iterable', 'esnext'],
+        target: "es5",
+        lib: ["dom", "dom.iterable", "esnext"],
         allowJs: true,
         skipLibCheck: true,
         strict: true,
         noEmit: true,
         esModuleInterop: true,
-        module: 'esnext',
-        moduleResolution: 'bundler',
+        module: "esnext",
+        moduleResolution: "bundler",
         resolveJsonModule: true,
         isolatedModules: true,
-        jsx: 'preserve',
+        jsx: "preserve",
         incremental: true,
-        plugins: [{ name: 'next' }],
+        plugins: [{ name: "next" }],
         paths: {
-          '@/*': ['./*'],
+          "@/*": ["./*"],
         },
       },
-      include: ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
-      exclude: ['node_modules'],
-    }
+      include: ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+      exclude: ["node_modules"],
+    };
 
-    return JSON.stringify(tsConfig, null, 2)
+    return JSON.stringify(tsConfig, null, 2);
   }
 
   private async generateTailwindConfig(zip: JSZip): Promise<void> {
     // Tailwind v4 uses CSS-based config, no tailwind.config.js needed
-    zip.file('postcss.config.mjs', this.getPostCssConfigContent())
+    zip.file("postcss.config.mjs", this.getPostCssConfigContent());
   }
 
   private getPostCssConfigContent(): string {
@@ -296,16 +297,17 @@ export default nextConfig
     '@tailwindcss/postcss': {},
   },
 }
-`
+`;
   }
 
   private async generateGlobalsCss(zip: JSZip): Promise<void> {
-    const appFolder = zip.folder('app')
-    appFolder?.file('globals.css', this.getGlobalsCssContent())
+    const appFolder = zip.folder("app");
+    appFolder?.file("globals.css", this.getGlobalsCssContent());
   }
 
   private getGlobalsCssContent(): string {
-    const { colors, typography, borderRadius, spacing, shadows } = this.designSystem
+    const { colors, typography, borderRadius, spacing, shadows } =
+      this.designSystem;
 
     return `@import "tailwindcss";
 
@@ -343,10 +345,10 @@ export default nextConfig
   --font-size-base: ${typography.fontSize.base};
   --font-size-lg: ${typography.fontSize.lg};
   --font-size-xl: ${typography.fontSize.xl};
-  --font-size-2xl: ${typography.fontSize['2xl']};
-  --font-size-3xl: ${typography.fontSize['3xl']};
-  --font-size-4xl: ${typography.fontSize['4xl']};
-  --font-size-5xl: ${typography.fontSize['5xl']};
+  --font-size-2xl: ${typography.fontSize["2xl"]};
+  --font-size-3xl: ${typography.fontSize["3xl"]};
+  --font-size-4xl: ${typography.fontSize["4xl"]};
+  --font-size-5xl: ${typography.fontSize["5xl"]};
 
   --font-weight-normal: ${typography.fontWeight.normal};
   --font-weight-medium: ${typography.fontWeight.medium};
@@ -357,14 +359,18 @@ export default nextConfig
   --line-height-normal: ${typography.lineHeight.normal};
   --line-height-relaxed: ${typography.lineHeight.relaxed};
 
-${spacing.scale.map((val, i) => `  --spacing-${i}: ${val}px;`).join('\n')}
+${spacing.scale.map((val, i) => `  --spacing-${i}: ${val}px;`).join("\n")}
 
-${shadows ? `  --shadow-sm: ${shadows.sm};
+${
+  shadows
+    ? `  --shadow-sm: ${shadows.sm};
   --shadow-md: ${shadows.md};
   --shadow-lg: ${shadows.lg};
   --shadow-xl: ${shadows.xl};
-  --shadow-2xl: ${shadows['2xl']};
-  --shadow-inner: ${shadows.inner};` : ''}
+  --shadow-2xl: ${shadows["2xl"]};
+  --shadow-inner: ${shadows.inner};`
+    : ""
+}
 }
 
 @layer base {
@@ -386,12 +392,21 @@ ${shadows ? `  --shadow-sm: ${shadows.sm};
     font-family: var(--font-family-mono);
   }
 }
-`
+
+/* Dark mode - invert foreground/background */
+.dark {
+  --color-background: ${colors.foreground || "#0a0a0a"};
+  --color-foreground: ${colors.background || "#fafafa"};
+  --color-muted: ${colors.mutedForeground || "#262626"};
+  --color-muted-foreground: ${colors.muted || "#a3a3a3"};
+  --color-border: ${colors.mutedForeground || "#262626"};
+}
+`;
   }
 
   private async generateLayoutFile(zip: JSZip): Promise<void> {
-    const appFolder = zip.folder('app')
-    appFolder?.file('layout.tsx', this.getLayoutContent())
+    const appFolder = zip.folder("app");
+    appFolder?.file("layout.tsx", this.getLayoutContent());
   }
 
   private getLayoutContent(): string {
@@ -452,39 +467,42 @@ export default function RootLayout({
     </html>
   )
 }
-`
+`;
   }
 
   private async generatePages(zip: JSZip): Promise<void> {
-    const appFolder = zip.folder('app')!
+    const appFolder = zip.folder("app")!;
 
     for (const page of this.pages) {
-      const components = this.componentsByPage.get(page.id) || []
-      const content = this.generatePageContent(page, components)
+      const components = this.componentsByPage.get(page.id) || [];
+      const content = this.generatePageContent(page, components);
 
-      if (page.slug === 'home') {
-        appFolder.file('page.tsx', content)
+      if (page.slug === "home") {
+        appFolder.file("page.tsx", content);
       } else {
-        const pageFolder = appFolder.folder(page.slug)
-        pageFolder?.file('page.tsx', content)
+        const pageFolder = appFolder.folder(page.slug);
+        pageFolder?.file("page.tsx", content);
       }
     }
   }
 
-  private generatePageContent(page: Page, components: ComponentInstance[]): string {
-    const imports = this.generateImports(components)
-    const componentJsx = this.generateComponentsJsx(components)
+  private generatePageContent(
+    page: Page,
+    components: ComponentInstance[],
+  ): string {
+    const imports = this.generateImports(components);
+    const componentJsx = this.generateComponentsJsx(components);
 
     return `${imports}
 
 export default function ${this.toPascalCase(page.name)}Page() {
   return (
     <main className="min-h-screen">
-      ${componentJsx || '      {/* Add your components here */}'}
+      ${componentJsx || "      {/* Add your components here */}"}
     </main>
   )
 }
-`
+`;
   }
 
   /**
@@ -520,7 +538,6 @@ export default function ${this.toPascalCase(page.name)}Page() {
       const sourceFolder = componentsFolder.folder(registryItem.source)!
       sourceFolder.file(filename, code)
     }
-  }
 
   /**
    * Copy UI primitive components (button, card, input, etc.)
@@ -536,6 +553,10 @@ export default function ${this.toPascalCase(page.name)}Page() {
       if (neededUI.size === 0 || neededUI.has(name)) {
         uiFolder.file(filename, content)
       }
+
+      // Normalize cn() import path: some components use @/lib/utils/cn, others @/lib/utils
+      // In export, we provide both paths, so no rewriting needed
+      return code;
     }
   }
 
@@ -598,11 +619,39 @@ export default function ${this.toPascalCase(page.name)}Page() {
       return `'use client'\n\n${code}`
     }
 
-    return code
+    // Fallback: use the registry's code field (JSX snippet)
+    // This is a degraded experience but won't crash the build
+    console.warn(
+      `[ExportEngine] No source found for ${registryItem.id}, using stub`,
+    );
+
+    const componentName = this.toPascalCase(registryItem.name);
+    const propsInterface = registryItem.props
+      .map(
+        (p) =>
+          `  ${p.name}?: ${p.type === "boolean" ? "boolean" : p.type === "number" ? "number" : "string"}`,
+      )
+      .join("\n");
+
+    return `'use client'
+
+interface ${componentName}Props {
+${propsInterface}
+}
+
+export default function ${componentName}(props: ${componentName}Props) {
+  return (
+    <div data-component="${registryItem.id}" className="p-4">
+      {/* TODO: Implement ${registryItem.displayName} */}
+      <p className="text-muted-foreground">Component: ${registryItem.displayName}</p>
+    </div>
+  )
+}
+`;
   }
 
   private async generateLibFiles(zip: JSZip): Promise<void> {
-    const libFolder = zip.folder('lib')!
+    const libFolder = zip.folder("lib")!;
 
     libFolder.file('utils.ts', `import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -610,13 +659,27 @@ import { twMerge } from 'tailwind-merge'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-`)
+`,
+    );
+
+    // Utils/cn (for shadcn components importing from @/lib/utils/cn)
+    const utilsFolder = libFolder.folder("utils")!;
+    utilsFolder.file(
+      "cn.ts",
+      `import { type ClassValue, clsx } from 'clsx'
+import { twMerge } from 'tailwind-merge'
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+`,
+    );
   }
 
   private async generateCMSFiles(zip: JSZip): Promise<void> {
-    if (this.cmsCollections.length === 0) return
+    if (this.cmsCollections.length === 0) return;
 
-    const cmsFolder = zip.folder('lib/cms')!
+    const cmsFolder = zip.folder("lib/cms")!;
 
     const typeDefs = this.cmsCollections.map((col) => {
       const fields = col.fields.map((f) => {
@@ -632,11 +695,9 @@ export function cn(...inputs: ClassValue[]) {
         }
         return `  ${f.slug}${f.required ? '' : '?'}: ${tsType}`
       })
-      const typeName = this.toPascalCase(col.name)
-      return `export interface ${typeName} {\n  id: string\n${fields.join('\n')}\n  _status: 'draft' | 'published'\n}`
-    }).join('\n\n')
+      .join("\n\n");
 
-    cmsFolder.file('types.ts', typeDefs + '\n')
+    cmsFolder.file("types.ts", typeDefs + "\n");
 
     const dataExports = this.cmsCollections.map((col) => {
       const typeName = this.toPascalCase(col.name)
@@ -654,10 +715,11 @@ export function cn(...inputs: ClassValue[]) {
     cmsFolder.file('data.ts', `import type { ${this.cmsCollections.map((c) => this.toPascalCase(c.name)).join(', ')} } from './types'\n\n${dataExports}\n`)
 
     const helpers = `// CMS Helpers - Auto-generated
-${this.cmsCollections.map((col) => {
-  const typeName = this.toPascalCase(col.name)
-  const varName = col.slug.replace(/-/g, '_')
-  return `import { ${varName} } from './data'
+${this.cmsCollections
+  .map((col) => {
+    const typeName = this.toPascalCase(col.name);
+    const varName = col.slug.replace(/-/g, "_");
+    return `import { ${varName} } from './data'
 import type { ${typeName} } from './types'
 
 export function get${typeName}s(onlyPublished = true): ${typeName}[] {
@@ -666,24 +728,27 @@ export function get${typeName}s(onlyPublished = true): ${typeName}[] {
 
 export function get${typeName}ById(id: string): ${typeName} | undefined {
   return ${varName}.find(i => i.id === id)
-}`
-}).join('\n\n')}
-`
-    cmsFolder.file('helpers.ts', helpers)
+}`;
+  })
+  .join("\n\n")}
+`;
+    cmsFolder.file("helpers.ts", helpers);
   }
 
   private async generateCMSHelpers(zip: JSZip): Promise<void> {
-    if (this.cmsCollections.length > 0) return
+    if (this.cmsCollections.length > 0) return;
 
     const hasCMSBindings = Array.from(this.componentsByPage.values())
       .flat()
-      .some(c => c.cmsBindings && c.cmsBindings.length > 0)
+      .some((c) => c.cmsBindings && c.cmsBindings.length > 0);
 
-    if (!hasCMSBindings) return
+    if (!hasCMSBindings) return;
 
     const cmsFolder = zip.folder('lib')?.folder('cms')
 
-    cmsFolder?.file('helpers.ts', `// CMS data helpers - replace with your actual data source
+    cmsFolder?.file(
+      "helpers.ts",
+      `// CMS data helpers - replace with your actual data source
 export interface CMSItem {
   id: string
   slug: string
@@ -699,13 +764,14 @@ export async function getCollectionItem(collectionSlug: string, itemSlug: string
   const items = await getCollectionItems(collectionSlug)
   return items.find(item => item.slug === itemSlug) ?? null
 }
-`)
+`,
+    );
   }
 
   private async generateReadme(zip: JSZip): Promise<void> {
     const readme = `# ${this.project.name}
 
-${this.project.description || 'A Next.js project built with App Builder.'}
+${this.project.description || "A Next.js project built with App Builder."}
 
 ## Getting Started
 
@@ -761,13 +827,16 @@ MIT
   }
 
   private async generateEnvExample(zip: JSZip): Promise<void> {
-    zip.file('.env.example', `# Environment Variables
+    zip.file(
+      ".env.example",
+      `# Environment Variables
 # Copy this file to .env.local and fill in the values
 
 # Example:
 # DATABASE_URL=your_database_url
 # API_KEY=your_api_key
-`)
+`,
+    );
   }
 
   // =====================================
@@ -776,21 +845,21 @@ MIT
 
   private collectDependencies(components: ComponentInstance[]): Record<string, string> {
     const deps: Record<string, string> = {
-      clsx: '^2.1.0',
-      'tailwind-merge': '^3.0.0',
-      'class-variance-authority': '^0.7.0',
-      'lucide-react': '^0.400.0',
-    }
+      clsx: "^2.1.0",
+      "tailwind-merge": "^3.0.0",
+      "class-variance-authority": "^0.7.0",
+      "lucide-react": "^0.400.0",
+    };
 
     const uniqueIds = new Set(components.map((c) => c.componentRegistryId))
 
     for (const id of uniqueIds) {
-      const registryItem = componentRegistry.getById(id)
-      if (!registryItem) continue
+      const registryItem = componentRegistry.getById(id);
+      if (!registryItem) continue;
 
       if (registryItem.dependencyManifest?.length) {
         for (const dep of registryItem.dependencyManifest) {
-          deps[dep.package] = dep.version
+          deps[dep.package] = dep.version;
         }
       } else {
         for (const dep of registryItem.dependencies) {
@@ -853,7 +922,7 @@ MIT
       }
     }
 
-    return deps
+    return deps;
   }
 
   /**
@@ -893,20 +962,28 @@ MIT
   private generateImports(components: ComponentInstance[]): string {
     const uniqueIds = new Set(
       components
-        .filter((c) => c.source !== 'builtin')
-        .map((c) => c.componentRegistryId)
-    )
-    const imports: string[] = []
+        .filter((c) => c.source !== "builtin")
+        .map((c) => c.componentRegistryId),
+    );
+    const imports: string[] = [];
 
     for (const id of uniqueIds) {
-      const registryItem = componentRegistry.getById(id)
-      if (!registryItem) continue
+      const registryItem = componentRegistry.getById(id);
+      if (!registryItem) continue;
 
-      const componentName = this.toPascalCase(registryItem.name)
-      imports.push(`import ${componentName} from '@/components/${registryItem.source}/${registryItem.name.toLowerCase().replace(/\s+/g, '-')}'`)
+      const componentName = this.toPascalCase(registryItem.name);
+
+      // Use modulePath for the filename, matching what generateComponents writes
+      const filename = registryItem.modulePath
+        ? registryItem.modulePath.replace(`${registryItem.source}-`, "")
+        : registryItem.name.toLowerCase().replace(/\s+/g, "-");
+
+      imports.push(
+        `import ${componentName} from '@/components/${registryItem.source}/${filename}'`,
+      );
     }
 
-    return imports.join('\n')
+    return imports.join("\n");
   }
 
   private generateComponentsJsx(components: ComponentInstance[], indent = 6): string {
@@ -914,11 +991,11 @@ MIT
 
     const rootComponents = components
       .filter((c) => !c.parentId)
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => a.order - b.order);
 
     return rootComponents
       .map((comp) => this.renderComponentNode(comp, components, indent))
-      .join('\n')
+      .join("\n");
   }
 
   private renderComponentNode(
@@ -926,19 +1003,27 @@ MIT
     allComponents: ComponentInstance[],
     indent: number,
   ): string {
-    const pad = ' '.repeat(indent)
-    const registryItem = componentRegistry.getById(comp.componentRegistryId)
-    if (!registryItem) return `${pad}{/* Unknown: ${comp.componentRegistryId} */}`
+    const pad = " ".repeat(indent);
+    const registryItem = componentRegistry.getById(comp.componentRegistryId);
+    if (!registryItem)
+      return `${pad}{/* Unknown: ${comp.componentRegistryId} */}`;
 
     const styleStr = this.buildStyleAttribute(comp)
 
     const children = allComponents
       .filter((c) => c.parentId === comp.id)
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => a.order - b.order);
 
     const builtinTag = BUILTIN_TAG_MAP[comp.componentRegistryId]
     if (builtinTag) {
-      return this.renderBuiltinElement(comp, builtinTag, children, allComponents, indent, styleStr)
+      return this.renderBuiltinElement(
+        comp,
+        builtinTag,
+        children,
+        allComponents,
+        indent,
+        styleStr,
+      );
     }
 
     const componentName = this.toPascalCase(registryItem.name)
@@ -946,12 +1031,14 @@ MIT
 
     if (children.length > 0) {
       const childrenJsx = children
-        .map((child) => this.renderComponentNode(child, allComponents, indent + 2))
-        .join('\n')
-      return `${pad}<${componentName}${propsString}${styleStr}>\n${childrenJsx}\n${pad}</${componentName}>`
+        .map((child) =>
+          this.renderComponentNode(child, allComponents, indent + 2),
+        )
+        .join("\n");
+      return `${pad}<${componentName}${propsString}${styleStr}>\n${childrenJsx}\n${pad}</${componentName}>`;
     }
 
-    return `${pad}<${componentName}${propsString}${styleStr} />`
+    return `${pad}<${componentName}${propsString}${styleStr} />`;
   }
 
   private renderBuiltinElement(
@@ -962,34 +1049,46 @@ MIT
     indent: number,
     styleStr: string,
   ): string {
-    const pad = ' '.repeat(indent)
+    const pad = " ".repeat(indent);
+
+    // Dynamic heading tag from props
+    if (tag === "dynamic") {
+      const level =
+        (comp.props.level as string) || (comp.props.tag as string) || "h2";
+      const validLevels = ["h1", "h2", "h3", "h4", "h5", "h6"];
+      tag = validLevels.includes(level) ? level : "h2";
+    }
 
     if (tag === 'img') {
       const src = this.escapeJsxString(comp.props.src as string || '/placeholder.jpg')
       const alt = this.escapeJsxString(comp.props.alt as string || '')
       return `${pad}<img src="${src}" alt="${alt}"${styleStr} />`
     }
-    if (tag === 'input') {
-      const type = this.escapeJsxString(comp.props.type as string || 'text')
-      const placeholder = this.escapeJsxString(comp.props.placeholder as string || '')
-      const name = this.escapeJsxString(comp.props.name as string || '')
-      return `${pad}<input type="${type}" name="${name}" placeholder="${placeholder}"${styleStr} />`
+    if (tag === "input") {
+      const type = this.escapeJsxString((comp.props.type as string) || "text");
+      const placeholder = this.escapeJsxString(
+        (comp.props.placeholder as string) || "",
+      );
+      const name = this.escapeJsxString((comp.props.name as string) || "");
+      return `${pad}<input type="${type}" name="${name}" placeholder="${placeholder}"${styleStr} />`;
     }
 
     const textContent = (comp.props.text || comp.props.content || comp.props.label || comp.props.children || '') as string
 
     if (children.length > 0) {
       const childrenJsx = children
-        .map((child) => this.renderComponentNode(child, allComponents, indent + 2))
-        .join('\n')
-      return `${pad}<${tag}${styleStr}>\n${childrenJsx}\n${pad}</${tag}>`
+        .map((child) =>
+          this.renderComponentNode(child, allComponents, indent + 2),
+        )
+        .join("\n");
+      return `${pad}<${tag}${styleStr}>\n${childrenJsx}\n${pad}</${tag}>`;
     }
 
     if (textContent) {
-      return `${pad}<${tag}${styleStr}>${textContent}</${tag}>`
+      return `${pad}<${tag}${styleStr}>${this.escapeJsxString(textContent)}</${tag}>`;
     }
 
-    return `${pad}<${tag}${styleStr} />`
+    return `${pad}<${tag}${styleStr} />`;
   }
 
   private buildStyleAttribute(comp: ComponentInstance): string {
@@ -1008,60 +1107,173 @@ MIT
 
   private escapeJsxString(str: string): string {
     return str
-      .replace(/\\/g, '\\\\')
+      .replace(/\\/g, "\\\\")
       .replace(/"/g, '\\"')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/\{/g, '&#123;')
-      .replace(/\}/g, '&#125;')
+      .replace(/'/g, "\\'")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\{/g, "&#123;")
+      .replace(/\}/g, "&#125;");
   }
 
   private generatePropsString(props: Record<string, unknown>): string {
-    const entries = Object.entries(props).filter(([, value]) => value !== undefined && value !== null)
+    const entries = Object.entries(props).filter(
+      ([, value]) => value !== undefined && value !== null,
+    );
 
-    if (entries.length === 0) return ''
+    if (entries.length === 0) return "";
 
     const propsArray = entries.map(([key, value]) => {
-      if (typeof value === 'string') {
-        return `${key}="${this.escapeJsxString(value)}"`
-      } else if (typeof value === 'boolean') {
-        return value ? key : `${key}={false}`
+      if (typeof value === "string") {
+        return `${key}="${this.escapeJsxString(value)}"`;
+      } else if (typeof value === "boolean") {
+        return value ? key : `${key}={false}`;
       } else {
         try {
-          return `${key}={${JSON.stringify(value)}}`
+          return `${key}={${JSON.stringify(value)}}`;
         } catch {
-          return `${key}={undefined /* non-serializable */}`
+          return `${key}={undefined /* non-serializable */}`;
         }
       }
-    })
+    });
 
-    return ' ' + propsArray.join(' ')
+    return " " + propsArray.join(" ");
+  }
+
+  /**
+   * Detect if a component needs 'use client' directive
+   * Checks for React hooks, browser APIs, event handlers, and source-based heuristics
+   */
+  private detectClientDirective(code: string, source: string): boolean {
+    // Sources that are always client components (animations, interactivity)
+    const alwaysClientSources = ["aceternity", "gsap", "osmo", "skiper"];
+    if (alwaysClientSources.includes(source)) {
+      return true;
+    }
+
+    // React hooks that require client
+    const hooks = [
+      "useState",
+      "useEffect",
+      "useRef",
+      "useCallback",
+      "useMemo",
+      "useContext",
+      "useReducer",
+      "useLayoutEffect",
+      "useTransition",
+      "useDeferredValue",
+      "useId",
+      "useSyncExternalStore",
+      "useInsertionEffect",
+      "useImperativeHandle",
+      "useDebugValue",
+    ];
+
+    // Browser APIs that require client
+    const browserAPIs = [
+      "window",
+      "document",
+      "navigator",
+      "localStorage",
+      "sessionStorage",
+      "IntersectionObserver",
+      "ResizeObserver",
+      "MutationObserver",
+      "requestAnimationFrame",
+      "cancelAnimationFrame",
+      "setTimeout",
+      "setInterval",
+      "fetch",
+      "XMLHttpRequest",
+      "WebSocket",
+      "AudioContext",
+      "Canvas",
+      "getComputedStyle",
+    ];
+
+    // Event handlers that require client
+    const eventHandlers = [
+      "onClick",
+      "onChange",
+      "onSubmit",
+      "onFocus",
+      "onBlur",
+      "onKeyDown",
+      "onKeyUp",
+      "onKeyPress",
+      "onMouseEnter",
+      "onMouseLeave",
+      "onMouseMove",
+      "onMouseDown",
+      "onMouseUp",
+      "onScroll",
+      "onWheel",
+      "onTouchStart",
+      "onTouchMove",
+      "onTouchEnd",
+      "onDrag",
+      "onDrop",
+      "onInput",
+      "onLoad",
+      "onError",
+      "onAnimationEnd",
+      "onTransitionEnd",
+    ];
+
+    // Check hooks
+    for (const hook of hooks) {
+      if (code.includes(hook)) return true;
+    }
+
+    // Check browser APIs (with word boundary to avoid false positives)
+    for (const api of browserAPIs) {
+      const regex = new RegExp(`\\b${api}\\b`);
+      if (regex.test(code)) return true;
+    }
+
+    // Check event handlers
+    for (const handler of eventHandlers) {
+      if (code.includes(handler)) return true;
+    }
+
+    // Check for framer-motion (always needs client)
+    if (code.includes("framer-motion") || code.includes("motion/react")) {
+      return true;
+    }
+
+    // Check for gsap
+    if (code.includes("gsap") || code.includes("@gsap")) {
+      return true;
+    }
+
+    return false;
   }
 
   private toPascalCase(str: string): string {
     return str
-      .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
-      .replace(/^(.)/, (c) => c.toUpperCase())
+      .replace(/[-_\s]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ""))
+      .replace(/^(.)/, (c) => c.toUpperCase());
   }
 
   private getInstallCommand(): string {
     const commands: Record<string, string> = {
-      npm: 'npm install',
-      yarn: 'yarn',
-      pnpm: 'pnpm install',
-      bun: 'bun install',
-    }
-    return commands[this.options.packageManager]
+      npm: "npm install",
+      yarn: "yarn",
+      pnpm: "pnpm install",
+      bun: "bun install",
+    };
+    return commands[this.options.packageManager];
   }
 
   private getDevCommand(): string {
     const commands: Record<string, string> = {
-      npm: 'npm run dev',
-      yarn: 'yarn dev',
-      pnpm: 'pnpm dev',
-      bun: 'bun dev',
-    }
-    return commands[this.options.packageManager]
+      npm: "npm run dev",
+      yarn: "yarn dev",
+      pnpm: "pnpm dev",
+      bun: "bun dev",
+    };
+    return commands[this.options.packageManager];
   }
 
   private getGitignore(): string {
@@ -1098,7 +1310,7 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
-`
+`;
   }
 }
 
@@ -1108,43 +1320,43 @@ next-env.d.ts
 
 export async function exportProject(
   projectId: string,
-  options?: Partial<ExportOptions>
+  options?: Partial<ExportOptions>,
 ): Promise<void> {
   const project = await db.projects.get(projectId)
   if (!project) throw new Error('Project not found')
 
   const designSystem = await db.designSystems
-    .where('projectId')
+    .where("projectId")
     .equals(projectId)
-    .first()
-  if (!designSystem) throw new Error('Design system not found')
+    .first();
+  if (!designSystem) throw new Error("Design system not found");
 
   const pages = await db.pages
-    .where('projectId')
+    .where("projectId")
     .equals(projectId)
-    .sortBy('order')
+    .sortBy("order");
 
   const componentsByPage = new Map<string, ComponentInstance[]>()
   for (const page of pages) {
     const components = await db.componentInstances
-      .where('pageId')
+      .where("pageId")
       .equals(page.id)
-      .sortBy('order')
-    componentsByPage.set(page.id, components)
+      .sortBy("order");
+    componentsByPage.set(page.id, components);
   }
 
   const cmsCollections = await db.cmsCollections
-    .where('projectId')
+    .where("projectId")
     .equals(projectId)
-    .toArray()
+    .toArray();
 
-  const cmsItems: CMSItem[] = []
+  const cmsItems: CMSItem[] = [];
   for (const collection of cmsCollections) {
     const items = await db.cmsItems
-      .where('collectionId')
+      .where("collectionId")
       .equals(collection.id)
-      .toArray()
-    cmsItems.push(...items)
+      .toArray();
+    cmsItems.push(...items);
   }
 
   const exporter = new ExportEngine(
@@ -1155,6 +1367,6 @@ export async function exportProject(
     options,
     cmsCollections,
     cmsItems,
-  )
-  await exporter.exportToZip()
+  );
+  await exporter.exportToZip();
 }

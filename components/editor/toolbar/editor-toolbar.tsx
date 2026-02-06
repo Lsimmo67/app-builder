@@ -185,8 +185,14 @@ export function EditorToolbar() {
           <ComponentImportDialog />
           <ImportContentDialog />
 
+          {/* Media Library */}
+          <MediaLibraryDialog />
+
           {/* Design System */}
           <DesignSystemPanel />
+
+          {/* AI Assistant */}
+          <AIAssistantPanel />
 
           {/* CMS */}
           <Sheet>

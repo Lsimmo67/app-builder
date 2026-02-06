@@ -40,6 +40,7 @@ interface LayerItemProps {
   isExpanded?: boolean
   hasChildren?: boolean
   onToggleExpand?: () => void
+  isDropTarget?: boolean
 }
 
 // Get icon based on component category
@@ -75,6 +76,7 @@ export function LayerItem({
   isExpanded = false,
   hasChildren = false,
   onToggleExpand,
+  isDropTarget = false,
 }: LayerItemProps) {
   const { selectedComponentId, selectComponent, hoveredComponentId, hoverComponent } = useEditorStore()
   const { updateComponent, removeComponent, duplicateComponent } = useCanvasStore()
@@ -156,6 +158,7 @@ export function LayerItem({
             isSelected && 'bg-primary/10 border border-primary/30',
             isHovered && !isSelected && 'bg-muted/70',
             isDragging && 'opacity-50',
+            isDropTarget && 'bg-primary/15 ring-1 ring-primary/50 ring-dashed',
             component.isLocked && 'opacity-60',
             component.isHidden && 'opacity-40'
           )}

@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { RotateCcw, Upload, ExternalLink, X, Image as ImageIcon } from 'lucide-react'
+import { RotateCcw, Upload, ExternalLink, X, Image as ImageIcon, FolderOpen } from 'lucide-react'
 import { useDebouncedCallback } from '@/hooks/use-debounce'
 import { DEBOUNCE_MEDIA } from '@/lib/constants/debounce'
+import { MediaLibraryDialog } from '@/components/editor/media/media-library-dialog'
+import type { MediaAsset } from '@/types'
 
 interface ImageEditorProps {
   value: string
@@ -109,6 +111,24 @@ export function ImageEditor({
           <Upload className="h-3 w-3 mr-1" />
           Upload
         </Button>
+        <MediaLibraryDialog
+          onSelect={(asset: MediaAsset) => {
+            setLocalValue(asset.dataUrl)
+            setPreviewError(false)
+            onChange(asset.dataUrl)
+          }}
+          trigger={
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 h-7 text-xs"
+              disabled={disabled}
+            >
+              <FolderOpen className="h-3 w-3 mr-1" />
+              Library
+            </Button>
+          }
+        />
         {isValidUrl && (
           <>
             <Button

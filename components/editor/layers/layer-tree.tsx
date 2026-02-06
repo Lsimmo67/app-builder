@@ -10,6 +10,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  DragOverEvent,
   DragOverlay,
 } from '@dnd-kit/core'
 import {
@@ -36,6 +37,7 @@ import {
   FileText,
 } from 'lucide-react'
 import { ComponentInstance, ComponentSource, SOURCE_COLORS, SOURCE_LABELS } from '@/types/component'
+import { componentRegistry } from '@/lib/components-registry'
 import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
@@ -93,9 +95,11 @@ export function LayerTree() {
   })
   const [isDragging, setIsDragging] = useState(false)
 
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
+
   const currentPage = useProjectStore((state) => state.currentPage)
   const components = useCanvasStore((state) => state.components)
-  const { reorderComponents } = useCanvasStore()
+  const { reorderComponents, moveComponent } = useCanvasStore()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -167,23 +171,65 @@ export function LayerTree() {
   // Handle drag start
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setIsDragging(true)
+    setDragOverId(null)
   }, [])
 
-  // Handle drag end
+  // Handle drag over — detect cross-level hover
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const { over } = event
+      setDragOverId(over ? String(over.id) : null)
+    },
+    []
+  )
+
+  // Handle drag end — supports cross-level moves
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setIsDragging(false)
+      setDragOverId(null)
       const { active, over } = event
 
-      if (over && active.id !== over.id) {
-        const oldIndex = components.findIndex((c) => c.id === active.id)
-        const newIndex = components.findIndex((c) => c.id === over.id)
+      if (!over || active.id === over.id) return
+
+      const activeComp = components.find((c) => c.id === active.id)
+      const overComp = components.find((c) => c.id === over.id)
+      if (!activeComp || !overComp) return
+
+      // Check if dropping onto a container component (cross-level move)
+      const overRegistry = componentRegistry.getById(overComp.componentRegistryId)
+      const isOverContainer = overRegistry?.acceptsChildren ?? false
+
+      if (isOverContainer && activeComp.parentId !== overComp.id) {
+        // Move into the container as a child
+        const children = components
+          .filter((c) => c.parentId === overComp.id)
+          .sort((a, b) => a.order - b.order)
+        const newOrder = children.length > 0 ? Math.max(...children.map((c) => c.order)) + 1 : 0
+        moveComponent(activeComp.id, newOrder, overComp.id)
+        // Auto-expand the target container
+        setExpandedNodes((prev) => new Set([...prev, overComp.id]))
+      } else if (activeComp.parentId === overComp.parentId) {
+        // Same level reorder
+        const siblings = components
+          .filter((c) => c.parentId === activeComp.parentId)
+          .sort((a, b) => a.order - b.order)
+        const oldIndex = siblings.findIndex((c) => c.id === active.id)
+        const newIndex = siblings.findIndex((c) => c.id === over.id)
         if (oldIndex !== -1 && newIndex !== -1) {
-          reorderComponents(oldIndex, newIndex)
+          reorderComponents(oldIndex, newIndex, activeComp.parentId)
         }
+      } else {
+        // Cross-level: move to sibling level of the target
+        const targetSiblings = components
+          .filter((c) => c.parentId === overComp.parentId)
+          .sort((a, b) => a.order - b.order)
+        const targetIndex = targetSiblings.findIndex((c) => c.id === over.id)
+        const newOrder = targetIndex >= 0 ? targetIndex + 1 : targetSiblings.length
+        moveComponent(activeComp.id, newOrder, overComp.parentId)
       }
     },
-    [components, reorderComponents]
+    [components, reorderComponents, moveComponent]
   )
 
   // Toggle source filter
@@ -200,6 +246,9 @@ export function LayerTree() {
   const renderNode = (node: TreeNode, depth: number = 0): React.ReactNode => {
     const hasChildren = node.children.length > 0
     const isExpanded = expandedNodes.has(node.id)
+    const isDropTarget = dragOverId === node.id
+    const nodeRegistry = componentRegistry.getById(node.component.componentRegistryId)
+    const isContainer = nodeRegistry?.acceptsChildren ?? false
 
     return (
       <div key={node.id}>
@@ -209,6 +258,7 @@ export function LayerTree() {
           hasChildren={hasChildren}
           isExpanded={isExpanded}
           onToggleExpand={() => toggleExpand(node.id)}
+          isDropTarget={isDropTarget && isContainer}
         />
         {hasChildren && isExpanded && (
           <div className="ml-2">
@@ -323,6 +373,7 @@ export function LayerTree() {
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
             >
               <SortableContext
