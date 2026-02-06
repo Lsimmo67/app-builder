@@ -1,6 +1,6 @@
 /**
  * Centralized dependency version map for exports.
- * Used by both ExportEngine and ExportGenerator to avoid 'latest' versions.
+ * Used by ExportEngine to avoid 'latest' versions.
  */
 export const DEPENDENCY_VERSIONS: Record<string, string> = {
   // Core

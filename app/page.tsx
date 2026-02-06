@@ -1,6 +1,8 @@
 'use client'
 
 import { CreateProjectDialog } from '@/components/dashboard/create-project-dialog'
+import { ImportBaloDialog } from '@/components/dashboard/import-balo-dialog'
+import { TemplatePickerDialog } from '@/components/dashboard/template-picker-dialog'
 import { ProjectList } from '@/components/dashboard/project-list'
 import { Layers } from 'lucide-react'
 
@@ -21,7 +23,11 @@ export default function HomePage() {
               </p>
             </div>
           </div>
-          <CreateProjectDialog />
+          <div className="flex items-center gap-2">
+            <ImportBaloDialog />
+            <TemplatePickerDialog />
+            <CreateProjectDialog />
+          </div>
         </div>
       </header>
 

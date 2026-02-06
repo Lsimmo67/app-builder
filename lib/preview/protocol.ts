@@ -7,6 +7,10 @@ export type EditorToPreviewMessage =
   | { type: 'UPDATE_DESIGN_SYSTEM'; payload: DesignSystem | null }
   | { type: 'SET_SELECTED'; payload: string | null }
   | { type: 'SET_DARK_MODE'; payload: boolean }
+  | { type: 'ANIMATION_REPLAY'; payload: string }
+  | { type: 'ANIMATION_PAUSE_ALL' }
+  | { type: 'ANIMATION_RESUME_ALL' }
+  | { type: 'SCROLL_TO_COMPONENT'; payload: string }
 
 // Messages from Preview iframe -> Editor
 export type PreviewToEditorMessage =
@@ -14,5 +18,6 @@ export type PreviewToEditorMessage =
   | { type: 'COMPONENT_CLICKED'; payload: string }
   | { type: 'COMPONENT_HOVERED'; payload: string | null }
   | { type: 'CONTENT_HEIGHT'; payload: number }
+  | { type: 'ANIMATION_COMPLETE'; payload: string }
 
 export type PreviewMessage = EditorToPreviewMessage | PreviewToEditorMessage
