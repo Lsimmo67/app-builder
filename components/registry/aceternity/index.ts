@@ -169,3 +169,39 @@ export { default as AceternityFileUpload } from "./file-upload"
 
 // Loaders & Utilities
 export { default as AceternityMultiStepLoader } from "./multi-step-loader"
+
+// --- New components (Batch 3) ---
+
+// Text Effects
+export { default as AceternityContainerTextFlip } from "./container-text-flip"
+export { default as AceternityLayoutTextFlip } from "./layout-text-flip"
+
+// Interactive Effects
+export { default as AceternityPointerHighlight } from "./pointer-highlight"
+export { default as AceternityGlowingEffect } from "./glowing-effect"
+export { default as AceternityStatefulButton } from "./stateful-button"
+export { default as AceternityTabs } from "./tabs"
+export { default as AceternityCometCard } from "./comet-card"
+export { default as AceternityTooltipCard } from "./tooltip-card"
+
+// Navigation
+export { default as AceternityResizableNavbar } from "./resizable-navbar"
+export { default as AceternityStickyBanner } from "./sticky-banner"
+
+// Backgrounds & Canvases
+export { default as AceternityNoiseBackground } from "./noise-background"
+export { default as AceternityBackgroundRippleEffect } from "./background-ripple-effect"
+export { default as AceternityDottedGlowBackground } from "./dotted-glow-background"
+export { default as AceternityCanvasRevealEffect } from "./canvas-reveal-effect"
+export { default as AceternityPixelatedCanvas } from "./pixelated-canvas"
+export { default as AceternityWebcamPixelGrid } from "./webcam-pixel-grid"
+
+// Loaders
+export { default as AceternityLoader } from "./loader"
+
+// Data Visualization
+export { default as AceternityWorldMap } from "./world-map"
+export { default as AceternityGoogleGeminiEffect } from "./google-gemini-effect"
+
+// Shaders
+export { default as AceternityDitherShader } from "./dither-shader"
