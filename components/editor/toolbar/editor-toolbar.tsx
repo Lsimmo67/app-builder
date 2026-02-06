@@ -46,6 +46,8 @@ import { DesignSystemPanel } from './design-system-panel'
 import { ComponentImportDialog } from './component-import-dialog'
 import { ImportContentDialog } from './import-content-dialog'
 import { DeployDialog } from './deploy-dialog'
+import { MediaLibraryDialog } from '@/components/editor/media/media-library-dialog'
+import { AIAssistantPanel } from '@/components/editor/ai/ai-assistant-panel'
 import type { ViewMode, PreviewDevice } from '@/types'
 
 const viewModeIcons: Record<ViewMode, typeof Layout> = {

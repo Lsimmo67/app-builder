@@ -538,6 +538,7 @@ export default function ${this.toPascalCase(page.name)}Page() {
       const sourceFolder = componentsFolder.folder(registryItem.source)!
       sourceFolder.file(filename, code)
     }
+  }
 
   /**
    * Copy UI primitive components (button, card, input, etc.)
@@ -554,9 +555,6 @@ export default function ${this.toPascalCase(page.name)}Page() {
         uiFolder.file(filename, content)
       }
 
-      // Normalize cn() import path: some components use @/lib/utils/cn, others @/lib/utils
-      // In export, we provide both paths, so no rewriting needed
-      return code;
     }
   }
 
@@ -619,35 +617,7 @@ export default function ${this.toPascalCase(page.name)}Page() {
       return `'use client'\n\n${code}`
     }
 
-    // Fallback: use the registry's code field (JSX snippet)
-    // This is a degraded experience but won't crash the build
-    console.warn(
-      `[ExportEngine] No source found for ${registryItem.id}, using stub`,
-    );
-
-    const componentName = this.toPascalCase(registryItem.name);
-    const propsInterface = registryItem.props
-      .map(
-        (p) =>
-          `  ${p.name}?: ${p.type === "boolean" ? "boolean" : p.type === "number" ? "number" : "string"}`,
-      )
-      .join("\n");
-
-    return `'use client'
-
-interface ${componentName}Props {
-${propsInterface}
-}
-
-export default function ${componentName}(props: ${componentName}Props) {
-  return (
-    <div data-component="${registryItem.id}" className="p-4">
-      {/* TODO: Implement ${registryItem.displayName} */}
-      <p className="text-muted-foreground">Component: ${registryItem.displayName}</p>
-    </div>
-  )
-}
-`;
+    return code
   }
 
   private async generateLibFiles(zip: JSZip): Promise<void> {
@@ -682,6 +652,7 @@ export function cn(...inputs: ClassValue[]) {
     const cmsFolder = zip.folder("lib/cms")!;
 
     const typeDefs = this.cmsCollections.map((col) => {
+      const typeName = this.toPascalCase(col.name)
       const fields = col.fields.map((f) => {
         let tsType = 'string'
         switch (f.type) {
@@ -694,8 +665,9 @@ export function cn(...inputs: ClassValue[]) {
           default: tsType = 'string'
         }
         return `  ${f.slug}${f.required ? '' : '?'}: ${tsType}`
-      })
-      .join("\n\n");
+      }).join("\n")
+      return `export interface ${typeName} {\n${fields}\n}`
+    }).join("\n\n");
 
     cmsFolder.file("types.ts", typeDefs + "\n");
 
