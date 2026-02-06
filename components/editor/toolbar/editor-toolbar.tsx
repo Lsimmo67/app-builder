@@ -34,6 +34,7 @@ import {
   PanelLeft,
   PanelRight,
   Database,
+  Rocket,
 } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { useEditorStore, useProjectStore } from '@/lib/store'
@@ -43,8 +44,8 @@ import { CMSPanel } from '@/components/editor/cms'
 import { PageSelector } from './page-selector'
 import { DesignSystemPanel } from './design-system-panel'
 import { ComponentImportDialog } from './component-import-dialog'
-import { MediaLibraryDialog } from '@/components/editor/media/media-library-dialog'
-import { AIAssistantPanel } from '@/components/editor/ai/ai-assistant-panel'
+import { ImportContentDialog } from './import-content-dialog'
+import { DeployDialog } from './deploy-dialog'
 import type { ViewMode, PreviewDevice } from '@/types'
 
 const viewModeIcons: Record<ViewMode, typeof Layout> = {
@@ -81,6 +82,7 @@ export function EditorToolbar() {
   } = useEditorStore()
 
   const [showExportDialog, setShowExportDialog] = useState(false)
+  const [showDeployDialog, setShowDeployDialog] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
   const [exportSuccess, setExportSuccess] = useState(false)
 
@@ -181,6 +183,7 @@ export function EditorToolbar() {
           {/* Import tools */}
           <RelumeImportDialog />
           <ComponentImportDialog />
+          <ImportContentDialog />
 
           {/* Media Library */}
           <MediaLibraryDialog />
@@ -292,11 +295,20 @@ export function EditorToolbar() {
 
           <div className="h-6 w-px bg-border" />
 
-          {/* Export */}
+          {/* Export & Deploy */}
           <Button size="sm" className="h-8" onClick={() => setShowExportDialog(true)}>
             <Download className="h-4 w-4 mr-1" />
             <span className="hidden sm:inline">Export</span>
           </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="sm" variant="outline" className="h-8" onClick={() => setShowDeployDialog(true)}>
+                <Rocket className="h-4 w-4 mr-1" />
+                <span className="hidden sm:inline">Deploy</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Deploy to Vercel</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
@@ -355,6 +367,14 @@ export function EditorToolbar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Deploy Dialog */}
+      <DeployDialog
+        open={showDeployDialog}
+        onOpenChange={setShowDeployDialog}
+        projectName={currentProject?.name || 'project'}
+        zipBlob={null}
+      />
     </>
   )
 }
