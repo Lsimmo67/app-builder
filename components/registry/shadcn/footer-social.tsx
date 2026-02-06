@@ -13,7 +13,7 @@ interface ShadcnFooterSocialProps {
   className?: string
 }
 
-const socialIcons: Record<string, React.ElementType> = {
+const socialIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   github: Github,
   twitter: Twitter,
   linkedin: Linkedin,

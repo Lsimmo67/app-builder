@@ -8,7 +8,7 @@ interface ShadcnSocialProofBannerProps {
   className?: string
 }
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   star: Star,
   users: Users,
   download: Download,

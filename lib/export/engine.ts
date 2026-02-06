@@ -499,10 +499,9 @@ export default function ${this.toPascalCase(page.name)}Page() {
       // Skip builtin elements (they emit raw HTML, no component file needed)
       if (registryItem.source === "builtin") continue;
 
-      const sourceFolder = componentsFolder.folder(registryItem.source)!
-      sourceFolder.file(filename, code)
-    }
-  }
+      // Get component code
+      const componentCode = this.generateComponentCode(registryItem);
+      if (!componentCode) continue;
 
       // Use modulePath for filename, fallback to kebab-cased name
       const filename = registryItem.modulePath
@@ -519,18 +518,9 @@ export default function ${this.toPascalCase(page.name)}Page() {
         neededUiPrimitives.add(match[1]);
       }
 
-    }
-  }
-
-  /**
-   * Copy shared registry components (_shared/section-wrapper, placeholder-image)
-   */
-  private async generateSharedComponents(zip: JSZip): Promise<void> {
-    const sources = await this.fetchSourceFiles()
-    const sharedFolder = zip.folder('components')!.folder('registry')!.folder('_shared')!
-
       // Also check for relative _shared imports (../_shared/)
       const relativeSharedRegex = /from\s+["']\.\.?\/_shared\/([^"']+)["']/g;
+      let sharedMatch;
       while ((sharedMatch = relativeSharedRegex.exec(componentCode)) !== null) {
         neededSharedHelpers.add(sharedMatch[1]);
       }
@@ -612,7 +602,7 @@ export default function ${this.toPascalCase(page.name)}Page() {
       return code;
     }
 
-    return code
+    return "";
   }
 
   private async generateLibFiles(zip: JSZip): Promise<void> {
@@ -649,23 +639,36 @@ export function cn(...inputs: ClassValue[]) {
 
     const cmsFolder = zip.folder("lib/cms")!;
 
-    const typeDefs = this.cmsCollections.map((col) => {
-      const typeName = this.toPascalCase(col.name)
-      const fields = col.fields.map((f) => {
-        let tsType = 'string'
-        switch (f.type) {
-          case 'number': tsType = 'number'; break
-          case 'boolean': tsType = 'boolean'; break
-          case 'date': tsType = 'string'; break
-          case 'option': tsType = f.validation?.options
-            ? f.validation.options.map((o) => `'${o}'`).join(' | ')
-            : 'string'; break
-          default: tsType = 'string'
-        }
-        return `  ${f.slug}${f.required ? '' : '?'}: ${tsType}`
-      }).join("\n")
-      return `export interface ${typeName} {\n${fields}\n}`
-    }).join("\n\n");
+    const typeDefs = this.cmsCollections
+      .map((col) => {
+        const typeName = this.toPascalCase(col.name);
+        const fields = col.fields
+          .map((f) => {
+            let tsType = "string";
+            switch (f.type) {
+              case "number":
+                tsType = "number";
+                break;
+              case "boolean":
+                tsType = "boolean";
+                break;
+              case "date":
+                tsType = "string";
+                break;
+              case "option":
+                tsType = f.validation?.options
+                  ? f.validation.options.map((o) => `'${o}'`).join(" | ")
+                  : "string";
+                break;
+              default:
+                tsType = "string";
+            }
+            return `  ${f.slug}${f.required ? "" : "?"}: ${tsType}`;
+          })
+          .join("\n");
+        return `export interface ${typeName} {\n${fields}\n}`;
+      })
+      .join("\n\n");
 
     cmsFolder.file("types.ts", typeDefs + "\n");
 

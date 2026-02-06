@@ -11,7 +11,7 @@ interface ShadcnFeatureGrid4ColProps {
   className?: string
 }
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   zap: Zap,
   shield: Shield,
   globe: Globe,

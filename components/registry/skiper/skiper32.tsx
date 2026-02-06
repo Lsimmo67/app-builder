@@ -2,7 +2,7 @@
 
 import { motion, MotionValue, useScroll, useTransform } from "framer-motion";
 import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollTrigger } from "gsap/dist/ScrollTrigger";
 import ReactLenis from "lenis/react";
 import React, { useEffect, useRef } from "react";
 

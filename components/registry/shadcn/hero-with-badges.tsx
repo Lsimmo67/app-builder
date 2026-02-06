@@ -13,7 +13,7 @@ interface ShadcnHeroWithBadgesProps {
   className?: string
 }
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   shield: Shield,
   zap: Zap,
   star: Star,

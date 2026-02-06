@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react"
 import { gsap } from "gsap"
-import { Draggable } from "gsap/Draggable"
+import { Draggable } from "gsap/dist/Draggable"
 import { cn } from "@/lib/utils/cn"
 
 if (typeof window !== "undefined") {
